@@ -332,13 +332,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             {/* Desktop: theme, session status, and role switcher inline */}
             <div className="hidden items-center gap-1.5 md:flex">
-              <ThemeToggle theme={theme} onToggle={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} />
+              <ThemeToggle
+                theme={theme}
+                onToggle={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+              />
               <SessionMonitor />
               <RoleSwitcher />
             </div>
 
             {/* Mobile: same three controls collapsed into one menu */}
-            <MobileMoreMenu theme={theme} onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} />
+            <MobileMoreMenu
+              theme={theme}
+              onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+            />
 
             <NotificationsBell
               notifications={notifItems}
@@ -419,7 +425,12 @@ function MobileMoreMenu({ theme, onToggleTheme }: { theme: ThemeMode; onToggleTh
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative md:hidden" aria-label="More options">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative md:hidden"
+          aria-label="More options"
+        >
           <MoreVertical className="size-5" />
           {!loading && session && (
             <span className={cn("absolute right-1 top-1 size-2 rounded-full", dotClass)} />
@@ -428,7 +439,11 @@ function MobileMoreMenu({ theme, onToggleTheme }: { theme: ThemeMode; onToggleTh
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuItem onClick={onToggleTheme}>
-          {theme === "dark" ? <Sun className="mr-2 size-4" /> : <MoonStar className="mr-2 size-4" />}
+          {theme === "dark" ? (
+            <Sun className="mr-2 size-4" />
+          ) : (
+            <MoonStar className="mr-2 size-4" />
+          )}
           Switch to {theme === "dark" ? "light" : "dark"} mode
         </DropdownMenuItem>
         {!loading && session && (
@@ -486,21 +501,19 @@ function SidebarBrand({
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </Button>
       )}
-     {!collapsed && (
-  <div className="flex min-w-0 items-center gap-2.5">
-    {/* <div className="grid size-8 shrink-0 place-items-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+      {!collapsed && (
+        <div className="flex min-w-0 items-center gap-2.5">
+          {/* <div className="grid size-8 shrink-0 place-items-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
       <span className="font-mono text-xs font-bold">DJF</span>
     </div> */}
-    <div className="min-w-0">
-      <div className="truncate text-sm font-semibold text-sidebar-foreground">
-        DJ's Panel
-      </div>
-      <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
-        Agent Portal - TMS
-      </div>
-    </div>
-  </div>
-)}
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-sidebar-foreground">DJ's Panel</div>
+            <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
+              Agent Portal - TMS
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -603,13 +616,20 @@ function SessionMonitor() {
   }[sessionStatus];
 
   return (
-    <div className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-1.5 shadow-sm", statusConfig.borderClass)}>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 shadow-sm",
+        statusConfig.borderClass,
+      )}
+    >
       <div className="flex size-7 items-center justify-center rounded-full bg-background/80">
         <Clock3 className={cn("size-3.5", statusConfig.textClass)} />
       </div>
       <div className="flex items-center gap-1.5">
         <span className={cn("size-2 rounded-full", statusConfig.dotClass)} />
-        <span className={cn("text-sm font-semibold", statusConfig.textClass)}>{statusConfig.label}</span>
+        <span className={cn("text-sm font-semibold", statusConfig.textClass)}>
+          {statusConfig.label}
+        </span>
       </div>
     </div>
   );
@@ -626,7 +646,11 @@ function RoleSwitcher({ inline }: { inline?: boolean } = {}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal", inline && "w-full sm:w-auto")}>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn("gap-1.5 font-normal", inline && "w-full sm:w-auto")}
+        >
           <CircleUser className="size-4 text-primary" />
           <span className="hidden text-xs lg:inline">Viewing as</span>
           <span className="text-xs font-medium">{ROLE_LABELS[role]}</span>
@@ -719,7 +743,9 @@ function NotificationsBell({
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium">{n.title}</div>
                   <div className="truncate text-xs text-muted-foreground">{n.message}</div>
-                  <div className="mt-0.5 text-[10px] text-muted-foreground">{relative(n.createdAt)}</div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground">
+                    {relative(n.createdAt)}
+                  </div>
                 </div>
               </button>
             ))
@@ -805,14 +831,14 @@ function UserMenu() {
             Sign out
           </DropdownMenuItem> */}
           <DropdownMenuItem
-  onClick={() => {
-    void handleSignOut();
-  }}
-  className="text-destructive hover:text-black focus:text-black"
->
-  <LogOut className="mr-2 size-4" />
-  Sign out
-</DropdownMenuItem>
+            onClick={() => {
+              void handleSignOut();
+            }}
+            className="text-destructive hover:text-black focus:text-black"
+          >
+            <LogOut className="mr-2 size-4" />
+            Sign out
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -824,19 +850,25 @@ function UserMenu() {
             </div>
             <DialogTitle className="text-xl font-semibold">Clock out first</DialogTitle>
             <DialogDescription className="text-sm leading-6 text-muted-foreground">
-              You&apos;re still checked in. Please end your session from Daily Activity before sign-out so your activity is recorded correctly.
+              You&apos;re still checked in. Please end your session from Daily Activity before
+              sign-out so your activity is recorded correctly.
             </DialogDescription>
           </DialogHeader>
 
           <div className="rounded-xl border border-border/70 bg-card/70 p-4">
             <div className="text-sm font-medium text-foreground">Why this matters</div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Finishing your session before you leave keeps your daily log accurate and prevents gaps in your activity history.
+              Finishing your session before you leave keeps your daily log accurate and prevents
+              gaps in your activity history.
             </p>
           </div>
 
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:gap-2">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowClockOutRequiredDialog(false)}>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setShowClockOutRequiredDialog(false)}
+            >
               Cancel
             </Button>
             <Button className="w-full sm:w-auto" onClick={handleGoToActivity}>
