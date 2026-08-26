@@ -544,18 +544,20 @@ function QuotesPage() {
               <div>
                 <span className="font-medium">{q.customerName || q.customerId}</span>
                 {q.pendingApproval && (
-                  <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                    q.approvalStatus === "pending"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : q.approvalStatus === "changes_requested"
-                      ? "bg-orange-100 text-orange-800"
-                      : "bg-red-100 text-red-800"
-                  }`}>
+                  <span
+                    className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                      q.approvalStatus === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : q.approvalStatus === "changes_requested"
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-red-100 text-red-800"
+                    }`}
+                  >
                     {q.approvalStatus === "changes_requested"
                       ? "Changes Requested"
                       : q.approvalStatus === "rejected"
-                      ? "Rejected"
-                      : "Pending Approval"}
+                        ? "Rejected"
+                        : "Pending Approval"}
                   </span>
                 )}
               </div>
@@ -599,20 +601,22 @@ function QuotesPage() {
                   <div className="flex items-center gap-2">
                     <SheetTitle>Quote {open.id.toUpperCase()}</SheetTitle>
                     {open.pendingApproval && (
-                    <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      open.approvalStatus === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : open.approvalStatus === "changes_requested"
-                        ? "bg-orange-100 text-orange-800"
-                        : "bg-red-100 text-red-800"
-                    }`}>
-                      {open.approvalStatus === "changes_requested"
-                        ? "Changes Requested"
-                        : open.approvalStatus === "rejected"
-                        ? "Rejected"
-                        : "Pending Approval"}
-                    </span>
-                  )}
+                      <span
+                        className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          open.approvalStatus === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : open.approvalStatus === "changes_requested"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {open.approvalStatus === "changes_requested"
+                          ? "Changes Requested"
+                          : open.approvalStatus === "rejected"
+                            ? "Rejected"
+                            : "Pending Approval"}
+                      </span>
+                    )}
                   </div>
                   {!editing && canEdit && (
                     <Button variant="ghost" size="sm" onClick={startEdit}>

@@ -466,8 +466,14 @@ function InvoicesPage() {
         { label: "Invoice #", getValue: (invoice) => invoice.invoiceNumber },
         { label: "Customer", getValue: (invoice) => invoice.customerName },
         { label: "Status", getValue: (invoice) => invoice.status },
-        { label: "Invoice Date", getValue: (invoice) => (invoice.invoiceDate ? fmtDate(invoice.invoiceDate) : "") },
-        { label: "Due Date", getValue: (invoice) => (invoice.dueDate ? fmtDate(invoice.dueDate) : "") },
+        {
+          label: "Invoice Date",
+          getValue: (invoice) => (invoice.invoiceDate ? fmtDate(invoice.invoiceDate) : ""),
+        },
+        {
+          label: "Due Date",
+          getValue: (invoice) => (invoice.dueDate ? fmtDate(invoice.dueDate) : ""),
+        },
         { label: "Total", getValue: (invoice) => invoice.total },
         { label: "Balance Due", getValue: (invoice) => invoice.balanceDue },
         { label: "Amount Paid", getValue: (invoice) => invoice.amountPaid },
