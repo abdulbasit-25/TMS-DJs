@@ -84,55 +84,76 @@ function SearchPage() {
 
     async function loadResults() {
       try {
-        const [usersResponse, customersResponse, carriersResponse, loadsResponse] = await Promise.all([
-          apiFetch<{ users?: UserResult[]; total?: number }>('/api/users?search=' + encodeURIComponent(q.trim()) + '&pageSize=5'),
-          apiFetch<{ customers?: CustomerResult[] }>('/api/customers'),
-          apiFetch<{ carriers?: CarrierResult[] }>('/api/carriers?limit=5&q=' + encodeURIComponent(q.trim())),
-          apiFetch<{ loads?: LoadResult[] }>('/api/loads'),
-        ]);
+        const [usersResponse, customersResponse, carriersResponse, loadsResponse] =
+          await Promise.all([
+            apiFetch<{ users?: UserResult[]; total?: number }>(
+              "/api/users?search=" + encodeURIComponent(q.trim()) + "&pageSize=5",
+            ),
+            apiFetch<{ customers?: CustomerResult[] }>("/api/customers"),
+            apiFetch<{ carriers?: CarrierResult[] }>(
+              "/api/carriers?limit=5&q=" + encodeURIComponent(q.trim()),
+            ),
+            apiFetch<{ loads?: LoadResult[] }>("/api/loads"),
+          ]);
 
         if (!active) return;
 
         const searchTerm = q.trim().toLowerCase();
         const users = (usersResponse.data.users ?? []).filter((item) =>
-          [item.name, item.email, item.role].some((value) => value?.toLowerCase().includes(searchTerm)),
+          [item.name, item.email, item.role].some((value) =>
+            value?.toLowerCase().includes(searchTerm),
+          ),
         );
         const customers = (customersResponse.data.customers ?? []).filter((item) =>
-          [item.company, item.contact, item.email, item.agentName].some((value) => value?.toLowerCase().includes(searchTerm)),
+          [item.company, item.contact, item.email, item.agentName].some((value) =>
+            value?.toLowerCase().includes(searchTerm),
+          ),
         );
         const carriers = (carriersResponse.data.carriers ?? []).filter((item) =>
-          [item.legalName, item.companyName, item.dba, item.mcNumber, item.dotNumber, item.contactName, item.contactEmail].some((value) => value?.toLowerCase().includes(searchTerm)),
+          [
+            item.legalName,
+            item.companyName,
+            item.dba,
+            item.mcNumber,
+            item.dotNumber,
+            item.contactName,
+            item.contactEmail,
+          ].some((value) => value?.toLowerCase().includes(searchTerm)),
         );
         const loads = (loadsResponse.data.loads ?? []).filter((item) =>
-          [item.ref, item.loadNumber, item.customerName, item.carrierName, item.status].some((value) => value?.toLowerCase().includes(searchTerm)),
+          [item.ref, item.loadNumber, item.customerName, item.carrierName, item.status].some(
+            (value) => value?.toLowerCase().includes(searchTerm),
+          ),
         );
 
-        setResults([
-          {
-            title: 'Users',
-            icon: Users,
-            href: '/users',
-            items: users.slice(0, 5),
-          },
-          {
-            title: 'Customers',
-            icon: Building2,
-            href: '/customers',
-            items: customers.slice(0, 5),
-          },
-          {
-            title: 'Carriers',
-            icon: Truck,
-            href: '/carriers',
-            items: carriers.slice(0, 5),
-          },
-          {
-            title: 'Loads',
-            icon: Package,
-            href: '/loads',
-            items: loads.slice(0, 5),
-          },
-        ].filter((group) => group.items.length > 0));
+        setResults(
+          [
+            {
+              title: "Users",
+              icon: Users,
+              href: "/users",
+              items: users.slice(0, 5),
+            },
+            {
+              title: "Customers",
+              icon: Building2,
+              href: "/customers",
+              items: customers.slice(0, 5),
+            },
+            {
+              title: "Carriers",
+              icon: Truck,
+              href: "/carriers",
+              items: carriers.slice(0, 5),
+            },
+            {
+              title: "Loads",
+              icon: Package,
+              href: "/loads",
+              items: loads.slice(0, 5),
+            },
+          ].filter((group) => group.items.length > 0),
+        );
       } catch (error) {
         console.error(error);
         if (active) {
@@ -168,10 +189,15 @@ function SearchPage() {
     <div className="space-y-6">
       <PageHeader
         title="Search"
-        description={hasQuery ? `Results for “${q}”` : "Search across loads, customers, carriers, and users."}
+        description={
+          hasQuery ? `Results for “${q}”` : "Search across loads, customers, carriers, and users."
+        }
       />
 
-      <form onSubmit={submitSearch} className="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <form
+        onSubmit={submitSearch}
+        className="rounded-lg border border-border bg-card p-4 shadow-sm"
+      >
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -238,10 +264,17 @@ function SearchPage() {
                       "";
 
                     return (
-                      <li key={index} className="flex items-center justify-between rounded-md border border-border/70 px-3 py-2">
+                      <li
+                        key={index}
+                        className="flex items-center justify-between rounded-md border border-border/70 px-3 py-2"
+                      >
                         <div className="min-w-0">
                           <div className="truncate text-sm font-medium">{primary}</div>
-                          {secondary ? <div className="truncate text-xs text-muted-foreground">{secondary}</div> : null}
+                          {secondary ? (
+                            <div className="truncate text-xs text-muted-foreground">
+                              {secondary}
+                            </div>
+                          ) : null}
                         </div>
                         <ArrowRight className="ml-3 size-4 shrink-0 text-muted-foreground" />
                       </li>
