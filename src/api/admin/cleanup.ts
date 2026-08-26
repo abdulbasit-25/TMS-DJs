@@ -9,13 +9,13 @@ import { cleanupOldNotifications, cleanupOldSessionLogs } from "../../lib/notifi
  *  - Notifications read >24 hours ago
  *  - Notifications unread >2 weeks old
  *  - Login/session logs >2 months old
- * 
+ *
  * Requires admin or owner role for security.
  */
 export async function cleanupHandler(request: Request) {
   const user = await getSessionUserFromRequest(request);
   const sessionUser = requireAuth(user);
-  
+
   // Only admins/owners can trigger cleanup
   if (!["admin", "owner"].includes(sessionUser.role)) {
     throw Object.assign(new Error("Unauthorized: Admin access required"), { status: 403 });
