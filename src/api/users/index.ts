@@ -166,10 +166,18 @@ export async function usersHandler(request: Request) {
     ]);
 
     const teamMap = Object.fromEntries(
-      teams.map((team: { _id: { toString(): string }; name: string }) => [team._id.toString(), team.name]),
+      teams.map((team: { _id: { toString(): string }; name: string }) => [
+        team._id.toString(),
+        team.name,
+      ]),
     );
     const managerMap = Object.fromEntries(
-      teams.map((team: { _id: { toString(): string }; managerId?: { toString(): string } | null }) => [team._id.toString(), team.managerId?.toString() ?? ""]),
+      teams.map(
+        (team: { _id: { toString(): string }; managerId?: { toString(): string } | null }) => [
+          team._id.toString(),
+          team.managerId?.toString() ?? "",
+        ],
+      ),
     );
 
     return jsonResponse({
@@ -472,19 +480,26 @@ export async function usersHandler(request: Request) {
         );
         if (prevTeamId) {
           notifPromises.push(
-            notifyTeamManager(prevTeamId, {
-              title: "Team member suspended",
-              message: `${targetName} has been suspended.`,
-              notificationType: "user_suspended",
-              relatedModule: "team_management",
-              recordType: "User",
-              recordId: targetId,
-              actionUrl: userActionUrl,
-              priority: "high",
-            }, sender),
+            notifyTeamManager(
+              prevTeamId,
+              {
+                title: "Team member suspended",
+                message: `${targetName} has been suspended.`,
+                notificationType: "user_suspended",
+                relatedModule: "team_management",
+                recordType: "User",
+                recordId: targetId,
+                actionUrl: userActionUrl,
+                priority: "high",
+              },
+              sender,
+            ),
           );
         }
-      } else if (newStatus === "active" && (prevStatus === "suspended" || prevStatus === "pending" || prevStatus === "locked")) {
+      } else if (
+        newStatus === "active" &&
+        (prevStatus === "suspended" || prevStatus === "pending" || prevStatus === "locked")
+      ) {
         notifPromises.push(
           notifyUser(
             targetId,
@@ -503,16 +518,20 @@ export async function usersHandler(request: Request) {
         );
         if (newTeamId) {
           notifPromises.push(
-            notifyTeamManager(newTeamId, {
-              title: "Team member activated",
-              message: `${targetName} has been activated.`,
-              notificationType: "user_reactivated",
-              relatedModule: "team_management",
-              recordType: "User",
-              recordId: targetId,
-              actionUrl: userActionUrl,
-              priority: "low",
-            }, sender),
+            notifyTeamManager(
+              newTeamId,
+              {
+                title: "Team member activated",
+                message: `${targetName} has been activated.`,
+                notificationType: "user_reactivated",
+                relatedModule: "team_management",
+                recordType: "User",
+                recordId: targetId,
+                actionUrl: userActionUrl,
+                priority: "low",
+              },
+              sender,
+            ),
           );
         }
       } else if (newStatus === "locked") {
@@ -539,8 +558,10 @@ export async function usersHandler(request: Request) {
       const prevRoleIndex = ROLE_ORDER.indexOf(prevRole as (typeof ROLE_ORDER)[number]);
       const newRoleIndex = ROLE_ORDER.indexOf(newRole as (typeof ROLE_ORDER)[number]);
       const isPromotion = newRoleIndex < prevRoleIndex;
-      const prettyPrevRole = ROLE_LABELS[prevRole as keyof typeof ROLE_LABELS] ?? prevRole.replace(/_/g, " ");
-      const prettyNewRole = ROLE_LABELS[newRole as keyof typeof ROLE_LABELS] ?? newRole.replace(/_/g, " ");
+      const prettyPrevRole =
+        ROLE_LABELS[prevRole as keyof typeof ROLE_LABELS] ?? prevRole.replace(/_/g, " ");
+      const prettyNewRole =
+        ROLE_LABELS[newRole as keyof typeof ROLE_LABELS] ?? newRole.replace(/_/g, " ");
       const prettyTitle = isPromotion ? "User promoted" : "User demoted";
       const prettyMessage = `${targetName}'s role changed from ${prettyPrevRole} to ${prettyNewRole}.`;
 
@@ -581,30 +602,38 @@ export async function usersHandler(request: Request) {
     if (prevTeamId !== newTeamId) {
       if (prevTeamId) {
         notifPromises.push(
-          notifyTeamManager(prevTeamId, {
-            title: "Team member removed",
-            message: `${targetName} has been removed from your team.`,
-            notificationType: "team_member_removed",
-            relatedModule: "team_management",
-            recordType: "User",
-            recordId: targetId,
-            actionUrl: userActionUrl,
-            priority: "medium",
-          }, sender),
+          notifyTeamManager(
+            prevTeamId,
+            {
+              title: "Team member removed",
+              message: `${targetName} has been removed from your team.`,
+              notificationType: "team_member_removed",
+              relatedModule: "team_management",
+              recordType: "User",
+              recordId: targetId,
+              actionUrl: userActionUrl,
+              priority: "medium",
+            },
+            sender,
+          ),
         );
       }
       if (newTeamId) {
         notifPromises.push(
-          notifyTeamManager(newTeamId, {
-            title: "New team member assigned",
-            message: `${targetName} has been assigned to your team.`,
-            notificationType: "team_member_added",
-            relatedModule: "team_management",
-            recordType: "User",
-            recordId: targetId,
-            actionUrl: userActionUrl,
-            priority: "medium",
-          }, sender),
+          notifyTeamManager(
+            newTeamId,
+            {
+              title: "New team member assigned",
+              message: `${targetName} has been assigned to your team.`,
+              notificationType: "team_member_added",
+              relatedModule: "team_management",
+              recordType: "User",
+              recordId: targetId,
+              actionUrl: userActionUrl,
+              priority: "medium",
+            },
+            sender,
+          ),
           notifyUser(
             targetId,
             {
