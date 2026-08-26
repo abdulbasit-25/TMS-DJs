@@ -372,7 +372,9 @@ export async function loadsListHandler(request: Request) {
         actionType: "create",
         requestedBy: new mongoose.Types.ObjectId(user.id),
         requestedByName: user.name,
-        teamId: (user as any).teamId ? new mongoose.Types.ObjectId((user as any).teamId) : undefined,
+        teamId: (user as any).teamId
+          ? new mongoose.Types.ObjectId((user as any).teamId)
+          : undefined,
         newValues,
         auditHistory: [
           {
@@ -415,9 +417,15 @@ export async function loadsListHandler(request: Request) {
         User.find().select("_id name").lean().exec(),
       ])) as any[];
 
-      const userMap = Object.fromEntries((users as any[]).map((u: any) => [u._id.toString(), u.name]));
-      const customerMap = Object.fromEntries((customers as any[]).map((c: any) => [c._id.toString(), c]));
-      const carrierMap = Object.fromEntries((carriers as any[]).map((c: any) => [c._id.toString(), c]));
+      const userMap = Object.fromEntries(
+        (users as any[]).map((u: any) => [u._id.toString(), u.name]),
+      );
+      const customerMap = Object.fromEntries(
+        (customers as any[]).map((c: any) => [c._id.toString(), c]),
+      );
+      const carrierMap = Object.fromEntries(
+        (carriers as any[]).map((c: any) => [c._id.toString(), c]),
+      );
 
       return jsonResponse({
         load: mapPendingLoad(
@@ -433,7 +441,10 @@ export async function loadsListHandler(request: Request) {
           company: c.companyName,
           contact: c.contactName,
         })),
-        carriers: (carriers as any[]).map((c: any) => ({ id: c._id.toString(), legalName: c.legalName })),
+        carriers: (carriers as any[]).map((c: any) => ({
+          id: c._id.toString(),
+          legalName: c.legalName,
+        })),
       });
     }
 
@@ -525,8 +536,36 @@ export async function loadsListHandler(request: Request) {
 
     // Notify team manager and lead agents if user has a team
     if ((user as any).teamId) {
-      void notifyTeamManager((user as any).teamId, { title: "New load created", message: `${user.name} created load ${createdLoadRef}.`, notificationType: "load_created", relatedModule: "loads", recordType: "Load", recordId: createdLoadId, actionUrl: createActionUrl, priority: "low", metadata: { loadNumber: createdLoadRef } }, createSender);
-      void notifyLeadAgents((user as any).teamId, { title: "New load created", message: `${user.name} created load ${createdLoadRef}.`, notificationType: "load_created", relatedModule: "loads", recordType: "Load", recordId: createdLoadId, actionUrl: createActionUrl, priority: "low", metadata: { loadNumber: createdLoadRef } }, createSender);
+      void notifyTeamManager(
+        (user as any).teamId,
+        {
+          title: "New load created",
+          message: `${user.name} created load ${createdLoadRef}.`,
+          notificationType: "load_created",
+          relatedModule: "loads",
+          recordType: "Load",
+          recordId: createdLoadId,
+          actionUrl: createActionUrl,
+          priority: "low",
+          metadata: { loadNumber: createdLoadRef },
+        },
+        createSender,
+      );
+      void notifyLeadAgents(
+        (user as any).teamId,
+        {
+          title: "New load created",
+          message: `${user.name} created load ${createdLoadRef}.`,
+          notificationType: "load_created",
+          relatedModule: "loads",
+          recordType: "Load",
+          recordId: createdLoadId,
+          actionUrl: createActionUrl,
+          priority: "low",
+          metadata: { loadNumber: createdLoadRef },
+        },
+        createSender,
+      );
     }
 
     const [customers, carriers, users] = await Promise.all([
@@ -538,19 +577,27 @@ export async function loadsListHandler(request: Request) {
       User.find().select("_id name").lean().exec(),
     ]);
 
-
-    const userMap = Object.fromEntries((users as any[]).map((u: any) => [u._id.toString(), u.name]));
-    const customerMap = Object.fromEntries((customers as any[]).map((c: any) => [c._id.toString(), c]));
-    const carrierMap = Object.fromEntries((carriers as any[]).map((c: any) => [c._id.toString(), c]));
+    const userMap = Object.fromEntries(
+      (users as any[]).map((u: any) => [u._id.toString(), u.name]),
+    );
+    const customerMap = Object.fromEntries(
+      (customers as any[]).map((c: any) => [c._id.toString(), c]),
+    );
+    const carrierMap = Object.fromEntries(
+      (carriers as any[]).map((c: any) => [c._id.toString(), c]),
+    );
 
     return jsonResponse({
       load: mapLoad(created, userMap, customerMap, carrierMap),
       customers: customers.map((c) => ({
         id: c._id.toString(),
-          company: c.companyName,
-          contact: c.contactName,
-        })),
-        carriers: (carriers as any[]).map((c: any) => ({ id: c._id.toString(), legalName: c.legalName })),
+        company: c.companyName,
+        contact: c.contactName,
+      })),
+      carriers: (carriers as any[]).map((c: any) => ({
+        id: c._id.toString(),
+        legalName: c.legalName,
+      })),
     });
   }
 
@@ -761,11 +808,16 @@ export async function loadsListHandler(request: Request) {
           newValues.carrierId = carrierId;
         }
         if (body.loadNumber !== undefined) newValues.loadNumber = body.loadNumber;
-        if (body.customerReference !== undefined) newValues.customerReference = body.customerReference;
+        if (body.customerReference !== undefined)
+          newValues.customerReference = body.customerReference;
         if (body.status !== undefined && body.status !== newValues.status) {
           newValues.status = body.status;
           newValues.statusHistory = [
-            { status: body.status, changedBy: new mongoose.Types.ObjectId(user.id), changedAt: new Date() },
+            {
+              status: body.status,
+              changedBy: new mongoose.Types.ObjectId(user.id),
+              changedAt: new Date(),
+            },
             ...(newValues.statusHistory || []),
           ];
         }
@@ -776,7 +828,8 @@ export async function loadsListHandler(request: Request) {
         if (body.pickupCity !== undefined) newValues.pickupCity = body.pickupCity;
         if (body.pickupState !== undefined) newValues.pickupState = body.pickupState;
         if (body.pickupZip !== undefined) newValues.pickupZip = body.pickupZip;
-        if (body.pickupDate !== undefined) newValues.pickupDate = body.pickupDate ? new Date(body.pickupDate) : undefined;
+        if (body.pickupDate !== undefined)
+          newValues.pickupDate = body.pickupDate ? new Date(body.pickupDate) : undefined;
         if (body.pickupTime !== undefined) newValues.pickupTime = body.pickupTime;
         if (body.deliveryCompany !== undefined) newValues.deliveryCompany = body.deliveryCompany;
         if (body.deliveryContact !== undefined) newValues.deliveryContact = body.deliveryContact;
@@ -785,7 +838,8 @@ export async function loadsListHandler(request: Request) {
         if (body.deliveryCity !== undefined) newValues.deliveryCity = body.deliveryCity;
         if (body.deliveryState !== undefined) newValues.deliveryState = body.deliveryState;
         if (body.deliveryZip !== undefined) newValues.deliveryZip = body.deliveryZip;
-        if (body.deliveryDate !== undefined) newValues.deliveryDate = body.deliveryDate ? new Date(body.deliveryDate) : undefined;
+        if (body.deliveryDate !== undefined)
+          newValues.deliveryDate = body.deliveryDate ? new Date(body.deliveryDate) : undefined;
         if (body.deliveryTime !== undefined) newValues.deliveryTime = body.deliveryTime;
         if (body.commodity !== undefined) newValues.commodity = body.commodity;
         if (body.weight !== undefined) newValues.weight = body.weight;
@@ -799,8 +853,13 @@ export async function loadsListHandler(request: Request) {
         if (body.stackable !== undefined) newValues.stackable = body.stackable;
         if (body.customerRate !== undefined) newValues.customerRate = Number(body.customerRate);
         if (body.carrierCost !== undefined) newValues.carrierCost = Number(body.carrierCost);
-        if (body.accessorialCharges !== undefined) newValues.accessorialCharges = Number(body.accessorialCharges);
-        const fin = calculateFinancials(newValues.customerRate, newValues.carrierCost, newValues.accessorialCharges);
+        if (body.accessorialCharges !== undefined)
+          newValues.accessorialCharges = Number(body.accessorialCharges);
+        const fin = calculateFinancials(
+          newValues.customerRate,
+          newValues.carrierCost,
+          newValues.accessorialCharges,
+        );
         newValues.revenue = fin.revenue;
         newValues.grossMargin = fin.grossMargin;
         newValues.marginPercent = fin.marginPercent;
@@ -810,12 +869,14 @@ export async function loadsListHandler(request: Request) {
         if (body.deadheadMiles !== undefined) newValues.deadheadMiles = body.deadheadMiles;
         if (body.documents !== undefined) {
           newValues.documents = body.documents.map((d: any) => ({
-            kind: d.kind, uploaded: d.uploaded,
+            kind: d.kind,
+            uploaded: d.uploaded,
             uploadedAt: d.uploadedAt ? new Date(d.uploadedAt) : undefined,
           }));
         }
         if (body.internalNotes !== undefined) newValues.internalNotes = body.internalNotes;
-        if (body.driverInstructions !== undefined) newValues.driverInstructions = body.driverInstructions;
+        if (body.driverInstructions !== undefined)
+          newValues.driverInstructions = body.driverInstructions;
         if (body.customerNotes !== undefined) newValues.customerNotes = body.customerNotes;
 
         existingApproval.newValues = newValues;
@@ -829,7 +890,12 @@ export async function loadsListHandler(request: Request) {
         await existingApproval.save();
 
         const [resCust, resCarr, resUsers] = await Promise.all([
-          Customer.find().select("_id companyName contactName contactPhone contactEmail creditLimit creditStatus").lean().exec(),
+          Customer.find()
+            .select(
+              "_id companyName contactName contactPhone contactEmail creditLimit creditStatus",
+            )
+            .lean()
+            .exec(),
           Carrier.find().lean().exec(),
           User.find().select("_id name").lean().exec(),
         ]);
@@ -838,7 +904,11 @@ export async function loadsListHandler(request: Request) {
         const rCarrMap = Object.fromEntries(resCarr.map((c) => [c._id.toString(), c]));
         return jsonResponse({
           load: mapPendingLoad(existingApproval, loadId, user, rUserMap, rCustMap, rCarrMap),
-          customers: resCust.map((c) => ({ id: c._id.toString(), company: c.companyName, contact: c.contactName })),
+          customers: resCust.map((c) => ({
+            id: c._id.toString(),
+            company: c.companyName,
+            contact: c.contactName,
+          })),
           carriers: resCarr.map((c) => ({ id: c._id.toString(), legalName: c.legalName })),
         });
       }
@@ -968,14 +1038,14 @@ export async function loadsListHandler(request: Request) {
         ],
       });
 
-        const [customers, carriers, users] = (await Promise.all([
+      const [customers, carriers, users] = (await Promise.all([
         Customer.find()
           .select("_id companyName contactName contactPhone contactEmail creditLimit creditStatus")
           .lean()
           .exec(),
         Carrier.find().lean().exec(),
         User.find().select("_id name").lean().exec(),
-        ])) as any[];
+      ])) as any[];
 
       const userMap = Object.fromEntries(users.map((u) => [u._id.toString(), u.name]));
       const customerMap = Object.fromEntries(customers.map((c) => [c._id.toString(), c]));
@@ -1099,43 +1169,121 @@ export async function loadsListHandler(request: Request) {
     // Emit load status change notifications
     const newStatus = load.status;
     if (newStatus !== prevLoadStatus && newStatus) {
-      const statusSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: (user as any).teamId };
+      const statusSender: SenderContext = {
+        userId: user.id,
+        name: user.name,
+        role: user.role,
+        teamId: (user as any).teamId,
+      };
       const statusLoadId = load._id.toString();
       const statusActionUrl = `/loads?focus=${statusLoadId}`;
       const statusMsg = `Load ${load.loadNumber || statusLoadId} status changed to "${newStatus}" by ${user.name}.`;
 
       // Notify the assigned agent
       if (load.agentId && load.agentId.toString() !== user.id) {
-        void notifyUser(load.agentId.toString(), { title: "Load status updated", message: statusMsg, notificationType: "load_status_updated", relatedModule: "loads", recordType: "Load", recordId: statusLoadId, actionUrl: statusActionUrl, priority: "medium", metadata: { status: newStatus, prevStatus: prevLoadStatus } }, statusSender);
+        void notifyUser(
+          load.agentId.toString(),
+          {
+            title: "Load status updated",
+            message: statusMsg,
+            notificationType: "load_status_updated",
+            relatedModule: "loads",
+            recordType: "Load",
+            recordId: statusLoadId,
+            actionUrl: statusActionUrl,
+            priority: "medium",
+            metadata: { status: newStatus, prevStatus: prevLoadStatus },
+          },
+          statusSender,
+        );
       }
 
       // Notify admins
-      void notifyAdmins({ title: "Load status updated", message: statusMsg, notificationType: "load_status_updated", relatedModule: "loads", recordType: "Load", recordId: statusLoadId, actionUrl: statusActionUrl, priority: "low", metadata: { status: newStatus } }, statusSender);
+      void notifyAdmins(
+        {
+          title: "Load status updated",
+          message: statusMsg,
+          notificationType: "load_status_updated",
+          relatedModule: "loads",
+          recordType: "Load",
+          recordId: statusLoadId,
+          actionUrl: statusActionUrl,
+          priority: "low",
+          metadata: { status: newStatus },
+        },
+        statusSender,
+      );
 
       // On delivered, notify accounting
       if (newStatus === "delivered") {
-        void notifyAccounting({ title: "Load delivered", message: `Load ${load.loadNumber || statusLoadId} has been delivered and is ready for invoicing.`, notificationType: "load_completed", relatedModule: "loads", recordType: "Load", recordId: statusLoadId, actionUrl: statusActionUrl, priority: "medium", metadata: { status: newStatus } }, statusSender);
+        void notifyAccounting(
+          {
+            title: "Load delivered",
+            message: `Load ${load.loadNumber || statusLoadId} has been delivered and is ready for invoicing.`,
+            notificationType: "load_completed",
+            relatedModule: "loads",
+            recordType: "Load",
+            recordId: statusLoadId,
+            actionUrl: statusActionUrl,
+            priority: "medium",
+            metadata: { status: newStatus },
+          },
+          statusSender,
+        );
       }
     }
 
     // Emit agent reassignment notifications
     const newAgentId = load.agentId?.toString();
     if (prevAgentId && newAgentId && newAgentId !== prevAgentId) {
-      const reassignSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: (user as any).teamId };
+      const reassignSender: SenderContext = {
+        userId: user.id,
+        name: user.name,
+        role: user.role,
+        teamId: (user as any).teamId,
+      };
       const reassignLoadId = load._id.toString();
       const reassignUrl = `/loads?focus=${reassignLoadId}`;
-      void notifyUser(newAgentId, { title: "Load assigned to you", message: `Load ${load.loadNumber || reassignLoadId} has been assigned to you.`, notificationType: "load_assigned", relatedModule: "loads", recordType: "Load", recordId: reassignLoadId, actionUrl: reassignUrl, priority: "high", metadata: {} }, reassignSender);
-      void notifyUser(prevAgentId, { title: "Load unassigned", message: `Load ${load.loadNumber || reassignLoadId} has been reassigned away from you.`, notificationType: "load_unassigned", relatedModule: "loads", recordType: "Load", recordId: reassignLoadId, actionUrl: reassignUrl, priority: "medium", metadata: {} }, reassignSender);
+      void notifyUser(
+        newAgentId,
+        {
+          title: "Load assigned to you",
+          message: `Load ${load.loadNumber || reassignLoadId} has been assigned to you.`,
+          notificationType: "load_assigned",
+          relatedModule: "loads",
+          recordType: "Load",
+          recordId: reassignLoadId,
+          actionUrl: reassignUrl,
+          priority: "high",
+          metadata: {},
+        },
+        reassignSender,
+      );
+      void notifyUser(
+        prevAgentId,
+        {
+          title: "Load unassigned",
+          message: `Load ${load.loadNumber || reassignLoadId} has been reassigned away from you.`,
+          notificationType: "load_unassigned",
+          relatedModule: "loads",
+          recordType: "Load",
+          recordId: reassignLoadId,
+          actionUrl: reassignUrl,
+          priority: "medium",
+          metadata: {},
+        },
+        reassignSender,
+      );
     }
 
-      const [customers, carriers, users] = (await Promise.all([
+    const [customers, carriers, users] = (await Promise.all([
       Customer.find()
         .select("_id companyName contactName contactPhone contactEmail creditLimit creditStatus")
         .lean()
         .exec(),
       Carrier.find().lean().exec(),
       User.find().select("_id name").lean().exec(),
-      ])) as any[];
+    ])) as any[];
 
     const userMap = Object.fromEntries(users.map((u) => [u._id.toString(), u.name]));
     const customerMap = Object.fromEntries(customers.map((c) => [c._id.toString(), c]));
@@ -1177,7 +1325,9 @@ export async function loadsListHandler(request: Request) {
       // May be a pending-only load backed only by an ApprovalRequest (create action)
       const pendingApproval = await ApprovalRequest.findOne({
         module: "loads",
-        recordId: mongoose.isValidObjectId(loadId) ? new mongoose.Types.ObjectId(loadId) : undefined,
+        recordId: mongoose.isValidObjectId(loadId)
+          ? new mongoose.Types.ObjectId(loadId)
+          : undefined,
         status: { $in: ["pending", "changes_requested", "rejected"] },
       }).exec();
 
@@ -1196,7 +1346,9 @@ export async function loadsListHandler(request: Request) {
 
       // Also check if this loadId is an ApprovalRequest._id itself (edit-type approvals)
       if (mongoose.isValidObjectId(loadId)) {
-        const approvalById = await ApprovalRequest.findById(new mongoose.Types.ObjectId(loadId)).exec();
+        const approvalById = await ApprovalRequest.findById(
+          new mongoose.Types.ObjectId(loadId),
+        ).exec();
         if (approvalById && approvalById.module === "loads") {
           await approvalById.deleteOne();
           return jsonResponse({ success: true, deletedId: loadId });
@@ -1253,7 +1405,10 @@ export async function loadsListHandler(request: Request) {
         approvalScope.teamId = new mongoose.Types.ObjectId((user as any).teamId);
       }
     }
-    approvalRequests = await ApprovalRequest.find(approvalScope).sort({ createdAt: -1 }).lean().exec();
+    approvalRequests = await ApprovalRequest.find(approvalScope)
+      .sort({ createdAt: -1 })
+      .lean()
+      .exec();
   } catch (err) {
     console.error("Error fetching load approval requests:", err);
   }
