@@ -113,7 +113,14 @@ function CarriersPage() {
   const { session } = useAuth();
   const role = session?.role ?? "agent";
   const canApprove = can(role, "approval_actions");
-  const canManage = ["owner", "admin", "ops_manager", "team_manager", "leadagent", "agent"].includes(role);
+  const canManage = [
+    "owner",
+    "admin",
+    "ops_manager",
+    "team_manager",
+    "leadagent",
+    "agent",
+  ].includes(role);
   const canDelete = ["owner", "admin", "ops_manager", "team_manager"].includes(role);
 
   const [items, setItems] = useState<CarrierItem[]>([]);

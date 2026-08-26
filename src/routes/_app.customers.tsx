@@ -535,14 +535,20 @@ function CustomersPage() {
               <div>
                 <span className="font-medium">{c.company}</span>
                 {c.pendingApproval && (
-                  <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                    c.approvalStatus === "pending" ? "bg-yellow-100 text-yellow-800" :
-                    c.approvalStatus === "changes_requested" ? "bg-orange-100 text-orange-800" :
-                    "bg-red-100 text-red-800"
-                  }`}>
-                    {c.approvalStatus === "changes_requested" ? "Changes Requested" :
-                     c.approvalStatus === "rejected" ? "Rejected" :
-                     "Pending Approval"}
+                  <span
+                    className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                      c.approvalStatus === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : c.approvalStatus === "changes_requested"
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {c.approvalStatus === "changes_requested"
+                      ? "Changes Requested"
+                      : c.approvalStatus === "rejected"
+                        ? "Rejected"
+                        : "Pending Approval"}
                   </span>
                 )}
               </div>

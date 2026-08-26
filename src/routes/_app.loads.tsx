@@ -323,7 +323,15 @@ function ApprovalStatusBadge({ status }: { status?: string }) {
 /* edit form inside the detail sheet, so the ~40 fields only exist once.    */
 /* ------------------------------------------------------------------------ */
 
-function SectionCard({ title, eyebrow, children }: { title: string; eyebrow: string; children: ReactNode }) {
+function SectionCard({
+  title,
+  eyebrow,
+  children,
+}: {
+  title: string;
+  eyebrow: string;
+  children: ReactNode;
+}) {
   return (
     <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
@@ -355,7 +363,11 @@ function BasicInfoFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-customerId`}>Customer *</Label>
-          <Select value={values.customerId} onValueChange={(v) => onChange("customerId", v)} required>
+          <Select
+            value={values.customerId}
+            onValueChange={(v) => onChange("customerId", v)}
+            required
+          >
             <SelectTrigger id={`${idPrefix}-customerId`}>
               <SelectValue placeholder="Select a customer" />
             </SelectTrigger>
@@ -435,7 +447,10 @@ function AddressFields({
 }) {
   const f = (name: string) => `${kind}${name}` as keyof LoadFormBase;
   return (
-    <SectionCard title={kind === "pickup" ? "Pickup details" : "Delivery details"} eyebrow={kind === "pickup" ? "Pickup" : "Delivery"}>
+    <SectionCard
+      title={kind === "pickup" ? "Pickup details" : "Delivery details"}
+      eyebrow={kind === "pickup" ? "Pickup" : "Delivery"}
+    >
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5 sm:col-span-3">
           <Label htmlFor={`${idPrefix}-${kind}Company`}>Company</Label>
@@ -516,25 +531,55 @@ function AddressFields({
   );
 }
 
-function FreightFields({ idPrefix, values, onChange }: { idPrefix: string; values: LoadFormBase; onChange: FieldChange }) {
+function FreightFields({
+  idPrefix,
+  values,
+  onChange,
+}: {
+  idPrefix: string;
+  values: LoadFormBase;
+  onChange: FieldChange;
+}) {
   return (
     <SectionCard title="Freight details" eyebrow="Freight">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5 sm:col-span-3">
           <Label htmlFor={`${idPrefix}-commodity`}>Commodity</Label>
-          <Input id={`${idPrefix}-commodity`} value={values.commodity} onChange={(e) => onChange("commodity", e.target.value)} />
+          <Input
+            id={`${idPrefix}-commodity`}
+            value={values.commodity}
+            onChange={(e) => onChange("commodity", e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-weight`}>Weight</Label>
-          <Input id={`${idPrefix}-weight`} type="number" min="0" value={values.weight} onChange={(e) => onChange("weight", e.target.value)} />
+          <Input
+            id={`${idPrefix}-weight`}
+            type="number"
+            min="0"
+            value={values.weight}
+            onChange={(e) => onChange("weight", e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-pieces`}>Pieces</Label>
-          <Input id={`${idPrefix}-pieces`} type="number" min="0" value={values.pieces} onChange={(e) => onChange("pieces", e.target.value)} />
+          <Input
+            id={`${idPrefix}-pieces`}
+            type="number"
+            min="0"
+            value={values.pieces}
+            onChange={(e) => onChange("pieces", e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-pallets`}>Pallets</Label>
-          <Input id={`${idPrefix}-pallets`} type="number" min="0" value={values.pallets} onChange={(e) => onChange("pallets", e.target.value)} />
+          <Input
+            id={`${idPrefix}-pallets`}
+            type="number"
+            min="0"
+            value={values.pallets}
+            onChange={(e) => onChange("pallets", e.target.value)}
+          />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-equipmentType`}>Equipment Type</Label>
@@ -556,7 +601,10 @@ function FreightFields({ idPrefix, values, onChange }: { idPrefix: string; value
         </div>
         <div className="space-y-1.5">
           <Label htmlFor={`${idPrefix}-loadType`}>Load Type</Label>
-          <Select value={values.loadType} onValueChange={(v) => onChange("loadType", v as LoadType)}>
+          <Select
+            value={values.loadType}
+            onValueChange={(v) => onChange("loadType", v as LoadType)}
+          >
             <SelectTrigger id={`${idPrefix}-loadType`}>
               <SelectValue placeholder="Select type" />
             </SelectTrigger>
@@ -694,7 +742,15 @@ function PricingFields({
   );
 }
 
-function NotesFields({ idPrefix, values, onChange }: { idPrefix: string; values: LoadFormBase; onChange: FieldChange }) {
+function NotesFields({
+  idPrefix,
+  values,
+  onChange,
+}: {
+  idPrefix: string;
+  values: LoadFormBase;
+  onChange: FieldChange;
+}) {
   return (
     <SectionCard title="Notes & instructions" eyebrow="Communication">
       <div className="grid gap-4">
@@ -730,7 +786,9 @@ function NotesFields({ idPrefix, values, onChange }: { idPrefix: string; values:
 function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div>
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
       <div className={`mt-0.5 text-sm ${mono ? "font-mono text-xs" : ""}`}>{value || "—"}</div>
     </div>
   );
@@ -766,8 +824,10 @@ function LoadsPage() {
     documents: [] as DocumentItem[],
   });
 
-  const setCreateField: FieldChange = (field, value) => setCreateForm((p) => ({ ...p, [field]: value }));
-  const setEditField: FieldChange = (field, value) => setEditForm((p) => ({ ...p, [field]: value }));
+  const setCreateField: FieldChange = (field, value) =>
+    setCreateForm((p) => ({ ...p, [field]: value }));
+  const setEditField: FieldChange = (field, value) =>
+    setEditForm((p) => ({ ...p, [field]: value }));
 
   useEffect(() => {
     let active = true;
@@ -869,7 +929,9 @@ function LoadsPage() {
           temperature: createForm.temperature ? Number(createForm.temperature) : undefined,
           customerRate: createForm.customerRate ? Number(createForm.customerRate) : 0,
           carrierCost: createForm.carrierCost ? Number(createForm.carrierCost) : 0,
-          accessorialCharges: createForm.accessorialCharges ? Number(createForm.accessorialCharges) : 0,
+          accessorialCharges: createForm.accessorialCharges
+            ? Number(createForm.accessorialCharges)
+            : 0,
           loadedMiles: createForm.loadedMiles ? Number(createForm.loadedMiles) : undefined,
           deadheadMiles: createForm.deadheadMiles ? Number(createForm.deadheadMiles) : undefined,
         }),
@@ -949,7 +1011,7 @@ function LoadsPage() {
             uploaded: !uploaded,
             uploadedAt: !uploaded ? new Date().toISOString() : undefined,
           }
-        : d
+        : d,
     );
     setEditForm((prev) => ({ ...prev, documents: newDocs }));
   }
@@ -964,7 +1026,10 @@ function LoadsPage() {
         { label: "Carrier", getValue: (load) => load.carrierName },
         { label: "Status", getValue: (load) => load.status },
         { label: "Pickup", getValue: (load) => (load.pickupDate ? fmtDate(load.pickupDate) : "") },
-        { label: "Delivery", getValue: (load) => (load.deliveryDate ? fmtDate(load.deliveryDate) : "") },
+        {
+          label: "Delivery",
+          getValue: (load) => (load.deliveryDate ? fmtDate(load.deliveryDate) : ""),
+        },
         { label: "Revenue", getValue: (load) => load.customerRate ?? 0 },
       ],
       formatExportFilename("loads", format),
@@ -1041,10 +1106,18 @@ function LoadsPage() {
           {filtered.length} {filtered.length === 1 ? "load" : "loads"}
         </span>
         <div className="ml-auto inline-flex rounded-md border border-border bg-card p-0.5">
-          <Button size="sm" variant={view === "table" ? "secondary" : "ghost"} onClick={() => setView("table")}>
+          <Button
+            size="sm"
+            variant={view === "table" ? "secondary" : "ghost"}
+            onClick={() => setView("table")}
+          >
             <List className="size-4" /> Table
           </Button>
-          <Button size="sm" variant={view === "board" ? "secondary" : "ghost"} onClick={() => setView("board")}>
+          <Button
+            size="sm"
+            variant={view === "board" ? "secondary" : "ghost"}
+            onClick={() => setView("board")}
+          >
             <LayoutGrid className="size-4" /> Board
           </Button>
         </div>
@@ -1074,11 +1147,19 @@ function LoadsPage() {
               { head: "Status", cell: (l) => <StatusBadge value={l.status} /> },
               {
                 head: "Pickup",
-                cell: (l) => <span className="text-xs text-muted-foreground">{l.pickupDate ? fmtDate(l.pickupDate) : "—"}</span>,
+                cell: (l) => (
+                  <span className="text-xs text-muted-foreground">
+                    {l.pickupDate ? fmtDate(l.pickupDate) : "—"}
+                  </span>
+                ),
               },
               {
                 head: "Delivery",
-                cell: (l) => <span className="text-xs text-muted-foreground">{l.deliveryDate ? fmtDate(l.deliveryDate) : "—"}</span>,
+                cell: (l) => (
+                  <span className="text-xs text-muted-foreground">
+                    {l.deliveryDate ? fmtDate(l.deliveryDate) : "—"}
+                  </span>
+                ),
               },
               {
                 head: "Revenue",
@@ -1086,7 +1167,9 @@ function LoadsPage() {
               },
               {
                 head: "Gross Margin",
-                cell: (l) => <span className="font-mono text-sm text-success">{usd(l.grossMargin)}</span>,
+                cell: (l) => (
+                  <span className="font-mono text-sm text-success">{usd(l.grossMargin)}</span>
+                ),
               },
             ]}
           />
@@ -1098,7 +1181,9 @@ function LoadsPage() {
             return (
               <div key={s} className="w-72 shrink-0 rounded-lg border border-border bg-card/40">
                 <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{s.replace("_", " ")}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wider">
+                    {s.replace("_", " ")}
+                  </span>
                   <span className="text-xs text-muted-foreground">{columnItems.length}</span>
                 </div>
                 <div className="space-y-2 p-2">
@@ -1108,7 +1193,9 @@ function LoadsPage() {
                       onClick={() => setOpenId(l.id)}
                       className="w-full rounded-md border border-border bg-background p-2.5 text-left transition-colors hover:bg-accent/50"
                     >
-                      <div className="font-mono text-[10px] text-muted-foreground">{l.loadNumber || l.ref}</div>
+                      <div className="font-mono text-[10px] text-muted-foreground">
+                        {l.loadNumber || l.ref}
+                      </div>
                       <div className="text-sm font-medium">{l.customerName}</div>
                       {l.pendingApproval && (
                         <div className="mt-1">
@@ -1116,10 +1203,14 @@ function LoadsPage() {
                         </div>
                       )}
                       <div className="text-xs text-muted-foreground">{l.carrierName}</div>
-                      <div className="mt-1 font-mono text-xs text-success">{usd(l.grossMargin)}</div>
+                      <div className="mt-1 font-mono text-xs text-success">
+                        {usd(l.grossMargin)}
+                      </div>
                     </button>
                   ))}
-                  {columnItems.length === 0 && <div className="px-2 py-3 text-xs text-muted-foreground">—</div>}
+                  {columnItems.length === 0 && (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">—</div>
+                  )}
                 </div>
               </div>
             );
@@ -1135,7 +1226,11 @@ function LoadsPage() {
               <Truck className="size-5 text-muted-foreground" /> Create Load
             </SheetTitle>
           </SheetHeader>
-          <form id="create-load-form" className="flex-1 overflow-y-auto px-6 py-5" onSubmit={createLoad}>
+          <form
+            id="create-load-form"
+            className="flex-1 overflow-y-auto px-6 py-5"
+            onSubmit={createLoad}
+          >
             <Tabs defaultValue="basic">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic</TabsTrigger>
@@ -1153,12 +1248,27 @@ function LoadsPage() {
                 />
               </TabsContent>
               <TabsContent value="route" className="space-y-4 pt-4">
-                <AddressFields idPrefix="create" kind="pickup" values={createForm} onChange={setCreateField} />
-                <AddressFields idPrefix="create" kind="delivery" values={createForm} onChange={setCreateField} />
+                <AddressFields
+                  idPrefix="create"
+                  kind="pickup"
+                  values={createForm}
+                  onChange={setCreateField}
+                />
+                <AddressFields
+                  idPrefix="create"
+                  kind="delivery"
+                  values={createForm}
+                  onChange={setCreateField}
+                />
               </TabsContent>
               <TabsContent value="freight" className="space-y-4 pt-4">
                 <FreightFields idPrefix="create" values={createForm} onChange={setCreateField} />
-                <PricingFields idPrefix="create" values={createForm} onChange={setCreateField} financials={createFinancials} />
+                <PricingFields
+                  idPrefix="create"
+                  values={createForm}
+                  onChange={setCreateField}
+                  financials={createFinancials}
+                />
               </TabsContent>
               <TabsContent value="notes" className="space-y-4 pt-4">
                 <NotesFields idPrefix="create" values={createForm} onChange={setCreateField} />
@@ -1205,7 +1315,11 @@ function LoadsPage() {
                     {canBook && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                          >
                             <Trash2 className="size-4" /> Delete
                           </Button>
                         </AlertDialogTrigger>
@@ -1213,7 +1327,8 @@ function LoadsPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Load?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently remove this load from the system and cannot be undone.
+                              This will permanently remove this load from the system and cannot be
+                              undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -1234,19 +1349,31 @@ function LoadsPage() {
                 {/* Quick-glance summary strip — key numbers visible without opening a tab */}
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Status</div>
-                    <div className="mt-0.5"><StatusBadge value={open.status} /></div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Status
+                    </div>
+                    <div className="mt-0.5">
+                      <StatusBadge value={open.status} />
+                    </div>
                   </div>
                   <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Revenue</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Revenue
+                    </div>
                     <div className="mt-0.5 font-mono text-sm">{usd(open.revenue)}</div>
                   </div>
                   <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Gross Margin</div>
-                    <div className="mt-0.5 font-mono text-sm text-success">{usd(open.grossMargin)}</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Gross Margin
+                    </div>
+                    <div className="mt-0.5 font-mono text-sm text-success">
+                      {usd(open.grossMargin)}
+                    </div>
                   </div>
                   <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margin %</div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Margin %
+                    </div>
                     <div className="mt-0.5 font-mono text-sm">{open.marginPercent.toFixed(1)}%</div>
                   </div>
                 </div>
@@ -1257,9 +1384,12 @@ function LoadsPage() {
                   <form id="edit-load-form" className="space-y-4" onSubmit={saveLoad}>
                     {open.pendingApproval && (
                       <div className="rounded-lg border border-info/30 bg-info/10 p-3 text-sm text-foreground">
-                        <div className="font-medium">This load is currently tied to an approval request.</div>
+                        <div className="font-medium">
+                          This load is currently tied to an approval request.
+                        </div>
                         <div className="mt-1 text-xs text-muted-foreground">
-                          Saving will update the existing request so the approver can review the latest changes.
+                          Saving will update the existing request so the approver can review the
+                          latest changes.
                         </div>
                       </div>
                     )}
@@ -1286,7 +1416,12 @@ function LoadsPage() {
                                 <Label htmlFor="edit-invoiceStatus">Invoice Status</Label>
                                 <Select
                                   value={editForm.invoiceStatus}
-                                  onValueChange={(v) => setEditForm((p) => ({ ...p, invoiceStatus: v as InvoiceStatus }))}
+                                  onValueChange={(v) =>
+                                    setEditForm((p) => ({
+                                      ...p,
+                                      invoiceStatus: v as InvoiceStatus,
+                                    }))
+                                  }
                                 >
                                   <SelectTrigger id="edit-invoiceStatus">
                                     <SelectValue />
@@ -1303,7 +1438,12 @@ function LoadsPage() {
                                 <Label htmlFor="edit-paymentStatus">Payment Status</Label>
                                 <Select
                                   value={editForm.paymentStatus}
-                                  onValueChange={(v) => setEditForm((p) => ({ ...p, paymentStatus: v as PaymentStatus }))}
+                                  onValueChange={(v) =>
+                                    setEditForm((p) => ({
+                                      ...p,
+                                      paymentStatus: v as PaymentStatus,
+                                    }))
+                                  }
                                 >
                                   <SelectTrigger id="edit-paymentStatus">
                                     <SelectValue />
@@ -1321,13 +1461,28 @@ function LoadsPage() {
                       </TabsContent>
 
                       <TabsContent value="route" className="space-y-4 pt-4">
-                        <AddressFields idPrefix="edit" kind="pickup" values={editForm} onChange={setEditField} />
-                        <AddressFields idPrefix="edit" kind="delivery" values={editForm} onChange={setEditField} />
+                        <AddressFields
+                          idPrefix="edit"
+                          kind="pickup"
+                          values={editForm}
+                          onChange={setEditField}
+                        />
+                        <AddressFields
+                          idPrefix="edit"
+                          kind="delivery"
+                          values={editForm}
+                          onChange={setEditField}
+                        />
                       </TabsContent>
 
                       <TabsContent value="freight" className="space-y-4 pt-4">
                         <FreightFields idPrefix="edit" values={editForm} onChange={setEditField} />
-                        <PricingFields idPrefix="edit" values={editForm} onChange={setEditField} financials={editFinancials} />
+                        <PricingFields
+                          idPrefix="edit"
+                          values={editForm}
+                          onChange={setEditField}
+                          financials={editFinancials}
+                        />
                       </TabsContent>
 
                       <TabsContent value="documents" className="space-y-4 pt-4">
@@ -1358,7 +1513,9 @@ function LoadsPage() {
                               </div>
                             ))}
                             {(editForm.documents || []).length === 0 && (
-                              <p className="text-sm text-muted-foreground sm:col-span-2">No documents tracked for this load.</p>
+                              <p className="text-sm text-muted-foreground sm:col-span-2">
+                                No documents tracked for this load.
+                              </p>
                             )}
                           </div>
                         </SectionCard>
@@ -1419,13 +1576,21 @@ function LoadsPage() {
                         <Field label="Status" value={<StatusBadge value={open.status} />} />
                         <Field label="Customer Reference" value={open.customerReference} />
                         <Field label="Load Number" value={open.loadNumber} mono />
-                        <Field label="Invoice Status" value={<StatusBadge value={open.invoiceStatus} />} />
-                        <Field label="Payment Status" value={<StatusBadge value={open.paymentStatus} />} />
+                        <Field
+                          label="Invoice Status"
+                          value={<StatusBadge value={open.invoiceStatus} />}
+                        />
+                        <Field
+                          label="Payment Status"
+                          value={<StatusBadge value={open.paymentStatus} />}
+                        />
                       </div>
 
                       {open.customer && (
                         <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer Info</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Customer Info
+                          </h4>
                           <div className="grid gap-4 sm:grid-cols-2">
                             <Field label="Company" value={open.customer.company} />
                             <Field label="Contact" value={open.customer.contact} />
@@ -1437,7 +1602,9 @@ function LoadsPage() {
 
                       {open.carrier && (
                         <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Carrier Info</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Carrier Info
+                          </h4>
                           <div className="grid gap-4 sm:grid-cols-2">
                             <Field label="Legal Name" value={open.carrier.legalName} />
                             <Field label="DBA" value={open.carrier.dba} />
@@ -1447,19 +1614,36 @@ function LoadsPage() {
                             <Field label="Phone" value={open.carrier.contactPhone} />
                             <Field label="Email" value={open.carrier.contactEmail} />
                             <Field label="Address" value={open.carrier.address} />
-                            <Field label="Equipment Types" value={open.carrier.equipmentTypes?.join(", ")} />
-                            <Field label="Service Areas" value={open.carrier.serviceAreas?.join(", ")} />
-                            <Field label="Insurance Carrier" value={open.carrier.insuranceCarrier} />
+                            <Field
+                              label="Equipment Types"
+                              value={open.carrier.equipmentTypes?.join(", ")}
+                            />
+                            <Field
+                              label="Service Areas"
+                              value={open.carrier.serviceAreas?.join(", ")}
+                            />
+                            <Field
+                              label="Insurance Carrier"
+                              value={open.carrier.insuranceCarrier}
+                            />
                             <Field
                               label="Insurance Expires At"
-                              value={open.carrier.insuranceExpiresAt ? fmtDate(open.carrier.insuranceExpiresAt) : ""}
+                              value={
+                                open.carrier.insuranceExpiresAt
+                                  ? fmtDate(open.carrier.insuranceExpiresAt)
+                                  : ""
+                              }
                             />
-                            <Field label="Status" value={<StatusBadge value={open.carrier.status} />} />
+                            <Field
+                              label="Status"
+                              value={<StatusBadge value={open.carrier.status} />}
+                            />
                           </div>
                         </div>
                       )}
 
-                      {open.pendingApproval && (open.comments?.length || open.auditHistory?.length) ? (
+                      {open.pendingApproval &&
+                      (open.comments?.length || open.auditHistory?.length) ? (
                         <div className="space-y-4">
                           {open.comments && open.comments.length > 0 && (
                             <div className="space-y-2">
@@ -1468,10 +1652,15 @@ function LoadsPage() {
                               </h4>
                               <ul className="space-y-2">
                                 {open.comments.map((c, i) => (
-                                  <li key={i} className="rounded-md border border-border bg-muted/40 p-2.5">
+                                  <li
+                                    key={i}
+                                    className="rounded-md border border-border bg-muted/40 p-2.5"
+                                  >
                                     <div className="mb-1 flex items-center justify-between gap-2">
                                       <span className="text-xs font-semibold">{c.by}</span>
-                                      <span className="text-xs text-muted-foreground">{fmtDateTime(c.at)}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {fmtDateTime(c.at)}
+                                      </span>
                                     </div>
                                     <p className="whitespace-pre-wrap text-sm">{c.body}</p>
                                   </li>
@@ -1491,8 +1680,14 @@ function LoadsPage() {
                                     className="flex items-start justify-between gap-2 rounded-md border border-border bg-card/50 px-2.5 py-1.5"
                                   >
                                     <div>
-                                      <span className="text-xs font-medium capitalize">{h.action?.replace(/_/g, " ")}</span>
-                                      {h.notes && <p className="mt-0.5 text-xs text-muted-foreground">{h.notes}</p>}
+                                      <span className="text-xs font-medium capitalize">
+                                        {h.action?.replace(/_/g, " ")}
+                                      </span>
+                                      {h.notes && (
+                                        <p className="mt-0.5 text-xs text-muted-foreground">
+                                          {h.notes}
+                                        </p>
+                                      )}
                                     </div>
                                     <div className="shrink-0 text-right text-xs text-muted-foreground">
                                       <div>{h.performedByName}</div>
@@ -1510,7 +1705,9 @@ function LoadsPage() {
                     <TabsContent value="route" className="space-y-6 pt-4">
                       <div className="grid gap-6 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pickup Details</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Pickup Details
+                          </h4>
                           <div className="grid gap-3">
                             <Field label="Company" value={open.pickupCompany} />
                             <Field label="Contact" value={open.pickupContact} />
@@ -1518,20 +1715,27 @@ function LoadsPage() {
                             <Field label="Address" value={open.pickupAddress} />
                             <Field
                               label="City / State"
-                              value={[open.pickupCity, open.pickupState, open.pickupZip].filter(Boolean).join(", ")}
+                              value={[open.pickupCity, open.pickupState, open.pickupZip]
+                                .filter(Boolean)
+                                .join(", ")}
                             />
                             <Field
                               label="Date & Time"
                               value={
                                 open.pickupDate
-                                  ? fmtDateTime(open.pickupDate + (open.pickupTime ? `T${open.pickupTime}` : ""))
+                                  ? fmtDateTime(
+                                      open.pickupDate +
+                                        (open.pickupTime ? `T${open.pickupTime}` : ""),
+                                    )
                                   : ""
                               }
                             />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Delivery Details</h4>
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Delivery Details
+                          </h4>
                           <div className="grid gap-3">
                             <Field label="Company" value={open.deliveryCompany} />
                             <Field label="Contact" value={open.deliveryContact} />
@@ -1539,13 +1743,18 @@ function LoadsPage() {
                             <Field label="Address" value={open.deliveryAddress} />
                             <Field
                               label="City / State"
-                              value={[open.deliveryCity, open.deliveryState, open.deliveryZip].filter(Boolean).join(", ")}
+                              value={[open.deliveryCity, open.deliveryState, open.deliveryZip]
+                                .filter(Boolean)
+                                .join(", ")}
                             />
                             <Field
                               label="Date & Time"
                               value={
                                 open.deliveryDate
-                                  ? fmtDateTime(open.deliveryDate + (open.deliveryTime ? `T${open.deliveryTime}` : ""))
+                                  ? fmtDateTime(
+                                      open.deliveryDate +
+                                        (open.deliveryTime ? `T${open.deliveryTime}` : ""),
+                                    )
                                   : ""
                               }
                             />
@@ -1556,7 +1765,9 @@ function LoadsPage() {
 
                     <TabsContent value="freight" className="space-y-6 pt-4">
                       <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Freight Details</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Freight Details
+                        </h4>
                         <div className="grid gap-3 sm:grid-cols-3">
                           <Field label="Commodity" value={open.commodity} />
                           <Field label="Weight" value={open.weight?.toString()} />
@@ -1567,14 +1778,26 @@ function LoadsPage() {
                           <Field label="Load Type" value={open.loadType?.toUpperCase()} />
                           <Field label="Temperature" value={open.temperature?.toString()} />
                           <div>
-                            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hazmat</div>
-                            <div className={open.hazmat ? "font-medium text-destructive" : "text-muted-foreground"}>
+                            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              Hazmat
+                            </div>
+                            <div
+                              className={
+                                open.hazmat
+                                  ? "font-medium text-destructive"
+                                  : "text-muted-foreground"
+                              }
+                            >
                               {open.hazmat ? "Yes" : "No"}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stackable</div>
-                            <div className="text-muted-foreground">{open.stackable ? "Yes" : "No"}</div>
+                            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              Stackable
+                            </div>
+                            <div className="text-muted-foreground">
+                              {open.stackable ? "Yes" : "No"}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1586,9 +1809,15 @@ function LoadsPage() {
                         <div className="grid gap-3 sm:grid-cols-4">
                           <Field label="Customer Rate" value={usd(open.customerRate)} mono />
                           <Field label="Carrier Cost" value={usd(open.carrierCost)} mono />
-                          <Field label="Accessorials" value={open.accessorialCharges ? usd(open.accessorialCharges) : "—"} mono />
+                          <Field
+                            label="Accessorials"
+                            value={open.accessorialCharges ? usd(open.accessorialCharges) : "—"}
+                            mono
+                          />
                           <div className="rounded-md border border-border bg-muted p-2">
-                            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Calculated</div>
+                            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              Calculated
+                            </div>
                             <div className="grid gap-1 text-xs">
                               <div className="flex justify-between">
                                 <span>Revenue</span>
@@ -1596,11 +1825,15 @@ function LoadsPage() {
                               </div>
                               <div className="flex justify-between">
                                 <span>Gross Margin</span>
-                                <span className="tabular-nums text-success">{usd(open.grossMargin)}</span>
+                                <span className="tabular-nums text-success">
+                                  {usd(open.grossMargin)}
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span>Margin %</span>
-                                <span className="tabular-nums">{open.marginPercent.toFixed(2)}%</span>
+                                <span className="tabular-nums">
+                                  {open.marginPercent.toFixed(2)}%
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -1608,7 +1841,9 @@ function LoadsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mileage</h4>
+                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Mileage
+                        </h4>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <Field label="Loaded Miles" value={open.loadedMiles?.toString()} />
                           <Field label="Deadhead Miles" value={open.deadheadMiles?.toString()} />
@@ -1617,7 +1852,9 @@ function LoadsPage() {
                     </TabsContent>
 
                     <TabsContent value="documents" className="space-y-2 pt-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Documents</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Documents
+                      </h4>
                       <ul className="space-y-1.5">
                         {(open.documents || []).map((d) => (
                           <li
@@ -1633,7 +1870,9 @@ function LoadsPage() {
                           </li>
                         ))}
                         {(open.documents || []).length === 0 && (
-                          <li className="text-sm text-muted-foreground">No documents tracked for this load.</li>
+                          <li className="text-sm text-muted-foreground">
+                            No documents tracked for this load.
+                          </li>
                         )}
                       </ul>
                     </TabsContent>
@@ -1661,7 +1900,9 @@ function LoadsPage() {
                       )}
                       {open.customerNotes && (
                         <div>
-                          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer Notes</div>
+                          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Customer Notes
+                          </div>
                           <div className="whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-2 text-sm">
                             {open.customerNotes}
                           </div>
@@ -1673,7 +1914,9 @@ function LoadsPage() {
                     </TabsContent>
 
                     <TabsContent value="history" className="space-y-2 pt-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status History</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Status History
+                      </h4>
                       <ul className="space-y-1.5">
                         {open.statusHistory?.length ? (
                           open.statusHistory.map((h, i) => (

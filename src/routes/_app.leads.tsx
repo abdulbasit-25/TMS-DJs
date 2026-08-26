@@ -234,7 +234,11 @@ function LeadsPage() {
         { label: "Phone", getValue: (lead) => lead.phone },
         { label: "Status", getValue: (lead) => lead.status },
         { label: "Agent", getValue: (lead) => lead.agentName },
-        { label: "Last Activity", getValue: (lead) => (lead.lastActivity ? new Date(lead.lastActivity).toLocaleString() : "") },
+        {
+          label: "Last Activity",
+          getValue: (lead) =>
+            lead.lastActivity ? new Date(lead.lastActivity).toLocaleString() : "",
+        },
       ],
       formatExportFilename("leads", format),
       format,
@@ -516,18 +520,20 @@ function LeadsPage() {
               <div>
                 <span className="font-medium">{l.company}</span>
                 {l.pendingApproval && (
-                  <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                    l.approvalStatus === "rejected"
-                      ? "bg-red-100 text-red-800"
-                      : l.approvalStatus === "changes_requested"
-                      ? "bg-orange-100 text-orange-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}>
+                  <span
+                    className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                      l.approvalStatus === "rejected"
+                        ? "bg-red-100 text-red-800"
+                        : l.approvalStatus === "changes_requested"
+                          ? "bg-orange-100 text-orange-800"
+                          : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
                     {l.approvalStatus === "changes_requested"
                       ? "Changes Requested"
                       : l.approvalStatus === "rejected"
-                      ? "Rejected"
-                      : "Pending Approval"}
+                        ? "Rejected"
+                        : "Pending Approval"}
                   </span>
                 )}
               </div>
@@ -564,18 +570,20 @@ function LeadsPage() {
                   <div className="flex items-center gap-2">
                     <SheetTitle>{editing ? "Edit lead" : open.company}</SheetTitle>
                     {open.pendingApproval && (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                        open.approvalStatus === "rejected"
-                          ? "bg-red-100 text-red-800"
-                          : open.approvalStatus === "changes_requested"
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          open.approvalStatus === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : open.approvalStatus === "changes_requested"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
                         {open.approvalStatus === "changes_requested"
                           ? "Changes Requested"
                           : open.approvalStatus === "rejected"
-                          ? "Rejected"
-                          : "Pending Approval"}
+                            ? "Rejected"
+                            : "Pending Approval"}
                       </span>
                     )}
                   </div>
