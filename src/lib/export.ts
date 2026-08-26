@@ -35,7 +35,9 @@ export function exportRowsToFile<T>(
   }
 
   const header = columns.map((column) => column.label);
-  const data = rows.map((row) => columns.map((column) => normalizeExportValue(column.getValue(row))));
+  const data = rows.map((row) =>
+    columns.map((column) => normalizeExportValue(column.getValue(row))),
+  );
 
   if (format === "csv") {
     const csvContent = [
