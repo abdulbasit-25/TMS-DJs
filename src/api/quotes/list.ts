@@ -317,7 +317,13 @@ export async function quotesListHandler(request: Request) {
       // Return both approval request and quote object
       return jsonResponse({
         approvalRequest: { id: approvalRequest._id.toString() },
-        quote: mapPendingQuote(approvalRequest as any, newQuoteId as any, user as any, agentMap, customerMap),
+        quote: mapPendingQuote(
+          approvalRequest as any,
+          newQuoteId as any,
+          user as any,
+          agentMap,
+          customerMap,
+        ),
         customers: customers.map((c) => ({ id: c._id.toString(), company: c.companyName })),
       });
     } else {
@@ -510,7 +516,7 @@ function mapPendingQuote(
 ) {
   const newValues = approvalRequest.newValues ?? {};
   const customerId = newValues.customerId?.toString();
-  
+
   // Convert approval comments to the format expected by the frontend
   const comments = (approvalRequest.comments || []).map((comment: any) => ({
     by: comment.userName,
