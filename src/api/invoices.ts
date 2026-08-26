@@ -164,11 +164,31 @@ export async function invoicesHandler(request: Request) {
     const invMsg = `Invoice ${invoiceNumber} for ${customer.companyName} ($${total.toFixed(2)}) has been created.`;
 
     void notifyAccounting(
-      { title: "New invoice created", message: invMsg, notificationType: "invoice_created", relatedModule: "invoices", recordType: "Invoice", recordId: invId, actionUrl: invActionUrl, priority: "medium", metadata: { invoiceNumber, total } },
+      {
+        title: "New invoice created",
+        message: invMsg,
+        notificationType: "invoice_created",
+        relatedModule: "invoices",
+        recordType: "Invoice",
+        recordId: invId,
+        actionUrl: invActionUrl,
+        priority: "medium",
+        metadata: { invoiceNumber, total },
+      },
       invSender,
     );
     void notifyAdmins(
-      { title: "New invoice created", message: invMsg, notificationType: "invoice_created", relatedModule: "invoices", recordType: "Invoice", recordId: invId, actionUrl: invActionUrl, priority: "low", metadata: { invoiceNumber, total } },
+      {
+        title: "New invoice created",
+        message: invMsg,
+        notificationType: "invoice_created",
+        relatedModule: "invoices",
+        recordType: "Invoice",
+        recordId: invId,
+        actionUrl: invActionUrl,
+        priority: "low",
+        metadata: { invoiceNumber, total },
+      },
       invSender,
     );
 
@@ -176,7 +196,17 @@ export async function invoicesHandler(request: Request) {
     if (customer.agentId) {
       void notifyUser(
         customer.agentId.toString(),
-        { title: "Invoice available", message: `An invoice (${invoiceNumber}) has been generated for your customer ${customer.companyName}.`, notificationType: "invoice_available", relatedModule: "invoices", recordType: "Invoice", recordId: invId, actionUrl: invActionUrl, priority: "low", metadata: { invoiceNumber } },
+        {
+          title: "Invoice available",
+          message: `An invoice (${invoiceNumber}) has been generated for your customer ${customer.companyName}.`,
+          notificationType: "invoice_available",
+          relatedModule: "invoices",
+          recordType: "Invoice",
+          recordId: invId,
+          actionUrl: invActionUrl,
+          priority: "low",
+          metadata: { invoiceNumber },
+        },
         invSender,
       );
     }
@@ -225,17 +255,65 @@ export async function invoicesHandler(request: Request) {
 
       // Emit payment notifications if fully paid
       if (invoice.status === "paid") {
-        const paySender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: user.teamId };
+        const paySender: SenderContext = {
+          userId: user.id,
+          name: user.name,
+          role: user.role,
+          teamId: user.teamId,
+        };
         const payInvId = invoice._id.toString();
         const payUrl = `/invoices?focus=${payInvId}`;
         const payMsg = `Invoice ${invoice.invoiceNumber} has been fully paid ($${invoice.total.toFixed(2)}).`;
-        void notifyAccounting({ title: "Invoice paid", message: payMsg, notificationType: "invoice_paid", relatedModule: "invoices", recordType: "Invoice", recordId: payInvId, actionUrl: payUrl, priority: "medium", metadata: { invoiceNumber: invoice.invoiceNumber } }, paySender);
-        void notifyAdmins({ title: "Invoice paid", message: payMsg, notificationType: "invoice_paid", relatedModule: "invoices", recordType: "Invoice", recordId: payInvId, actionUrl: payUrl, priority: "low", metadata: { invoiceNumber: invoice.invoiceNumber } }, paySender);
+        void notifyAccounting(
+          {
+            title: "Invoice paid",
+            message: payMsg,
+            notificationType: "invoice_paid",
+            relatedModule: "invoices",
+            recordType: "Invoice",
+            recordId: payInvId,
+            actionUrl: payUrl,
+            priority: "medium",
+            metadata: { invoiceNumber: invoice.invoiceNumber },
+          },
+          paySender,
+        );
+        void notifyAdmins(
+          {
+            title: "Invoice paid",
+            message: payMsg,
+            notificationType: "invoice_paid",
+            relatedModule: "invoices",
+            recordType: "Invoice",
+            recordId: payInvId,
+            actionUrl: payUrl,
+            priority: "low",
+            metadata: { invoiceNumber: invoice.invoiceNumber },
+          },
+          paySender,
+        );
         // Notify the agent who owns the customer
         try {
-          const payCustomer = await Customer.findById(invoice.customerId).select("agentId companyName").lean().exec();
+          const payCustomer = await Customer.findById(invoice.customerId)
+            .select("agentId companyName")
+            .lean()
+            .exec();
           if (payCustomer?.agentId) {
-            void notifyUser(payCustomer.agentId.toString(), { title: "Invoice paid", message: `Invoice ${invoice.invoiceNumber} for ${payCustomer.companyName} has been fully paid.`, notificationType: "invoice_paid", relatedModule: "invoices", recordType: "Invoice", recordId: payInvId, actionUrl: payUrl, priority: "low", metadata: { invoiceNumber: invoice.invoiceNumber } }, paySender);
+            void notifyUser(
+              payCustomer.agentId.toString(),
+              {
+                title: "Invoice paid",
+                message: `Invoice ${invoice.invoiceNumber} for ${payCustomer.companyName} has been fully paid.`,
+                notificationType: "invoice_paid",
+                relatedModule: "invoices",
+                recordType: "Invoice",
+                recordId: payInvId,
+                actionUrl: payUrl,
+                priority: "low",
+                metadata: { invoiceNumber: invoice.invoiceNumber },
+              },
+              paySender,
+            );
           }
         } catch (e) {
           console.error("[notification] invoice paid customer lookup failed:", e);
@@ -325,8 +403,23 @@ export async function invoicesHandler(request: Request) {
     }
 
     // Emit invoice deletion notification
-    const delSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: user.teamId };
-    void notifyAdmins({ title: "Invoice deleted", message: `Invoice ${invoice.invoiceNumber} has been deleted by ${user.name}.`, notificationType: "invoice_deleted", relatedModule: "invoices", priority: "medium", metadata: { invoiceNumber: invoice.invoiceNumber } }, delSender);
+    const delSender: SenderContext = {
+      userId: user.id,
+      name: user.name,
+      role: user.role,
+      teamId: user.teamId,
+    };
+    void notifyAdmins(
+      {
+        title: "Invoice deleted",
+        message: `Invoice ${invoice.invoiceNumber} has been deleted by ${user.name}.`,
+        notificationType: "invoice_deleted",
+        relatedModule: "invoices",
+        priority: "medium",
+        metadata: { invoiceNumber: invoice.invoiceNumber },
+      },
+      delSender,
+    );
 
     return jsonResponse({ success: true, deletedId: invoiceId });
   }
