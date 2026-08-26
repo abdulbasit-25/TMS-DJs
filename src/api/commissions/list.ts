@@ -152,11 +152,43 @@ export async function commissionsListHandler(request: Request) {
     });
 
     // Emit commission creation notifications
-    const commSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: user.teamId };
+    const commSender: SenderContext = {
+      userId: user.id,
+      name: user.name,
+      role: user.role,
+      teamId: user.teamId,
+    };
     const commId = created._id.toString();
     const commActionUrl = `/commissions?focus=${commId}`;
-    void notifyUser(agentId, { title: "Commission generated", message: `A commission of $${commissionAmount.toFixed(2)} (${commissionPercent}%) has been generated for your load.`, notificationType: "commission_generated", relatedModule: "commissions", recordType: "Commission", recordId: commId, actionUrl: commActionUrl, priority: "low", metadata: { commissionAmount, commissionPercent } }, commSender);
-    void notifyAccounting({ title: "New commission created", message: `Commission of $${commissionAmount.toFixed(2)} for agent has been created.`, notificationType: "commission_created", relatedModule: "commissions", recordType: "Commission", recordId: commId, actionUrl: commActionUrl, priority: "low", metadata: { commissionAmount, agentId } }, commSender);
+    void notifyUser(
+      agentId,
+      {
+        title: "Commission generated",
+        message: `A commission of $${commissionAmount.toFixed(2)} (${commissionPercent}%) has been generated for your load.`,
+        notificationType: "commission_generated",
+        relatedModule: "commissions",
+        recordType: "Commission",
+        recordId: commId,
+        actionUrl: commActionUrl,
+        priority: "low",
+        metadata: { commissionAmount, commissionPercent },
+      },
+      commSender,
+    );
+    void notifyAccounting(
+      {
+        title: "New commission created",
+        message: `Commission of $${commissionAmount.toFixed(2)} for agent has been created.`,
+        notificationType: "commission_created",
+        relatedModule: "commissions",
+        recordType: "Commission",
+        recordId: commId,
+        actionUrl: commActionUrl,
+        priority: "low",
+        metadata: { commissionAmount, agentId },
+      },
+      commSender,
+    );
 
     const createdAgent = (await User.findById(created.agentId).lean().exec()) as {
       name?: string;
@@ -243,16 +275,88 @@ export async function commissionsListHandler(request: Request) {
     // Emit commission payout status notifications
     const newPayoutStatus = commission.payoutStatus;
     if (newPayoutStatus !== prevPayoutStatus) {
-      const patchSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: user.teamId };
+      const patchSender: SenderContext = {
+        userId: user.id,
+        name: user.name,
+        role: user.role,
+        teamId: user.teamId,
+      };
       const patchCommId = commission._id.toString();
       const patchUrl = `/commissions?focus=${patchCommId}`;
       if (newPayoutStatus === "paid") {
-        void notifyUser(commission.agentId.toString(), { title: "Commission paid", message: `Your commission of $${commission.commissionAmount.toFixed(2)} has been paid.`, notificationType: "commission_paid", relatedModule: "commissions", recordType: "Commission", recordId: patchCommId, actionUrl: patchUrl, priority: "medium", metadata: { commissionAmount: commission.commissionAmount } }, patchSender);
-        void notifyAccounting({ title: "Commission paid", message: `Commission of $${commission.commissionAmount.toFixed(2)} has been marked as paid.`, notificationType: "commission_paid", relatedModule: "commissions", recordType: "Commission", recordId: patchCommId, actionUrl: patchUrl, priority: "low", metadata: { commissionAmount: commission.commissionAmount } }, patchSender);
-        void notifyAdmins({ title: "Commission paid", message: `Commission of $${commission.commissionAmount.toFixed(2)} has been paid.`, notificationType: "commission_paid", relatedModule: "commissions", recordType: "Commission", recordId: patchCommId, actionUrl: patchUrl, priority: "low", metadata: { commissionAmount: commission.commissionAmount } }, patchSender);
+        void notifyUser(
+          commission.agentId.toString(),
+          {
+            title: "Commission paid",
+            message: `Your commission of $${commission.commissionAmount.toFixed(2)} has been paid.`,
+            notificationType: "commission_paid",
+            relatedModule: "commissions",
+            recordType: "Commission",
+            recordId: patchCommId,
+            actionUrl: patchUrl,
+            priority: "medium",
+            metadata: { commissionAmount: commission.commissionAmount },
+          },
+          patchSender,
+        );
+        void notifyAccounting(
+          {
+            title: "Commission paid",
+            message: `Commission of $${commission.commissionAmount.toFixed(2)} has been marked as paid.`,
+            notificationType: "commission_paid",
+            relatedModule: "commissions",
+            recordType: "Commission",
+            recordId: patchCommId,
+            actionUrl: patchUrl,
+            priority: "low",
+            metadata: { commissionAmount: commission.commissionAmount },
+          },
+          patchSender,
+        );
+        void notifyAdmins(
+          {
+            title: "Commission paid",
+            message: `Commission of $${commission.commissionAmount.toFixed(2)} has been paid.`,
+            notificationType: "commission_paid",
+            relatedModule: "commissions",
+            recordType: "Commission",
+            recordId: patchCommId,
+            actionUrl: patchUrl,
+            priority: "low",
+            metadata: { commissionAmount: commission.commissionAmount },
+          },
+          patchSender,
+        );
       } else if (newPayoutStatus === "processing") {
-        void notifyUser(commission.agentId.toString(), { title: "Commission processing", message: `Your commission of $${commission.commissionAmount.toFixed(2)} is being processed.`, notificationType: "commission_processing", relatedModule: "commissions", recordType: "Commission", recordId: patchCommId, actionUrl: patchUrl, priority: "low", metadata: { commissionAmount: commission.commissionAmount } }, patchSender);
-        void notifyAccounting({ title: "Commission processing", message: `Commission of $${commission.commissionAmount.toFixed(2)} is now processing.`, notificationType: "commission_processing", relatedModule: "commissions", recordType: "Commission", recordId: patchCommId, actionUrl: patchUrl, priority: "low", metadata: { commissionAmount: commission.commissionAmount } }, patchSender);
+        void notifyUser(
+          commission.agentId.toString(),
+          {
+            title: "Commission processing",
+            message: `Your commission of $${commission.commissionAmount.toFixed(2)} is being processed.`,
+            notificationType: "commission_processing",
+            relatedModule: "commissions",
+            recordType: "Commission",
+            recordId: patchCommId,
+            actionUrl: patchUrl,
+            priority: "low",
+            metadata: { commissionAmount: commission.commissionAmount },
+          },
+          patchSender,
+        );
+        void notifyAccounting(
+          {
+            title: "Commission processing",
+            message: `Commission of $${commission.commissionAmount.toFixed(2)} is now processing.`,
+            notificationType: "commission_processing",
+            relatedModule: "commissions",
+            recordType: "Commission",
+            recordId: patchCommId,
+            actionUrl: patchUrl,
+            priority: "low",
+            metadata: { commissionAmount: commission.commissionAmount },
+          },
+          patchSender,
+        );
       }
     }
 
