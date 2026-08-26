@@ -5,18 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { relative } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useNotifications, type NotificationItem, type NotificationGroup } from "@/hooks/use-notifications";
-import { moduleIcon, typeColor, priorityClasses, priorityLabel, recordUrl } from "@/lib/notification-ui";
-import { toast } from "sonner";
 import {
-  Inbox,
-  Check,
-  CheckCheck,
-  Trash2,
-  Search,
-  Mail,
-  MailOpen,
-} from "lucide-react";
+  useNotifications,
+  type NotificationItem,
+  type NotificationGroup,
+} from "@/hooks/use-notifications";
+import {
+  moduleIcon,
+  typeColor,
+  priorityClasses,
+  priorityLabel,
+  recordUrl,
+} from "@/lib/notification-ui";
+import { toast } from "sonner";
+import { Inbox, Check, CheckCheck, Trash2, Search, Mail, MailOpen } from "lucide-react";
 
 export const Route = createFileRoute("/_app/notifications")({ component: NotifsPage });
 
@@ -110,11 +112,21 @@ function NotifsPage() {
                 {unreadCount} unread
               </span>
             )}
-            <Button size="sm" variant="outline" onClick={handleMarkAllRead} disabled={unreadCount === 0}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleMarkAllRead}
+              disabled={unreadCount === 0}
+            >
               <CheckCheck className="mr-1.5 size-3.5" />
               Mark all read
             </Button>
-            <Button size="sm" variant="outline" onClick={handleClearAll} disabled={totalCount === 0}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleClearAll}
+              disabled={totalCount === 0}
+            >
               <Trash2 className="mr-1.5 size-3.5" />
               Clear all
             </Button>
@@ -139,9 +151,7 @@ function NotifsPage() {
                 )}
               >
                 {tab === "all" ? "All" : tab === "unread" ? "Unread" : "Read"}
-                {count > 0 && (
-                  <span className="ml-1.5 text-[10px] opacity-70">{count}</span>
-                )}
+                {count > 0 && <span className="ml-1.5 text-[10px] opacity-70">{count}</span>}
               </button>
             );
           })}
@@ -244,9 +254,7 @@ function NotificationRow({
       {/* Content */}
       <button onClick={onClick} className="min-w-0 flex-1 text-left">
         <div className="flex items-start justify-between gap-2">
-          <span className={cn("text-sm", n.isRead ? "font-normal" : "font-medium")}>
-            {n.title}
-          </span>
+          <span className={cn("text-sm", n.isRead ? "font-normal" : "font-medium")}>{n.title}</span>
           <span className="shrink-0 text-[10px] text-muted-foreground">
             {relative(n.createdAt)}
           </span>
@@ -256,20 +264,13 @@ function NotificationRow({
           {n.senderName && (
             <span className="text-[10px] text-muted-foreground">From {n.senderName}</span>
           )}
-          {!n.isRead && (
-            <span className="size-1.5 rounded-full bg-primary" title="Unread" />
-          )}
+          {!n.isRead && <span className="size-1.5 rounded-full bg-primary" title="Unread" />}
         </div>
       </button>
 
       {/* Right: priority + hover actions */}
       <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <span
-          className={cn(
-            "rounded px-1.5 py-0.5 text-[10px] font-medium",
-            pClass,
-          )}
-        >
+        <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", pClass)}>
           {priorityLabel(n.priority)}
         </span>
         <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
