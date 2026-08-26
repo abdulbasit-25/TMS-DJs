@@ -350,7 +350,9 @@ function UpcomingFollowupsPanel({ items }: { items: DashboardData["upcomingFollo
               </div>
               <StatusBadge
                 value={f.priority}
-                tone={f.priority === "high" ? "danger" : f.priority === "medium" ? "warning" : "muted"}
+                tone={
+                  f.priority === "high" ? "danger" : f.priority === "medium" ? "warning" : "muted"
+                }
               />
             </li>
           ))}
@@ -395,7 +397,11 @@ function RecentLoadsPanel({ items }: { items: DashboardData["recentLoads"] }) {
   );
 }
 
-function InvoiceSummaryPanel({ summary }: { summary: NonNullable<DashboardData["invoiceSummary"]> }) {
+function InvoiceSummaryPanel({
+  summary,
+}: {
+  summary: NonNullable<DashboardData["invoiceSummary"]>;
+}) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <h2 className="mb-3 text-sm font-semibold">Invoice summary</h2>

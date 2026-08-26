@@ -257,9 +257,7 @@ function ActivityPage() {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    return [hours, minutes, seconds]
-      .map((value) => String(value).padStart(2, "0"))
-      .join(":");
+    return [hours, minutes, seconds].map((value) => String(value).padStart(2, "0")).join(":");
   }
 
   return (
@@ -291,7 +289,11 @@ function ActivityPage() {
             <Button variant="outline" onClick={() => setCheckinModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => { void confirmCheckIn(); }}>
+            <Button
+              onClick={() => {
+                void confirmCheckIn();
+              }}
+            >
               Start session
             </Button>
           </DialogFooter>
@@ -340,7 +342,11 @@ function ActivityPage() {
           </div>
 
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-            <Button variant="outline" onClick={() => setCheckoutModalOpen(false)} className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setCheckoutModalOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Continue Editing
             </Button>
             <Button
@@ -375,7 +381,9 @@ function ActivityPage() {
                 isCheckedIn ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
               }`}
             >
-              <span className={`size-1.5 rounded-full ${isCheckedIn ? "animate-pulse bg-success" : "bg-muted-foreground/50"}`} />
+              <span
+                className={`size-1.5 rounded-full ${isCheckedIn ? "animate-pulse bg-success" : "bg-muted-foreground/50"}`}
+              />
               {isCheckedIn ? "Checked in" : "Checked out"}
             </span>
           </div>
@@ -383,33 +391,37 @@ function ActivityPage() {
           {isCheckedIn ? (
             <div className="space-y-4">
               <div className="rounded-lg bg-muted/50 p-3">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Session started</div>
-                <div className="mt-0.5 text-sm font-medium">{checkedInAt ? fmtDateTime(checkedInAt) : "Active session"}</div>
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                  Session started
+                </div>
+                <div className="mt-0.5 text-sm font-medium">
+                  {checkedInAt ? fmtDateTime(checkedInAt) : "Active session"}
+                </div>
               </div>
-            <div className="relative overflow-hidden rounded-2xl border bg-card p-5">
-  <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+              <div className="relative overflow-hidden rounded-2xl border bg-card p-5">
+                <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
-  <div className="flex items-center justify-between">
-    <div>
-      <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-        Time Worked
-      </span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      Time Worked
+                    </span>
 
-      <div className="mt-3 text-4xl font-bold font-mono">
-        {formatElapsedTime(elapsedSeconds)}
-      </div>
+                    <div className="mt-3 text-4xl font-bold font-mono">
+                      {formatElapsedTime(elapsedSeconds)}
+                    </div>
 
-      <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-        <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-        Live Tracking
-      </div>
-    </div>
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
+                      <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      Live Tracking
+                    </div>
+                  </div>
 
-    <div className="rounded-2xl bg-primary/10 p-4">
-      <Clock className="h-8 w-8 text-primary" />
-    </div>
-  </div>
-</div>
+                  <div className="rounded-2xl bg-primary/10 p-4">
+                    <Clock className="h-8 w-8 text-primary" />
+                  </div>
+                </div>
+              </div>
 
               <Button
                 variant="outline"
@@ -532,14 +544,19 @@ function ActivityPage() {
             History
           </div>
           {!loading && history.length > 0 && (
-            <span className="text-xs text-muted-foreground">{history.length} {history.length === 1 ? "day" : "days"}</span>
+            <span className="text-xs text-muted-foreground">
+              {history.length} {history.length === 1 ? "day" : "days"}
+            </span>
           )}
         </div>
 
         {loading ? (
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-16 animate-pulse rounded-lg border border-border bg-muted/40" />
+              <div
+                key={i}
+                className="h-16 animate-pulse rounded-lg border border-border bg-muted/40"
+              />
             ))}
           </div>
         ) : history.length === 0 ? (
@@ -586,7 +603,9 @@ function ActivityPage() {
                     <div className="flex min-w-[7rem] shrink-0 items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
                       <span className="text-sm font-semibold">{fmtDate(l.date)}</span>
                       {l.userName && canSeeTeammateNames ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{l.userName}</span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                          {l.userName}
+                        </span>
                       ) : null}
                     </div>
 
@@ -595,7 +614,8 @@ function ActivityPage() {
                         <span className="font-semibold text-foreground">{l.calls}</span> calls
                       </span>
                       <span>
-                        <span className="font-semibold text-foreground">{l.followups}</span> follow-ups
+                        <span className="font-semibold text-foreground">{l.followups}</span>{" "}
+                        follow-ups
                       </span>
                       <span>
                         {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
@@ -611,21 +631,33 @@ function ActivityPage() {
                   {/* Expanded detail */}
                   {isExpanded && (
                     <div className="border-t border-border p-4 pt-3">
-                      <div className="mb-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">Sessions</div>
+                      <div className="mb-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                        Sessions
+                      </div>
                       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                         {sessions.map((sessionItem, index) => (
                           <div
                             key={`${l.id}-${index}`}
                             className="rounded-lg border border-border/70 bg-background/60 p-2.5 text-xs"
                           >
-                            <div className="mb-1 font-medium text-foreground">Session {index + 1}</div>
+                            <div className="mb-1 font-medium text-foreground">
+                              Session {index + 1}
+                            </div>
                             <div className="flex items-center justify-between text-muted-foreground">
                               <span>In</span>
-                              <span className="text-foreground">{sessionItem.checkedInAt ? fmtDateTime(sessionItem.checkedInAt) : "—"}</span>
+                              <span className="text-foreground">
+                                {sessionItem.checkedInAt
+                                  ? fmtDateTime(sessionItem.checkedInAt)
+                                  : "—"}
+                              </span>
                             </div>
                             <div className="flex items-center justify-between text-muted-foreground">
                               <span>Out</span>
-                              <span className="text-foreground">{sessionItem.checkedOutAt ? fmtDateTime(sessionItem.checkedOutAt) : "—"}</span>
+                              <span className="text-foreground">
+                                {sessionItem.checkedOutAt
+                                  ? fmtDateTime(sessionItem.checkedOutAt)
+                                  : "—"}
+                              </span>
                             </div>
                             <div className="mt-2 space-y-1 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
                               <div className="flex items-center justify-between">
@@ -634,10 +666,14 @@ function ActivityPage() {
                               </div>
                               <div className="flex items-center justify-between">
                                 <span>Follow-ups</span>
-                                <span className="text-foreground">{sessionItem.followups ?? 0}</span>
+                                <span className="text-foreground">
+                                  {sessionItem.followups ?? 0}
+                                </span>
                               </div>
                               {sessionItem.notes ? (
-                                <div className="pt-1 text-[10px] text-muted-foreground">{sessionItem.notes}</div>
+                                <div className="pt-1 text-[10px] text-muted-foreground">
+                                  {sessionItem.notes}
+                                </div>
                               ) : null}
                             </div>
                           </div>
@@ -646,7 +682,9 @@ function ActivityPage() {
 
                       {l.notes && (
                         <div className="mt-3">
-                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Day notes</div>
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Day notes
+                          </div>
                           <p className="mt-1 text-xs text-muted-foreground">{l.notes}</p>
                         </div>
                       )}
