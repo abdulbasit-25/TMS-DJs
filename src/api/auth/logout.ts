@@ -18,7 +18,8 @@ function getClientIp(request: Request) {
 }
 
 export async function logoutHandler(request: Request) {
-  const user = (await getSessionUserFromRequest(request)) ?? (await getSessionUserFromRefreshToken(request));
+  const user =
+    (await getSessionUserFromRequest(request)) ?? (await getSessionUserFromRefreshToken(request));
   if (user) {
     await connectDb();
     const dbUser = await User.findById(user.id).exec();
