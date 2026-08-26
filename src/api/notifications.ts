@@ -56,8 +56,14 @@ function mapNotification(doc: any, now: Date): MappedNotification {
     isRead: doc.isRead,
     senderName: doc.senderName,
     actionUrl: doc.actionUrl,
-    createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : new Date(doc.createdAt).toISOString(),
-    group: assignGroup(doc.createdAt instanceof Date ? doc.createdAt : new Date(doc.createdAt), now),
+    createdAt:
+      doc.createdAt instanceof Date
+        ? doc.createdAt.toISOString()
+        : new Date(doc.createdAt).toISOString(),
+    group: assignGroup(
+      doc.createdAt instanceof Date ? doc.createdAt : new Date(doc.createdAt),
+      now,
+    ),
   };
 }
 
@@ -157,7 +163,7 @@ export async function notificationsHandler(request: Request) {
     } else if (action === "cleanup_old") {
       // Delete old notifications (read >24h or unread >2 weeks)
       const result = await cleanupOldNotifications();
-      return jsonResponse({ 
+      return jsonResponse({
         ok: true,
         message: `Cleanup complete. Deleted ${result.deletedCount} notifications.`,
         deletedCount: result.deletedCount,

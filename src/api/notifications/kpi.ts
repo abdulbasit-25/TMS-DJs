@@ -98,9 +98,7 @@ async function computeKPIs(
   const isAgent = ["agent", "trainee"].includes(user.role);
   const isTeamLead = ["team_manager", "leadagent"].includes(user.role);
 
-  const userFilter = isAgent
-    ? { agentId: new mongoose.Types.ObjectId(user.id) }
-    : {};
+  const userFilter = isAgent ? { agentId: new mongoose.Types.ObjectId(user.id) } : {};
 
   const todayRange = { createdAt: { $gte: startOfToday, $lte: endOfToday } };
 
@@ -113,19 +111,18 @@ async function computeKPIs(
       return { overdueInvoices, outstandingInvoices };
     }
 
-    const [todayLoads, todayCustomers, pendingApprovals, outstandingInvoices] =
-      await Promise.all([
-        Load.countDocuments({ ...todayRange, ...userFilter }).exec(),
-        Customer.countDocuments({ ...todayRange, ...userFilter }).exec(),
-        isAdmin || isTeamLead
-          ? ApprovalRequest.countDocuments({ status: "pending" }).exec()
-          : Promise.resolve(0),
-        isAdmin
-          ? Invoice.countDocuments({
-              status: { $in: ["sent", "partially_paid", "overdue"] },
-            }).exec()
-          : Promise.resolve(0),
-      ]);
+    const [todayLoads, todayCustomers, pendingApprovals, outstandingInvoices] = await Promise.all([
+      Load.countDocuments({ ...todayRange, ...userFilter }).exec(),
+      Customer.countDocuments({ ...todayRange, ...userFilter }).exec(),
+      isAdmin || isTeamLead
+        ? ApprovalRequest.countDocuments({ status: "pending" }).exec()
+        : Promise.resolve(0),
+      isAdmin
+        ? Invoice.countDocuments({
+            status: { $in: ["sent", "partially_paid", "overdue"] },
+          }).exec()
+        : Promise.resolve(0),
+    ]);
 
     // Today's revenue from loads
     let todayRevenue = 0;
@@ -152,10 +149,8 @@ async function computeKPIs(
 function formatKpiMessage(kpis: Record<string, number>): string {
   const parts: string[] = [];
   if ("todayLoads" in kpis) parts.push(`Loads today: ${kpis.todayLoads}`);
-  if ("todayRevenue" in kpis)
-    parts.push(`Revenue today: $${(kpis.todayRevenue ?? 0).toFixed(2)}`);
-  if ("todayCustomers" in kpis)
-    parts.push(`New customers: ${kpis.todayCustomers}`);
+  if ("todayRevenue" in kpis) parts.push(`Revenue today: $${(kpis.todayRevenue ?? 0).toFixed(2)}`);
+  if ("todayCustomers" in kpis) parts.push(`New customers: ${kpis.todayCustomers}`);
   if ("pendingApprovals" in kpis && kpis.pendingApprovals > 0)
     parts.push(`Pending approvals: ${kpis.pendingApprovals}`);
   if ("outstandingInvoices" in kpis && kpis.outstandingInvoices > 0)
@@ -181,10 +176,7 @@ async function generateFollowUpReminders(
   const followUps = (await FollowUp.find({
     assignedTo: new mongoose.Types.ObjectId(user.id),
     isCompleted: false,
-    $or: [
-      { dueDate: { $gte: startOfToday, $lte: endOfToday } },
-      { dueDate: { $lt: now } },
-    ],
+    $or: [{ dueDate: { $gte: startOfToday, $lte: endOfToday } }, { dueDate: { $lt: now } }],
   })
     .lean()
     .exec()) as Array<{
@@ -303,10 +295,7 @@ async function generateQuoteExpiringAlerts(
     return;
   }
 
-  const expiringQuotes = (await QuoteRequest.find(quoteFilter)
-    .limit(20)
-    .lean()
-    .exec()) as Array<{
+  const expiringQuotes = (await QuoteRequest.find(quoteFilter).limit(20).lean().exec()) as Array<{
     _id: mongoose.Types.ObjectId;
     agentId?: mongoose.Types.ObjectId;
   }>;

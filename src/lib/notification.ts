@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import { Notification, type NotificationModule, type NotificationPriority } from "../models/notification";
+import {
+  Notification,
+  type NotificationModule,
+  type NotificationPriority,
+} from "../models/notification";
 import { LoginHistory } from "../models/loginHistory";
 import { Team } from "../models/team";
 import { User } from "../models/user";
@@ -57,7 +61,11 @@ function toObjectId(value?: string) {
   }
 }
 
-function resolveActionUrl(recordType?: string, recordId?: string, fallback?: string): string | undefined {
+function resolveActionUrl(
+  recordType?: string,
+  recordId?: string,
+  fallback?: string,
+): string | undefined {
   if (fallback) return fallback;
   if (!recordType || !recordId) return undefined;
   const map: Record<string, string> = {
@@ -86,8 +94,7 @@ function resolveActionUrl(recordType?: string, recordId?: string, fallback?: str
  */
 export async function createNotification(input: CreateInput): Promise<void> {
   try {
-    const actionUrl =
-      input.actionUrl ?? resolveActionUrl(input.recordType, input.recordId);
+    const actionUrl = input.actionUrl ?? resolveActionUrl(input.recordType, input.recordId);
     await Notification.create({
       recipientUserId: new mongoose.Types.ObjectId(input.recipientUserId),
       senderUserId: input.sender ? new mongoose.Types.ObjectId(input.sender.userId) : undefined,
@@ -144,49 +151,79 @@ export async function createNotifications(inputs: CreateInput[]): Promise<void> 
 // Recipient resolution helpers
 // ---------------------------------------------------------------------------
 
-async function getUsersByRoles(roles: string[]): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string; status: string }>> {
+async function getUsersByRoles(
+  roles: string[],
+): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string; status: string }>> {
   return User.find({ role: { $in: roles }, status: "active" })
     .select("_id name role status")
     .lean()
-    .exec() as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string; status: string }>>;
+    .exec() as Promise<
+    Array<{ _id: mongoose.Types.ObjectId; name: string; role: string; status: string }>
+  >;
 }
 
-async function getAdmins(): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>> {
-  return getUsersByRoles(["owner", "admin"]) as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>>;
+async function getAdmins(): Promise<
+  Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>
+> {
+  return getUsersByRoles(["owner", "admin"]) as Promise<
+    Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>
+  >;
 }
 
-async function getOpsManagers(): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>> {
-  return getUsersByRoles(["ops_manager"]) as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>>;
+async function getOpsManagers(): Promise<
+  Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>
+> {
+  return getUsersByRoles(["ops_manager"]) as Promise<
+    Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>
+  >;
 }
 
-async function getAccountingUsers(): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>> {
-  return getUsersByRoles(["accounting"]) as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>>;
+async function getAccountingUsers(): Promise<
+  Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>
+> {
+  return getUsersByRoles(["accounting"]) as Promise<
+    Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>
+  >;
 }
 
-async function getTeamManager(teamId: string): Promise<{ _id: mongoose.Types.ObjectId; name: string } | null> {
-  const team = (await Team.findById(teamId).select("managerId").lean().exec()) as
-    | { _id: mongoose.Types.ObjectId; managerId?: mongoose.Types.ObjectId }
-    | null;
+async function getTeamManager(
+  teamId: string,
+): Promise<{ _id: mongoose.Types.ObjectId; name: string } | null> {
+  const team = (await Team.findById(teamId).select("managerId").lean().exec()) as {
+    _id: mongoose.Types.ObjectId;
+    managerId?: mongoose.Types.ObjectId;
+  } | null;
   if (!team?.managerId) return null;
-  const manager = (await User.findById(team.managerId).select("_id name status").lean().exec()) as
-    | { _id: mongoose.Types.ObjectId; name?: string; status?: string }
-    | null;
+  const manager = (await User.findById(team.managerId).select("_id name status").lean().exec()) as {
+    _id: mongoose.Types.ObjectId;
+    name?: string;
+    status?: string;
+  } | null;
   if (!manager || manager.status !== "active") return null;
   return { _id: manager._id, name: manager.name ?? "" };
 }
 
-async function getLeadAgentsInTeam(teamId: string): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string }>> {
-  const users = (await User.find({ teamId: new mongoose.Types.ObjectId(teamId), role: "leadagent", status: "active" })
+async function getLeadAgentsInTeam(
+  teamId: string,
+): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string }>> {
+  const users = (await User.find({
+    teamId: new mongoose.Types.ObjectId(teamId),
+    role: "leadagent",
+    status: "active",
+  })
     .select("_id name")
     .lean()
     .exec()) as Array<{ _id: mongoose.Types.ObjectId; name?: string }>;
   return users.map((u) => ({ _id: u._id, name: u.name ?? "" }));
 }
 
-async function getTeamMembers(teamId: string): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>> {
-  const team = (await Team.findById(teamId).select("memberIds").lean().exec()) as
-    | { _id: mongoose.Types.ObjectId; memberIds?: mongoose.Types.ObjectId[] }
-    | null;
+async function getTeamMembers(
+  teamId: string,
+): Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>> {
+  const team = (await Team.findById(teamId).select("memberIds").lean().exec()) as {
+    _id: mongoose.Types.ObjectId;
+    memberIds?: mongoose.Types.ObjectId[];
+  } | null;
   if (!team?.memberIds?.length) return [];
   const users = (await User.find({ _id: { $in: team.memberIds }, status: "active" })
     .select("_id name role")
@@ -220,7 +257,10 @@ export async function notifyUser(
 /**
  * Notify all owner/admin users. Used for org-wide important events.
  */
-export async function notifyAdmins(payload: NotificationPayload, sender?: SenderContext): Promise<void> {
+export async function notifyAdmins(
+  payload: NotificationPayload,
+  sender?: SenderContext,
+): Promise<void> {
   const admins = await getAdmins();
   await createNotifications(
     admins.map((a) => ({
@@ -235,7 +275,10 @@ export async function notifyAdmins(payload: NotificationPayload, sender?: Sender
 /**
  * Notify all operations managers. Used for operational events.
  */
-export async function notifyOpsManagers(payload: NotificationPayload, sender?: SenderContext): Promise<void> {
+export async function notifyOpsManagers(
+  payload: NotificationPayload,
+  sender?: SenderContext,
+): Promise<void> {
   const ops = await getOpsManagers();
   await createNotifications(
     ops.map((o) => ({
@@ -250,7 +293,10 @@ export async function notifyOpsManagers(payload: NotificationPayload, sender?: S
 /**
  * Notify all accounting users. Used for invoice/commission events.
  */
-export async function notifyAccounting(payload: NotificationPayload, sender?: SenderContext): Promise<void> {
+export async function notifyAccounting(
+  payload: NotificationPayload,
+  sender?: SenderContext,
+): Promise<void> {
   const acct = await getAccountingUsers();
   await createNotifications(
     acct.map((a) => ({
@@ -379,7 +425,12 @@ export async function notifyApprovers(
  * (db backup, server restart, permission changes, etc.).
  */
 export async function emitSystemAlert(
-  payload: { title: string; message: string; priority?: NotificationPriority; metadata?: Record<string, unknown> },
+  payload: {
+    title: string;
+    message: string;
+    priority?: NotificationPriority;
+    metadata?: Record<string, unknown>;
+  },
   sender?: SenderContext,
 ): Promise<void> {
   await notifyAdmins(
@@ -399,15 +450,18 @@ export async function emitSystemAlert(
  * Cleanup old notifications. Deletes:
  *  1. All read notifications older than 24 hours
  *  2. All unread notifications older than 2 weeks
- * 
+ *
  * Returns the count of deleted documents.
- * 
+ *
  * This can be called:
  *  - On-demand via an API endpoint
  *  - Periodically via a cron job or scheduled task
  *  - During off-peak hours to maintain database performance
  */
-export async function cleanupOldNotifications(): Promise<{ deletedCount: number; details: { readNotifications: number; unreadNotifications: number } }> {
+export async function cleanupOldNotifications(): Promise<{
+  deletedCount: number;
+  details: { readNotifications: number; unreadNotifications: number };
+}> {
   try {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
@@ -426,7 +480,7 @@ export async function cleanupOldNotifications(): Promise<{ deletedCount: number;
 
     const totalDeleted = readResult.deletedCount + unreadResult.deletedCount;
     console.log(
-      `[notification] Cleanup complete: deleted ${readResult.deletedCount} old read notifications and ${unreadResult.deletedCount} old unread notifications (total: ${totalDeleted})`
+      `[notification] Cleanup complete: deleted ${readResult.deletedCount} old read notifications and ${unreadResult.deletedCount} old unread notifications (total: ${totalDeleted})`,
     );
 
     return {
@@ -454,7 +508,7 @@ export async function cleanupOldReadNotifications(): Promise<{ deletedCount: num
 /**
  * Cleanup old session/login logs. Deletes all login history records
  * older than 2 months to keep the database lean.
- * 
+ *
  * Returns the count of deleted documents.
  */
 export async function cleanupOldSessionLogs(): Promise<{ deletedCount: number }> {
