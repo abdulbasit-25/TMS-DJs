@@ -85,12 +85,31 @@ export async function followUpsListHandler(request: Request) {
     });
 
     // Emit follow-up creation notifications
-    const fuSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: user.teamId };
+    const fuSender: SenderContext = {
+      userId: user.id,
+      name: user.name,
+      role: user.role,
+      teamId: user.teamId,
+    };
     const fuId = created._id.toString();
     const fuUrl = `/followups?focus=${fuId}`;
     // Notify team manager/lead agent if high priority
     if (priority === "high" && user.teamId) {
-      void notifyTeamManager(user.teamId, { title: "High-priority follow-up assigned", message: `${user.name} created a high-priority follow-up: "${title}".`, notificationType: "followup_assigned", relatedModule: "followups", recordType: "FollowUp", recordId: fuId, actionUrl: fuUrl, priority: "high", metadata: { priority, leadName: lead.companyName } }, fuSender);
+      void notifyTeamManager(
+        user.teamId,
+        {
+          title: "High-priority follow-up assigned",
+          message: `${user.name} created a high-priority follow-up: "${title}".`,
+          notificationType: "followup_assigned",
+          relatedModule: "followups",
+          recordType: "FollowUp",
+          recordId: fuId,
+          actionUrl: fuUrl,
+          priority: "high",
+          metadata: { priority, leadName: lead.companyName },
+        },
+        fuSender,
+      );
     }
 
     return jsonResponse({
@@ -150,8 +169,27 @@ export async function followUpsListHandler(request: Request) {
 
     // Emit follow-up completion notification
     if (isCompleted && followUp.assignedTo.toString() !== user.id) {
-      const completeSender: SenderContext = { userId: user.id, name: user.name, role: user.role, teamId: user.teamId };
-      void notifyUser(followUp.assignedTo.toString(), { title: "Follow-up completed", message: `${user.name} completed follow-up: "${followUp.title}".`, notificationType: "followup_completed", relatedModule: "followups", recordType: "FollowUp", recordId: followUp._id.toString(), actionUrl: `/followups?focus=${followUp._id.toString()}`, priority: "low", metadata: { title: followUp.title } }, completeSender);
+      const completeSender: SenderContext = {
+        userId: user.id,
+        name: user.name,
+        role: user.role,
+        teamId: user.teamId,
+      };
+      void notifyUser(
+        followUp.assignedTo.toString(),
+        {
+          title: "Follow-up completed",
+          message: `${user.name} completed follow-up: "${followUp.title}".`,
+          notificationType: "followup_completed",
+          relatedModule: "followups",
+          recordType: "FollowUp",
+          recordId: followUp._id.toString(),
+          actionUrl: `/followups?focus=${followUp._id.toString()}`,
+          priority: "low",
+          metadata: { title: followUp.title },
+        },
+        completeSender,
+      );
     }
 
     const [users, leads] = await Promise.all([
