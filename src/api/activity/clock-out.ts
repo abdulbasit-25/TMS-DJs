@@ -102,8 +102,7 @@ export async function clockOutHandler(request: Request) {
   }>;
   const hasLongSession = allSessions.some((s) => {
     if (!s.checkedInAt || !s.checkedOutAt) return false;
-    const duration =
-      new Date(s.checkedOutAt).getTime() - new Date(s.checkedInAt).getTime();
+    const duration = new Date(s.checkedOutAt).getTime() - new Date(s.checkedInAt).getTime();
     return duration > 12 * 60 * 60 * 1000; // 12 hours
   });
 
