@@ -327,9 +327,7 @@ function TeamsPage() {
               {
                 head: "Manager",
                 cell: (team) => (
-                  <span className="text-sm text-muted-foreground">
-                    {team.managerName ?? "—"}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{team.managerName ?? "—"}</span>
                 ),
               },
               {
@@ -372,8 +370,8 @@ function TeamsPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete {team.name}?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action will delete the team and remove all members from it.
-                              This cannot be undone.
+                              This action will delete the team and remove all members from it. This
+                              cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row">

@@ -134,13 +134,18 @@ const EMPTY_FORM: UserFormState = {
 function getInitials(name?: string | null) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
-  const initials = parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0]?.slice(0, 2) ?? "?";
+  const initials =
+    parts.length > 1
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`
+      : (parts[0]?.slice(0, 2) ?? "?");
   return initials.toUpperCase();
 }
 
 function Avatar({ name, size = "size-8" }: { name?: string | null; size?: string }) {
   return (
-    <div className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground`}>
+    <div
+      className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground`}
+    >
       {getInitials(name)}
     </div>
   );
@@ -161,7 +166,9 @@ function UserFormFields({
   return (
     <div className="space-y-5">
       <div className="space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contact info</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Contact info
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="firstName">First name</Label>
@@ -208,11 +215,16 @@ function UserFormFields({
       </div>
 
       <div className="space-y-3 border-t border-border pt-4">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role & employment</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Role & employment
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Role</Label>
-            <Select value={form.role} onValueChange={(value) => setForm((prev) => ({ ...prev, role: value }))}>
+            <Select
+              value={form.role}
+              onValueChange={(value) => setForm((prev) => ({ ...prev, role: value }))}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -227,7 +239,10 @@ function UserFormFields({
           </div>
           <div className="space-y-1.5">
             <Label>Status</Label>
-            <Select value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}>
+            <Select
+              value={form.status}
+              onValueChange={(value) => setForm((prev) => ({ ...prev, status: value }))}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -242,7 +257,10 @@ function UserFormFields({
           </div>
           <div className="space-y-1.5">
             <Label>Team</Label>
-            <Select value={form.teamId} onValueChange={(value) => setForm((prev) => ({ ...prev, teamId: value }))}>
+            <Select
+              value={form.teamId}
+              onValueChange={(value) => setForm((prev) => ({ ...prev, teamId: value }))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select team" />
               </SelectTrigger>
@@ -282,7 +300,9 @@ function UserFormFields({
               max="100"
               step="0.01"
               value={form.commissionPercentage}
-              onChange={(event) => setForm((prev) => ({ ...prev, commissionPercentage: event.target.value }))}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, commissionPercentage: event.target.value }))
+              }
               placeholder="0-100"
               className="sm:max-w-[calc(50%-0.375rem)]"
             />
@@ -291,15 +311,21 @@ function UserFormFields({
       </div>
 
       <div className="space-y-3 border-t border-border pt-4">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Security</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Security
+        </div>
         <div className="space-y-1.5">
           <Label htmlFor="temporaryPassword">
-            {mode === "create" ? "Temporary password" : "Temporary password (leave blank to keep current)"}
+            {mode === "create"
+              ? "Temporary password"
+              : "Temporary password (leave blank to keep current)"}
           </Label>
           <Input
             id="temporaryPassword"
             value={form.temporaryPassword}
-            onChange={(event) => setForm((prev) => ({ ...prev, temporaryPassword: event.target.value }))}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, temporaryPassword: event.target.value }))
+            }
           />
         </div>
       </div>
@@ -379,7 +405,9 @@ function UsersPage() {
     try {
       const body = {
         ...form,
-        commissionPercentage: form.commissionPercentage ? parseFloat(form.commissionPercentage) : undefined,
+        commissionPercentage: form.commissionPercentage
+          ? parseFloat(form.commissionPercentage)
+          : undefined,
       };
       await apiFetch("/api/users", { method: "POST", body: JSON.stringify(body) });
       toast.success("User created");
@@ -398,7 +426,9 @@ function UsersPage() {
     try {
       const body = {
         ...updates,
-        commissionPercentage: updates.commissionPercentage ? parseFloat(updates.commissionPercentage) : undefined,
+        commissionPercentage: updates.commissionPercentage
+          ? parseFloat(updates.commissionPercentage)
+          : undefined,
       };
       await apiFetch("/api/users", { method: "PATCH", body: JSON.stringify({ userId, ...body }) });
       toast.success("User updated");
@@ -416,7 +446,9 @@ function UsersPage() {
     try {
       const body = {
         ...form,
-        commissionPercentage: form.commissionPercentage ? parseFloat(form.commissionPercentage) : undefined,
+        commissionPercentage: form.commissionPercentage
+          ? parseFloat(form.commissionPercentage)
+          : undefined,
       };
       await apiFetch("/api/users", {
         method: "PATCH",
@@ -490,7 +522,10 @@ function UsersPage() {
         { label: "Employment Type", getValue: (user) => user.employmentType ?? "" },
         { label: "Team", getValue: (user) => user.team ?? "" },
         { label: "Status", getValue: (user) => user.status },
-        { label: "Last Login", getValue: (user) => (user.lastLogin ? fmtDate(user.lastLogin) : "") },
+        {
+          label: "Last Login",
+          getValue: (user) => (user.lastLogin ? fmtDate(user.lastLogin) : ""),
+        },
       ],
       formatExportFilename("users", format),
       format,
@@ -590,7 +625,10 @@ function UsersPage() {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+            >
               <div className="size-8 shrink-0 animate-pulse rounded-full bg-muted" />
               <div className="flex-1 space-y-2">
                 <div className="h-3 w-1/4 animate-pulse rounded bg-muted" />
@@ -674,13 +712,17 @@ function UsersPage() {
               {
                 head: "Last login",
                 cell: (user) => (
-                  <span className="text-xs text-muted-foreground">{user.lastLogin ? fmtDate(user.lastLogin) : "—"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.lastLogin ? fmtDate(user.lastLogin) : "—"}
+                  </span>
                 ),
               },
               {
                 head: "Created",
                 cell: (user) => (
-                  <span className="text-xs text-muted-foreground">{user.createdAt ? fmtDate(user.createdAt) : "—"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {user.createdAt ? fmtDate(user.createdAt) : "—"}
+                  </span>
                 ),
               },
               {
@@ -758,14 +800,19 @@ function UsersPage() {
                     <div className="mt-0.5">{open.commissionPercentage ?? "—"}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase text-muted-foreground">Employment Type</div>
+                    <div className="text-[10px] uppercase text-muted-foreground">
+                      Employment Type
+                    </div>
                     <div className="mt-0.5">{open.employmentType ?? "—"}</div>
                   </div>
                 </div>
                 {canEditUsers && (
                   <div className="space-y-2 rounded-md border border-border p-3">
                     <Label>Role</Label>
-                    <Select value={open.role} onValueChange={(value) => void updateUser(open.id, { role: value })}>
+                    <Select
+                      value={open.role}
+                      onValueChange={(value) => void updateUser(open.id, { role: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -778,7 +825,10 @@ function UsersPage() {
                       </SelectContent>
                     </Select>
                     <Label>Status</Label>
-                    <Select value={open.status} onValueChange={(value) => void updateUser(open.id, { status: value })}>
+                    <Select
+                      value={open.status}
+                      onValueChange={(value) => void updateUser(open.id, { status: value })}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -794,19 +844,28 @@ function UsersPage() {
                 )}
                 {canEditUsers && (
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button variant="outline" className="w-full sm:w-auto" onClick={() => void resetPassword(open.id)}>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => void resetPassword(open.id)}
+                    >
                       <KeyRound className="size-4" /> Reset password
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" className="w-full text-destructive hover:sm:w-auto sm:w-auto">
+                        <Button
+                          variant="outline"
+                          className="w-full text-destructive hover:sm:w-auto sm:w-auto"
+                        >
                           <Trash2 className="size-4" /> Delete
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>Delete {open.name}?</AlertDialogTitle>
-                          <AlertDialogDescription>This action removes the user record from the database.</AlertDialogDescription>
+                          <AlertDialogDescription>
+                            This action removes the user record from the database.
+                          </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row">
                           <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
@@ -834,11 +893,16 @@ function UsersPage() {
           </DialogHeader>
           <UserFormFields form={form} setForm={setForm} teams={teams} mode="create" />
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowCreate(false)}>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setShowCreate(false)}
+            >
               Cancel
             </Button>
             <Button className="w-full sm:w-auto" onClick={() => void saveUser()} disabled={saving}>
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} {saving ? "Saving…" : "Create user"}
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{" "}
+              {saving ? "Saving…" : "Create user"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -851,11 +915,20 @@ function UsersPage() {
           </DialogHeader>
           <UserFormFields form={form} setForm={setForm} teams={teams} mode="edit" />
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowEdit(false)}>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setShowEdit(false)}
+            >
               Cancel
             </Button>
-            <Button className="w-full sm:w-auto" onClick={() => void saveEditedUser()} disabled={saving}>
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} {saving ? "Saving…" : "Save changes"}
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => void saveEditedUser()}
+              disabled={saving}
+            >
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}{" "}
+              {saving ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

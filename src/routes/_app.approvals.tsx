@@ -86,7 +86,9 @@ function formatPrimitive(v: unknown): string {
   if (typeof v === "boolean") return v ? "Yes" : "No";
   if (isIsoDateString(v)) {
     const d = new Date(v);
-    return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    return Number.isNaN(d.getTime())
+      ? String(v)
+      : d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
   }
   return String(v);
 }
@@ -98,7 +100,8 @@ function formatPrimitive(v: unknown): string {
  * other object or array so new fields don't regress to raw JSON either.
  */
 function renderChangeValue(key: string, value: unknown): ReactNode {
-  if (value === null || value === undefined) return <span className="text-muted-foreground">(empty)</span>;
+  if (value === null || value === undefined)
+    return <span className="text-muted-foreground">(empty)</span>;
 
   // documents: array of { kind, uploaded, uploadedAt }
   if (key === "documents" && Array.isArray(value)) {
@@ -109,7 +112,9 @@ function renderChangeValue(key: string, value: unknown): ReactNode {
           <li key={i} className="flex items-center justify-between gap-3">
             <span>{DOC_LABELS[doc.kind] || humanizeKey(doc.kind || "Document")}</span>
             <span className={doc.uploaded ? "text-success" : "text-muted-foreground"}>
-              {doc.uploaded ? `Uploaded${doc.uploadedAt ? ` · ${formatPrimitive(doc.uploadedAt)}` : ""}` : "Not uploaded"}
+              {doc.uploaded
+                ? `Uploaded${doc.uploadedAt ? ` · ${formatPrimitive(doc.uploadedAt)}` : ""}`
+                : "Not uploaded"}
             </span>
           </li>
         ))}
@@ -194,7 +199,9 @@ function StatusPill({ status }: { status: ApprovalRequest["status"] }) {
     rejected: "Rejected",
   };
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${styles[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${styles[status]}`}
+    >
       {labels[status]}
     </span>
   );
@@ -334,14 +341,15 @@ function ApprovalsPage() {
   const handleDecide = async (
     approvalRequestId: string,
     action: "approve" | "reject" | "request_changes",
-    reason?: string
+    reason?: string,
   ) => {
     try {
       await apiFetch("/api/approvals", {
         method: "PATCH",
         body: JSON.stringify({ approvalRequestId, action, rejectionReason: reason }),
       });
-      const actionText = action === "approve" ? "approved" : action === "reject" ? "rejected" : "changes requested";
+      const actionText =
+        action === "approve" ? "approved" : action === "reject" ? "rejected" : "changes requested";
       toast.success(`Request ${actionText}`);
       setShowDetailsDialog(false);
       await loadData();
@@ -437,7 +445,11 @@ function ApprovalsPage() {
           ))}
         </div>
       ) : filteredItems.length === 0 ? (
-        <EmptyState icon={<FileDiff className="size-6" />} title="All caught up" description="No pending approvals in this queue" />
+        <EmptyState
+          icon={<FileDiff className="size-6" />}
+          title="All caught up"
+          description="No pending approvals in this queue"
+        />
       ) : (
         <div className="grid gap-4">
           {filteredItems.map((item) => (
@@ -473,14 +485,20 @@ function ApprovalsPage() {
                       }}
                     >
                       <DialogTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => setSelectedItemId(item.id)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedItemId(item.id)}
+                        >
                           View details
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Approval Request Details</DialogTitle>
-                          <DialogDescription>Review the changes before making a decision</DialogDescription>
+                          <DialogDescription>
+                            Review the changes before making a decision
+                          </DialogDescription>
                         </DialogHeader>
                         {selectedItem && (
                           <ApprovalDetails
@@ -568,7 +586,10 @@ function ApprovalDetails({
         oldValue: null,
         newValue: value,
       }));
-    const allKeys = new Set([...Object.keys(approval.previousValues), ...Object.keys(approval.newValues)]);
+    const allKeys = new Set([
+      ...Object.keys(approval.previousValues),
+      ...Object.keys(approval.newValues),
+    ]);
     return Array.from(allKeys)
       .map((key) => ({
         key,
@@ -632,10 +653,12 @@ function ApprovalDetails({
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>
-              <span className="text-muted-foreground">Module:</span> <span className="font-medium">{approval.module}</span>
+              <span className="text-muted-foreground">Module:</span>{" "}
+              <span className="font-medium">{approval.module}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Action:</span> <span className="font-medium">{approval.actionType}</span>
+              <span className="text-muted-foreground">Action:</span>{" "}
+              <span className="font-medium">{approval.actionType}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Requested by:</span>{" "}
@@ -654,7 +677,9 @@ function ApprovalDetails({
           </CardContent>
         </Card>
 
-        {(approval.status === "approved" || approval.status === "rejected" || approval.status === "changes_requested") && (
+        {(approval.status === "approved" ||
+          approval.status === "rejected" ||
+          approval.status === "changes_requested") && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
@@ -668,21 +693,35 @@ function ApprovalDetails({
             <CardContent className="space-y-2 text-sm">
               <div>
                 <span className="text-muted-foreground">
-                  {approval.status === "approved" ? "Approved by" : approval.status === "changes_requested" ? "Requested by" : "Rejected by"}:
+                  {approval.status === "approved"
+                    ? "Approved by"
+                    : approval.status === "changes_requested"
+                      ? "Requested by"
+                      : "Rejected by"}
+                  :
                 </span>{" "}
                 <span className="font-medium">
-                  {approval.status === "approved" ? approval.approvedByName : approval.rejectedByName}
+                  {approval.status === "approved"
+                    ? approval.approvedByName
+                    : approval.rejectedByName}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">{approval.status === "approved" ? "Approved at" : "Processed at"}:</span>{" "}
+                <span className="text-muted-foreground">
+                  {approval.status === "approved" ? "Approved at" : "Processed at"}:
+                </span>{" "}
                 <span className="font-medium">
-                  {new Date((approval.status === "approved" ? approval.approvedAt : approval.rejectedAt) as string).toLocaleString()}
+                  {new Date(
+                    (approval.status === "approved"
+                      ? approval.approvedAt
+                      : approval.rejectedAt) as string,
+                  ).toLocaleString()}
                 </span>
               </div>
               {approval.rejectionReason && (
                 <div>
-                  <span className="text-muted-foreground">Reason:</span> <span className="font-medium">{approval.rejectionReason}</span>
+                  <span className="text-muted-foreground">Reason:</span>{" "}
+                  <span className="font-medium">{approval.rejectionReason}</span>
                 </div>
               )}
             </CardContent>
@@ -697,7 +736,12 @@ function ApprovalDetails({
             <FileDiff className="size-4" />
             Changes
             {canEdit && (
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setEditing(!editing)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto"
+                onClick={() => setEditing(!editing)}
+              >
                 {editing ? "Cancel" : "Edit"}
               </Button>
             )}
@@ -707,7 +751,12 @@ function ApprovalDetails({
           {editing ? (
             <div className="space-y-3">
               <Label>Edit New Values (JSON)</Label>
-              <Textarea value={newValues} onChange={(e) => setNewValues(e.target.value)} rows={10} className="font-mono text-xs" />
+              <Textarea
+                value={newValues}
+                onChange={(e) => setNewValues(e.target.value)}
+                rows={10}
+                className="font-mono text-xs"
+              />
               <Button onClick={handleSaveEdit} className="w-full sm:w-auto">
                 Save Changes & Re-submit
               </Button>
@@ -718,7 +767,9 @@ function ApprovalDetails({
             <div className="space-y-3">
               {changedFields.map(({ key, oldValue, newValue }) => (
                 <div key={key} className="space-y-1.5">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{humanizeKey(key)}</div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {humanizeKey(key)}
+                  </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label className="text-xs font-normal text-muted-foreground">Previous</Label>
@@ -755,7 +806,9 @@ function ApprovalDetails({
                 <div key={comment.id} className="rounded-md border border-border p-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold">{comment.userName}</span>
-                    <span className="text-xs text-muted-foreground">{relative(comment.createdAt)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {relative(comment.createdAt)}
+                    </span>
                   </div>
                   <p className="mt-1 text-sm">{comment.text}</p>
                 </div>
@@ -775,7 +828,11 @@ function ApprovalDetails({
                 rows={2}
                 className="flex-1"
               />
-              <Button onClick={handleAddComment} disabled={!newComment.trim() || addingComment} className="sm:self-end">
+              <Button
+                onClick={handleAddComment}
+                disabled={!newComment.trim() || addingComment}
+                className="sm:self-end"
+              >
                 {addingComment ? <Loader2 className="size-4 animate-spin" /> : "Add"}
               </Button>
             </div>
@@ -787,7 +844,9 @@ function ApprovalDetails({
       {canAct && ["pending", "changes_requested"].includes(approval.status) && (
         <div className="space-y-3 border-t border-border pt-4">
           <div className="space-y-1.5">
-            <Label htmlFor="rejectionReason">Reason (required for Request Changes, optional otherwise)</Label>
+            <Label htmlFor="rejectionReason">
+              Reason (required for Request Changes, optional otherwise)
+            </Label>
             <Textarea
               id="rejectionReason"
               value={rejectionReason}
@@ -796,7 +855,10 @@ function ApprovalDetails({
             />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => onDecide(approval.id, "reject", rejectionReason)}>
+            <Button
+              variant="outline"
+              onClick={() => onDecide(approval.id, "reject", rejectionReason)}
+            >
               <X className="size-4" /> Reject
             </Button>
             <Button
