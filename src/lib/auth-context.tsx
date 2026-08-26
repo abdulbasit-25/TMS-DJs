@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      await apiFetch<{ message: string }>('/api/auth/logout', { method: "POST", keepalive: true });
+      await apiFetch<{ message: string }>("/api/auth/logout", { method: "POST", keepalive: true });
     } catch {
       // Ignore logout errors; the local session will still be cleared.
     }
@@ -227,7 +227,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateLastActivity();
       },
     }),
-    [effectiveSession, loading, clockedIn, sessionStatus, sessionTimeRemainingMs, lastActivityAt, handleSignOut],
+    [
+      effectiveSession,
+      loading,
+      clockedIn,
+      sessionStatus,
+      sessionTimeRemainingMs,
+      lastActivityAt,
+      handleSignOut,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

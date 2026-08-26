@@ -21,7 +21,10 @@ export type SessionUser = {
 
 export function verifyJwt(token: string) {
   try {
-    return jwt.verify(token, getJwtSecret("JWT_SECRET")) as unknown as { sub: string; type: string };
+    return jwt.verify(token, getJwtSecret("JWT_SECRET")) as unknown as {
+      sub: string;
+      type: string;
+    };
   } catch (error) {
     return null;
   }
@@ -83,9 +86,10 @@ export async function getSessionUserFromRefreshToken(request: Request) {
     return null;
   }
 
-  const decoded = jwt.decode(decodeURIComponent(tokenMatch[1])) as
-    | { sub?: string; type?: string }
-    | null;
+  const decoded = jwt.decode(decodeURIComponent(tokenMatch[1])) as {
+    sub?: string;
+    type?: string;
+  } | null;
   if (!decoded || decoded.type !== "refresh" || !decoded.sub) {
     return null;
   }
