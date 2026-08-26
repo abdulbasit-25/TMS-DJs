@@ -5,7 +5,11 @@ let refreshSessionPromise: Promise<void> | null = null;
 
 function isAuthEndpoint(input: RequestInfo) {
   if (typeof input === "string") {
-    return input.includes("/api/auth/login") || input.includes("/api/auth/refresh") || input.includes("/api/auth/logout");
+    return (
+      input.includes("/api/auth/login") ||
+      input.includes("/api/auth/refresh") ||
+      input.includes("/api/auth/logout")
+    );
   }
   return false;
 }
