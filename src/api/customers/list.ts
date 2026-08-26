@@ -270,10 +270,7 @@ export async function customersListHandler(request: Request) {
     const updated = await customer.save();
 
     // Emit customer status change notifications
-    if (
-      (status === "approved" || status === "rejected") &&
-      status !== prevCustomerStatus
-    ) {
+    if ((status === "approved" || status === "rejected") && status !== prevCustomerStatus) {
       const sender: SenderContext = {
         userId: user.id,
         name: user.name,
@@ -281,10 +278,8 @@ export async function customersListHandler(request: Request) {
         teamId: user.teamId,
       };
       const actionUrl = `/customers?focus=${customerId}`;
-      const notificationType =
-        status === "approved" ? "customer_approved" : "customer_rejected";
-      const title =
-        status === "approved" ? "Customer approved" : "Customer rejected";
+      const notificationType = status === "approved" ? "customer_approved" : "customer_rejected";
+      const title = status === "approved" ? "Customer approved" : "Customer rejected";
       const message = `${user.name} ${status === "approved" ? "approved" : "rejected"} customer "${customer.companyName}".`;
 
       if (customer.agentId && customer.agentId.toString() !== user.id) {
@@ -312,20 +307,57 @@ export async function customersListHandler(request: Request) {
       }
 
       void notifyAdmins(
-        { title, message, notificationType, relatedModule: "customers", recordType: "Customer", recordId: customerId, actionUrl, priority: "low", metadata: { status } },
+        {
+          title,
+          message,
+          notificationType,
+          relatedModule: "customers",
+          recordType: "Customer",
+          recordId: customerId,
+          actionUrl,
+          priority: "low",
+          metadata: { status },
+        },
         sender,
       );
 
       if (customer.agentId) {
         try {
-          const agent = (await User.findById(customer.agentId)
-            .select("teamId")
-            .lean()
-            .exec()) as { teamId?: mongoose.Types.ObjectId } | null;
+          const agent = (await User.findById(customer.agentId).select("teamId").lean().exec()) as {
+            teamId?: mongoose.Types.ObjectId;
+          } | null;
           if (agent?.teamId) {
             const agentTeamId = agent.teamId.toString();
-            void notifyTeamManager(agentTeamId, { title, message, notificationType, relatedModule: "customers", recordType: "Customer", recordId: customerId, actionUrl, priority: "low", metadata: { status } }, sender);
-            void notifyLeadAgents(agentTeamId, { title, message, notificationType, relatedModule: "customers", recordType: "Customer", recordId: customerId, actionUrl, priority: "low", metadata: { status } }, sender);
+            void notifyTeamManager(
+              agentTeamId,
+              {
+                title,
+                message,
+                notificationType,
+                relatedModule: "customers",
+                recordType: "Customer",
+                recordId: customerId,
+                actionUrl,
+                priority: "low",
+                metadata: { status },
+              },
+              sender,
+            );
+            void notifyLeadAgents(
+              agentTeamId,
+              {
+                title,
+                message,
+                notificationType,
+                relatedModule: "customers",
+                recordType: "Customer",
+                recordId: customerId,
+                actionUrl,
+                priority: "low",
+                metadata: { status },
+              },
+              sender,
+            );
           }
         } catch (e) {
           console.error("[notification] customer status team lookup failed:", e);
