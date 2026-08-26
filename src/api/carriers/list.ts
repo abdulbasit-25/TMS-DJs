@@ -252,10 +252,7 @@ export async function carriersListHandler(request: Request) {
     const updated = await carrier.save();
 
     // Emit carrier status change notifications
-    if (
-      ["approved", "rejected", "suspended"].includes(status) &&
-      status !== prevCarrierStatus
-    ) {
+    if (["approved", "rejected", "suspended"].includes(status) && status !== prevCarrierStatus) {
       const sender: SenderContext = {
         userId: user.id,
         name: user.name,
