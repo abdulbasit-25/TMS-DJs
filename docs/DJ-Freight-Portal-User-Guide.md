@@ -1,4 +1,5 @@
 # DJ Freight Portal
+
 ## Client User Guide
 
 Version 1.0  
@@ -72,6 +73,7 @@ Choose a password that is easy for you to remember but strong enough to protect 
 After signing in, you will land on the dashboard. This is the home screen for your daily work.
 
 It helps you quickly see:
+
 - what needs attention
 - what is moving forward
 - what is waiting for review
@@ -98,62 +100,77 @@ The dashboard is your daily command center. It brings together the most importan
 ## What the Dashboard Tells You
 
 ### Summary Cards
+
 These cards show key numbers such as leads, loads, invoices, and approvals.
 
 What this tells you:
+
 - What is active right now
 - Where attention is needed
 - Whether work is increasing or slowing down
 
 What to do with this information:
+
 - Review urgent items first
 - Prioritize tasks that need action today
 - Follow up on anything that appears delayed
 
 ### Trend Charts
+
 These charts show patterns over time.
 
 What this tells you:
+
 - Whether performance is improving
 - Whether revenue or margin is growing
 - Whether workloads are increasing
 
 What to do with this information:
+
 - Use it to guide planning
 - Compare current performance to previous weeks
 - Highlight issues early
 
 ### Recent Activity
+
 This section shows the latest events in the portal.
 
 What this tells you:
+
 - What changed recently
 - Who acted on a record
 - What needs your attention next
 
 What to do with this information:
+
 - Review recent updates before starting work
 - Follow up on new actions quickly
 
 ### Pending Approvals
+
 This area shows items waiting for review.
 
 What this tells you:
+
 - Which requests need your decision
 - What is blocking progress
 
 What to do with this information:
+
 - Review approvals daily
 - Act promptly so work can continue
 
 ### Upcoming Follow-Ups
+
 This section highlights tasks that are due soon.
 
 What this tells you:
+
 - What needs follow-up this week
 - Which work is at risk of slipping
 
 What to do with this information:
+
 - Plan your day around important follow-ups
 - Keep customers and internal teams informed
 
@@ -203,6 +220,7 @@ Use leads to track potential customers and opportunities that still need attenti
 ## When to Use It
 
 Use leads when:
+
 - a new prospect is identified
 - a customer inquiry is received
 - an opportunity needs follow-up
@@ -253,6 +271,7 @@ Use the customer section to keep a clear record of each customer relationship.
 ## When to Use It
 
 Use customers when:
+
 - a lead becomes a real client
 - you need to review account history
 - you are preparing a quote or shipment
@@ -293,6 +312,7 @@ Use this area to keep carrier information organized and ready for booking.
 ## When to Use It
 
 Use carriers when:
+
 - a new carrier is added to the network
 - carrier information needs review
 - a shipment is being planned
@@ -334,6 +354,7 @@ Use quotes to present pricing clearly and make sure the opportunity is ready for
 ## When to Use It
 
 Use quotes when:
+
 - a customer requests a rate
 - you are preparing a shipment proposal
 - the deal needs internal review
@@ -419,6 +440,7 @@ Approvals make sure important actions are reviewed before they move forward. Thi
 ## When Approvals Appear
 
 Approvals may appear when:
+
 - a new lead is submitted
 - a quote needs review
 - a record changes in a significant way
@@ -562,6 +584,7 @@ Different users in the portal have different responsibilities.
 These users oversee the overall system and manage the broader business operation.
 
 They typically:
+
 - review major activity
 - manage user access
 - oversee important business decisions
@@ -572,6 +595,7 @@ They typically:
 These users focus on the day-to-day flow of work.
 
 They typically:
+
 - monitor activity
 - oversee approvals
 - keep operations moving smoothly
@@ -582,6 +606,7 @@ They typically:
 These users guide smaller teams and help coordinate work.
 
 They typically:
+
 - review team activity
 - support team members
 - manage follow-up priorities
@@ -592,6 +617,7 @@ They typically:
 Agents work directly with leads, customers, quotes, and shipments.
 
 They typically:
+
 - create and update records
 - follow up with opportunities
 - manage day-to-day work items
@@ -606,6 +632,7 @@ Trainees use the portal to learn the workflow and support day-to-day work with l
 Accounting users focus on financial visibility.
 
 They typically:
+
 - review invoices
 - monitor commission activity
 - support financial tracking
@@ -615,66 +642,87 @@ They typically:
 # 16. Frequently Asked Questions
 
 ## I forgot my password.
+
 Contact your administrator or use the password recovery option if available.
 
 ## Why can’t I edit this record?
+
 You may not have the right access for that record, or the record may be waiting for review.
 
 ## What happens after I submit an approval?
+
 The request is reviewed by the appropriate person and then either approved, rejected, or returned with changes.
 
 ## How do I know a shipment is complete?
+
 The load status will reflect the completed stage once the shipment has reached its final step.
 
 ## Why is a lead still open?
+
 It may still be active, waiting for follow-up, or awaiting review.
 
 ## How do I know which follow-up is urgent?
+
 Check the follow-up list and prioritize anything due soon or overdue.
 
 ## Why is a quote waiting for approval?
+
 Some quotes require review before moving forward.
 
 ## Can I update a customer record after it is created?
+
 Yes. Records should be kept current as details change.
 
 ## What should I do if I cannot find a record?
+
 Try the search tool or review whether the record is in a different status or section.
 
 ## How often should I review notifications?
+
 At least once a day, and more often if you are handling time-sensitive work.
 
 ## What if I submit a record by mistake?
+
 Contact the appropriate team member or administrator so the record can be corrected.
 
 ## Why am I seeing old information?
+
 Some records may have changed recently; review the latest notes and status before acting.
 
 ## How do I know whether a load is on track?
+
 Review the current load status and any recent updates attached to the record.
 
 ## What if an invoice is overdue?
+
 Review the invoice details and follow up promptly with the relevant party.
 
 ## Why is a commission not showing yet?
+
 It may still be pending or linked to a load that has not yet completed the relevant stage.
 
 ## What should I do if a customer changes contact details?
+
 Update the customer record immediately so future communication remains accurate.
 
 ## Can I create a quote without a customer record?
+
 In many cases, it is best to confirm the customer information first, but the portal may still support the workflow depending on the situation.
 
 ## How do I know whether I should create a new lead or update an existing one?
+
 If the company already exists in the system, update the existing record instead of creating a duplicate.
 
 ## What happens if I ignore a pending approval?
+
 Work may remain blocked until the approval is completed.
 
 ## Who should I contact for account issues?
+
 Contact your administrator or team lead.
 
 ## How should I use this portal every day?
+
 Use it as your main place for current work, follow-up, and visibility into the business.
 
 ---
@@ -696,18 +744,23 @@ Use it as your main place for current work, follow-up, and visibility into the b
 # 18. Troubleshooting
 
 ## I cannot sign in.
+
 Check your email and password. If the issue continues, contact your administrator.
 
 ## I do not see a menu item.
+
 You may not have access to that part of the portal right now.
 
 ## A record is not updating.
+
 Refresh the page and check whether the record has changed. If the issue remains, contact support.
 
 ## I am not receiving notifications.
+
 Check your notification area and confirm that the alert is not already visible.
 
 ## I cannot find a record.
+
 Use the search tool and check the status or section where the record should appear.
 
 ---
@@ -715,11 +768,13 @@ Use the search tool and check the status or section where the record should appe
 # 19. Support
 
 If you are unsure how to proceed, contact:
+
 - your team leader
 - your administrator
 - the operations support team
 
 Contact support when:
+
 - access is blocked
 - a record appears incorrect
 - an approval is stuck
