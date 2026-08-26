@@ -16,12 +16,19 @@ export async function activityLogsHandler(request: Request) {
 
   const logs = await DailyActivityLog.find(filter).sort({ date: -1 }).lean().exec();
 
-  const userIds = [...new Set(logs.map((log: { userId: string | { toString(): string } }) => log.userId.toString()))];
+  const userIds = [
+    ...new Set(
+      logs.map((log: { userId: string | { toString(): string } }) => log.userId.toString()),
+    ),
+  ];
   const users = await User.find({ _id: { $in: userIds } })
     .lean()
     .exec();
   const userIndex = new Map(
-    users.map((user: { _id: { toString(): string }; name: string; email: string }) => [user._id.toString(), { name: user.name, email: user.email }]),
+    users.map((user: { _id: { toString(): string }; name: string; email: string }) => [
+      user._id.toString(),
+      { name: user.name, email: user.email },
+    ]),
   );
 
   return jsonResponse({
