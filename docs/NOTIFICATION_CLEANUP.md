@@ -1,6 +1,7 @@
 # Data Cleanup Feature
 
 ## Overview
+
 This feature automatically manages old data to keep the database clean and improve application performance. Three types of data are cleaned up:
 
 1. **Read Notifications** - Deleted 24 hours after being marked as read
@@ -12,13 +13,17 @@ This feature automatically manages old data to keep the database clean and impro
 ### Notifications
 
 #### 1. Read Notification Cleanup
+
 When a notification is marked as read, a `readAt` timestamp is recorded in the database. This allows the system to track exactly when the notification was read.
 
 #### 2. Unread Notification Cleanup
+
 Unread notifications are tracked by their `createdAt` timestamp. Notifications unread for more than 2 weeks are automatically deleted.
 
 #### 3. Auto-Deletion Criteria
+
 Notifications are deleted if:
+
 - **Read notifications**: `isRead: true` AND `readAt < 24 hours ago`
 - **Unread notifications**: `isRead: false` AND `createdAt < 2 weeks ago`
 
@@ -27,7 +32,9 @@ Notifications are deleted if:
 ## Implementation Details
 
 ### Schema Changes
+
 Added `readAt` field to the Notification model:
+
 ```typescript
 readAt?: Date; // Timestamp when notification was marked as read
 ```
@@ -35,7 +42,9 @@ readAt?: Date; // Timestamp when notification was marked as read
 ### API Endpoints
 
 #### 1. Mark Notification as Read (Existing)
+
 **POST** `/api/notifications`
+
 ```json
 {
   "action": "mark_read",
@@ -46,11 +55,13 @@ readAt?: Date; // Timestamp when notification was marked as read
 When marked as read, the `readAt` timestamp is automatically set to the current time.
 
 #### 2. Manual Cleanup (Admin Only)
+
 **POST** `/api/admin/cleanup`
 
 Manually trigger cleanup of notifications older than 24 hours. Requires admin or owner role.
 
 Response:
+
 ```json
 {
   "ok": true,
@@ -61,7 +72,9 @@ Response:
 ```
 
 #### 3. Per-User Cleanup (Optional)
+
 **POST** `/api/notifications`
+
 ```json
 {
   "action": "cleanup_old"
@@ -75,6 +88,7 @@ Triggers cleanup for all notifications in the system (not just the current user)
 To automatically run cleanup on a schedule, you have several options:
 
 ### Option 1: Cron Job (Recommended)
+
 Add a cron job to run the cleanup endpoint periodically:
 
 ```bash
@@ -85,6 +99,7 @@ Add a cron job to run the cleanup endpoint periodically:
 ```
 
 ### Option 2: Application Startup
+
 Add cleanup to your application initialization in `src/start.ts`:
 
 ```typescript
@@ -94,25 +109,31 @@ import { cleanupOldReadNotifications } from "./lib/notification";
 await cleanupOldReadNotifications();
 
 // Then run periodically (e.g., every 6 hours)
-setInterval(() => {
-  cleanupOldReadNotifications().catch(err => 
-    console.error("Scheduled cleanup failed:", err)
-  );
-}, 6 * 60 * 60 * 1000);
+setInterval(
+  () => {
+    cleanupOldReadNotifications().catch((err) => console.error("Scheduled cleanup failed:", err));
+  },
+  6 * 60 * 60 * 1000,
+);
 ```
 
 ### Option 3: Worker/Background Job
+
 Use a background job queue (Bull, RabbitMQ, etc.) to schedule cleanup:
 
 ```typescript
 // In your job processor
 import { cleanupOldReadNotifications } from "./lib/notification";
 
-jobQueue.add("cleanup-old-notifications", {}, {
-  repeat: {
-    every: 6 * 60 * 60 * 1000, // 6 hours
+jobQueue.add(
+  "cleanup-old-notifications",
+  {},
+  {
+    repeat: {
+      every: 6 * 60 * 60 * 1000, // 6 hours
+    },
   },
-});
+);
 
 jobQueue.process("cleanup-old-notifications", async () => {
   return await cleanupOldReadNotifications();
@@ -120,6 +141,7 @@ jobQueue.process("cleanup-old-notifications", async () => {
 ```
 
 ### Option 4: AWS Lambda / Cloud Functions
+
 Create a scheduled function:
 
 ```typescript
@@ -139,6 +161,7 @@ export async function handler(event: any) {
 ## Monitoring
 
 ### Check Database Sizes
+
 Monitor your collections:
 
 ```bash
@@ -156,6 +179,7 @@ db.loginhistories.countDocuments()
 ### Cleanup Logs
 
 Cleanup operations are logged to the console with detailed information:
+
 ```
 [notification] Cleanup complete: deleted X old read notifications and Y old unread notifications (total: Z)
 [session-log] Cleanup complete: deleted X old session logs
@@ -166,6 +190,7 @@ Cleanup operations are logged to the console with detailed information:
 To change the cleanup periods, edit `src/lib/notification.ts`:
 
 ### Notification Cleanup Periods
+
 ```typescript
 // cleanupOldNotifications() function:
 const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -178,6 +203,7 @@ const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 ```
 
 ### Session Log Cleanup Period
+
 ```typescript
 // cleanupOldSessionLogs() function:
 const twoMonthsAgo = new Date();
@@ -208,23 +234,29 @@ This ensures the cleanup query `{ isRead: true, readAt: { $lt: twentyFourHoursAg
 - **No impact on unread**: Unread notifications are never affected
 
 ## Troubleshooting
+
 `/api/admin/cleanup` endpoint requires admin-level access.
 
 ### Notifications Not Being Deleted
+
 Check that:
+
 - `readAt` timestamp is being set for read notifications: `db.notifications.findOne({ isRead: true })` should show `readAt` field
 - `createdAt` exists for unread notifications
 - Verify cleanup is being called (check logs for `[notification] Cleanup complete`)
 - Ensure appropriate time has passed (24+ hours for read, 2+ weeks for unread)
 
 ### Session Logs Not Being Deleted
+
 Check that:
+
 - LoginHistory records have `createdAt` timestamp
 - At least 2 months have passed since creation
 - Run manual cleanup and check results
-Migration Notes for Existing Installations
+  Migration Notes for Existing Installations
 
 ### Notifications
+
 1. Existing read notifications will not have a `readAt` timestamp
 2. These notifications will not be deleted until marked as read again
 3. Optionally, backfill `readAt` for existing read notifications:
@@ -233,18 +265,21 @@ Migration Notes for Existing Installations
 // MongoDB shell
 db.notifications.updateMany(
   { isRead: true, readAt: { $exists: false } },
-  { $set: { readAt: new Date() } }
+  { $set: { readAt: new Date() } },
 );
 ```
 
 ### Session/Login History
+
 - Existing records will be cleaned up based on their `createdAt` timestamp
 - Records older than 2 months will be eligible for cleanup immediately
-// MongoDB shell
-db.notifications.updateMany(
+  // MongoDB shell
+  db.notifications.updateMany(
   { isRead: true, readAt: { $exists: false } },
   { $set: { readAt: new Date() } }
-);
+  );
+
 ```
 
 Then they would be eligible for deletion 24 hours from the migration date.
+```
