@@ -222,7 +222,8 @@ async function getRecentActivity(userId: string): Promise<DashboardActivity[]> {
     title: d.title,
     message: d.message,
     type: d.notificationType,
-    createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : new Date(d.createdAt).toISOString(),
+    createdAt:
+      d.createdAt instanceof Date ? d.createdAt.toISOString() : new Date(d.createdAt).toISOString(),
     actionUrl: d.actionUrl,
   }));
 }
@@ -245,16 +246,13 @@ async function getUpcomingFollowups(
     filter.assignedTo = new mongoose.Types.ObjectId(userId);
   }
 
-  const docs = await FollowUp.find(filter)
-    .sort({ dueDate: 1 })
-    .limit(5)
-    .lean()
-    .exec();
+  const docs = await FollowUp.find(filter).sort({ dueDate: 1 }).limit(5).lean().exec();
 
   return docs.map((d: any) => ({
     id: d._id.toString(),
     title: d.title,
-    dueDate: d.dueDate instanceof Date ? d.dueDate.toISOString() : new Date(d.dueDate).toISOString(),
+    dueDate:
+      d.dueDate instanceof Date ? d.dueDate.toISOString() : new Date(d.dueDate).toISOString(),
     priority: d.priority,
     leadName: undefined,
   }));
@@ -318,9 +316,7 @@ async function getTrends(
     const fullKey = isoWeekKey(d);
     const weekNum = fullKey.split("W")[1] ? `W${fullKey.split("W")[1]}` : fullKey;
     const existing = weekMap.get(fullKey);
-    allWeeks.push(
-      existing || { week: weekNum, margin: 0, revenue: 0, loads: 0 },
-    );
+    allWeeks.push(existing || { week: weekNum, margin: 0, revenue: 0, loads: 0 });
   }
 
   return allWeeks;
@@ -497,11 +493,7 @@ async function getCommissionSummary(
 async function getRecentLoads(
   matchFilter: Record<string, unknown>,
 ): Promise<DashboardRecentLoad[]> {
-  const docs = await Load.find(matchFilter)
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean()
-    .exec();
+  const docs = await Load.find(matchFilter).sort({ createdAt: -1 }).limit(5).lean().exec();
 
   return (docs as any[]).map((d) => ({
     id: d._id.toString(),
@@ -514,38 +506,39 @@ async function getRecentLoads(
       ? `${d.deliveryCity}${d.deliveryState ? ", " + d.deliveryState : ""}`
       : d.deliveryAddress || "—",
     revenue: d.revenue || 0,
-    createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : new Date(d.createdAt).toISOString(),
+    createdAt:
+      d.createdAt instanceof Date ? d.createdAt.toISOString() : new Date(d.createdAt).toISOString(),
   }));
 }
 
-async function getPendingApprovals(
-  teamId?: string,
-): Promise<DashboardApproval[]> {
+async function getPendingApprovals(teamId?: string): Promise<DashboardApproval[]> {
   const filter: Record<string, unknown> = { status: "pending" };
   if (teamId) {
     filter.teamId = new mongoose.Types.ObjectId(teamId);
   }
 
-  const docs = await ApprovalRequest.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .lean()
-    .exec();
+  const docs = await ApprovalRequest.find(filter).sort({ createdAt: -1 }).limit(5).lean().exec();
 
   return (docs as any[]).map((d) => ({
     id: d._id.toString(),
     module: d.module,
     actionType: d.actionType,
     requestedByName: d.requestedByName,
-    createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : new Date(d.createdAt).toISOString(),
+    createdAt:
+      d.createdAt instanceof Date ? d.createdAt.toISOString() : new Date(d.createdAt).toISOString(),
     newValues: d.newValues || {},
   }));
 }
 
-async function getTrainingProgress(userId: string, userStatus: string): Promise<DashboardTrainingProgress> {
+async function getTrainingProgress(
+  userId: string,
+  userStatus: string,
+): Promise<DashboardTrainingProgress> {
   const [requirements, documents] = await Promise.all([
     OnboardingRequirement.find({ active: true, required: true }).lean().exec(),
-    OnboardingDocument.find({ userId: new mongoose.Types.ObjectId(userId), deleted: false }).lean().exec(),
+    OnboardingDocument.find({ userId: new mongoose.Types.ObjectId(userId), deleted: false })
+      .lean()
+      .exec(),
   ]);
 
   const docMap = new Map<string, string>();
@@ -590,7 +583,9 @@ async function getTrainingProgress(userId: string, userStatus: string): Promise<
   };
 }
 
-async function resolveTeamMembers(teamId: string): Promise<{ team: any; memberIds: mongoose.Types.ObjectId[] }> {
+async function resolveTeamMembers(
+  teamId: string,
+): Promise<{ team: any; memberIds: mongoose.Types.ObjectId[] }> {
   const team = (await Team.findById(teamId).lean().exec()) as any;
   if (!team) {
     return { team: null, memberIds: [] };
@@ -694,28 +689,33 @@ async function computeOwnerAdmin(
   ] = await Promise.all([
     Lead.countDocuments({ status: { $nin: ["lost", "customer"] } }).exec(),
     QuoteRequest.countDocuments({ status: "pending_approval" }).exec(),
-    Load.countDocuments({ status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] } }).exec(),
-    Load.countDocuments({ status: { $in: ["delivered", "invoiced", "paid"] }, createdAt: { $gte: som } }).exec(),
+    Load.countDocuments({
+      status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] },
+    }).exec(),
+    Load.countDocuments({
+      status: { $in: ["delivered", "invoiced", "paid"] },
+      createdAt: { $gte: som },
+    }).exec(),
     Customer.countDocuments({ createdAt: { $gte: som } }).exec(),
     ApprovalRequest.countDocuments({ status: "pending" }).exec(),
-    (Commission.aggregate([
+    Commission.aggregate([
       { $match: { payoutStatus: "pending" } },
       { $group: { _id: null, total: { $sum: "$commissionAmount" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
-    (Commission.aggregate([
+    ]).exec() as Promise<Array<{ total: number }>>,
+    Commission.aggregate([
       { $match: { payoutStatus: "paid", month: now.getMonth() + 1, year: now.getFullYear() } },
       { $group: { _id: null, total: { $sum: "$commissionAmount" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
+    ]).exec() as Promise<Array<{ total: number }>>,
     Invoice.countDocuments({ status: { $in: ["sent", "partially_paid", "overdue"] } }).exec(),
     Invoice.countDocuments({ status: "overdue" }).exec(),
-    (Load.aggregate([
+    Load.aggregate([
       { $match: { createdAt: { $gte: som } } },
       { $group: { _id: null, total: { $sum: "$revenue" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
-    (Load.aggregate([
+    ]).exec() as Promise<Array<{ total: number }>>,
+    Load.aggregate([
       { $match: { createdAt: { $gte: som } } },
       { $group: { _id: null, total: { $sum: "$grossMargin" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
+    ]).exec() as Promise<Array<{ total: number }>>,
     getRecentActivity(user.id),
     getPendingApprovals(),
     getUpcomingFollowups(user.id),
@@ -731,7 +731,11 @@ async function computeOwnerAdmin(
   ]);
 
   const usd = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
 
   return {
     kpis: [
@@ -793,7 +797,9 @@ async function computeOpsManager(
   ] = await Promise.all([
     QuoteRequest.countDocuments({ status: "pending_approval" }).exec(),
     Carrier.countDocuments({ status: "pending" }).exec(),
-    Load.countDocuments({ status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] } }).exec(),
+    Load.countDocuments({
+      status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] },
+    }).exec(),
     Load.countDocuments({ status: "dispatched" }).exec(),
     Load.countDocuments({ status: "in_transit" }).exec(),
     Load.countDocuments({ status: "delivered", createdAt: { $gte: sow } }).exec(),
@@ -873,20 +879,34 @@ async function computeTeamManager(
     agentPerformance,
     trends,
   ] = await Promise.all([
-    Lead.countDocuments({ ownerId: { $in: memberIds }, status: { $nin: ["lost", "customer"] } }).exec(),
+    Lead.countDocuments({
+      ownerId: { $in: memberIds },
+      status: { $nin: ["lost", "customer"] },
+    }).exec(),
     QuoteRequest.countDocuments({ ...agentFilter, status: "pending_approval" }).exec(),
-    Load.countDocuments({ ...agentFilter, status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] } }).exec(),
-    Load.countDocuments({ ...agentFilter, status: { $in: ["delivered", "invoiced", "paid"] }, createdAt: { $gte: som } }).exec(),
-    (Load.aggregate([
+    Load.countDocuments({
+      ...agentFilter,
+      status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] },
+    }).exec(),
+    Load.countDocuments({
+      ...agentFilter,
+      status: { $in: ["delivered", "invoiced", "paid"] },
+      createdAt: { $gte: som },
+    }).exec(),
+    Load.aggregate([
       { $match: { ...agentFilter, createdAt: { $gte: som } } },
       { $group: { _id: null, total: { $sum: "$revenue" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
-    (Load.aggregate([
+    ]).exec() as Promise<Array<{ total: number }>>,
+    Load.aggregate([
       { $match: { ...agentFilter, createdAt: { $gte: som } } },
       { $group: { _id: null, total: { $sum: "$grossMargin" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
+    ]).exec() as Promise<Array<{ total: number }>>,
     ApprovalRequest.countDocuments({ ...teamFilter, status: "pending" }).exec(),
-    FollowUp.countDocuments({ assignedTo: { $in: memberIds }, isCompleted: false, dueDate: { $lte: eow } }).exec(),
+    FollowUp.countDocuments({
+      assignedTo: { $in: memberIds },
+      isCompleted: false,
+      dueDate: { $lte: eow },
+    }).exec(),
     getRecentActivity(user.id),
     getPendingApprovals(user.teamId),
     getUpcomingFollowups(user.id, memberIds),
@@ -895,7 +915,11 @@ async function computeTeamManager(
   ]);
 
   const usd = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
 
   return {
     kpis: [
@@ -966,11 +990,24 @@ async function computeLeadAgent(
     trends,
   ] = await Promise.all([
     QuoteRequest.countDocuments({ ...myFilter, status: "pending_approval" }).exec(),
-    Load.countDocuments({ ...myFilter, status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] } }).exec(),
+    Load.countDocuments({
+      ...myFilter,
+      status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] },
+    }).exec(),
     QuoteRequest.countDocuments({ ...teamFilter, status: "pending_approval" }).exec(),
-    Load.countDocuments({ ...teamFilter, status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] } }).exec(),
-    FollowUp.countDocuments({ assignedTo: userId, isCompleted: false, dueDate: { $lte: eow } }).exec(),
-    ApprovalRequest.countDocuments({ status: "pending", teamId: user.teamId ? new mongoose.Types.ObjectId(user.teamId) : undefined }).exec(),
+    Load.countDocuments({
+      ...teamFilter,
+      status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] },
+    }).exec(),
+    FollowUp.countDocuments({
+      assignedTo: userId,
+      isCompleted: false,
+      dueDate: { $lte: eow },
+    }).exec(),
+    ApprovalRequest.countDocuments({
+      status: "pending",
+      teamId: user.teamId ? new mongoose.Types.ObjectId(user.teamId) : undefined,
+    }).exec(),
     getRecentActivity(user.id),
     getUpcomingFollowups(user.id, teamMemberIds),
     getAgentPerformance(teamMemberIds),
@@ -1038,22 +1075,40 @@ async function computeAgent(
   ] = await Promise.all([
     Lead.countDocuments({ ownerId: userId, status: { $nin: ["lost", "customer"] } }).exec(),
     QuoteRequest.countDocuments({ ...myFilter, status: "pending_approval" }).exec(),
-    Load.countDocuments({ ...myFilter, status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] } }).exec(),
-    Load.countDocuments({ ...myFilter, status: { $in: ["delivered", "invoiced", "paid"] }, createdAt: { $gte: som } }).exec(),
+    Load.countDocuments({
+      ...myFilter,
+      status: { $nin: ["delivered", "invoiced", "paid", "cancelled"] },
+    }).exec(),
+    Load.countDocuments({
+      ...myFilter,
+      status: { $in: ["delivered", "invoiced", "paid"] },
+      createdAt: { $gte: som },
+    }).exec(),
     Customer.countDocuments({ ...myFilter }).exec(),
-    (Commission.aggregate([
+    Commission.aggregate([
       { $match: { agentId: userId, payoutStatus: "pending" } },
       { $group: { _id: null, total: { $sum: "$commissionAmount" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
-    (Commission.aggregate([
-      { $match: { agentId: userId, payoutStatus: "paid", month: now.getMonth() + 1, year: now.getFullYear() } },
+    ]).exec() as Promise<Array<{ total: number }>>,
+    Commission.aggregate([
+      {
+        $match: {
+          agentId: userId,
+          payoutStatus: "paid",
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+        },
+      },
       { $group: { _id: null, total: { $sum: "$commissionAmount" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
-    (Load.aggregate([
+    ]).exec() as Promise<Array<{ total: number }>>,
+    Load.aggregate([
       { $match: { ...myFilter, createdAt: { $gte: som } } },
       { $group: { _id: null, total: { $sum: "$revenue" } } },
-    ]).exec()) as Promise<Array<{ total: number }>>,
-    FollowUp.countDocuments({ assignedTo: userId, isCompleted: false, dueDate: { $lte: eow } }).exec(),
+    ]).exec() as Promise<Array<{ total: number }>>,
+    FollowUp.countDocuments({
+      assignedTo: userId,
+      isCompleted: false,
+      dueDate: { $lte: eow },
+    }).exec(),
     getRecentActivity(user.id),
     getUpcomingFollowups(user.id),
     getRecentLoads(myFilter),
@@ -1062,7 +1117,11 @@ async function computeAgent(
   ]);
 
   const usd = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
 
   return {
     kpis: [
@@ -1071,7 +1130,11 @@ async function computeAgent(
       { label: "My Active Loads", value: myActiveLoads, icon: "package" },
       { label: "My Delivered (MTD)", value: myDeliveredMtd, icon: "check" },
       { label: "My Revenue (MTD)", value: usd(myRevenueMtd[0]?.total || 0), icon: "dollar" },
-      { label: "My Commission Pending", value: usd(myCommissionPending[0]?.total || 0), icon: "dollar" },
+      {
+        label: "My Commission Pending",
+        value: usd(myCommissionPending[0]?.total || 0),
+        icon: "dollar",
+      },
     ],
     trends,
     agentPerformance: [],
@@ -1108,19 +1171,18 @@ async function computeTrainee(
 ): Promise<DashboardData> {
   const myFilter = { agentId: userId };
 
-  const [
-    myLeads,
-    myFollowupsDue,
-    trainingProgress,
-    recentActivity,
-    upcomingFollowups,
-  ] = await Promise.all([
-    Lead.countDocuments({ ownerId: userId, status: { $nin: ["lost", "customer"] } }).exec(),
-    FollowUp.countDocuments({ assignedTo: userId, isCompleted: false, dueDate: { $lte: eow } }).exec(),
-    getTrainingProgress(user.id, user.status),
-    getRecentActivity(user.id),
-    getUpcomingFollowups(user.id),
-  ]);
+  const [myLeads, myFollowupsDue, trainingProgress, recentActivity, upcomingFollowups] =
+    await Promise.all([
+      Lead.countDocuments({ ownerId: userId, status: { $nin: ["lost", "customer"] } }).exec(),
+      FollowUp.countDocuments({
+        assignedTo: userId,
+        isCompleted: false,
+        dueDate: { $lte: eow },
+      }).exec(),
+      getTrainingProgress(user.id, user.status),
+      getRecentActivity(user.id),
+      getUpcomingFollowups(user.id),
+    ]);
 
   const isActive = user.status === "active";
 
@@ -1175,16 +1237,19 @@ async function computeAccounting(
   eow: Date,
   now: Date,
 ): Promise<DashboardData> {
-  const [invoiceSummary, commissionSummary, recentActivity, upcomingFollowups] =
-    await Promise.all([
-      getInvoiceSummary(),
-      getCommissionSummary(),
-      getRecentActivity(user.id),
-      getUpcomingFollowups(user.id),
-    ]);
+  const [invoiceSummary, commissionSummary, recentActivity, upcomingFollowups] = await Promise.all([
+    getInvoiceSummary(),
+    getCommissionSummary(),
+    getRecentActivity(user.id),
+    getUpcomingFollowups(user.id),
+  ]);
 
   const usd = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(n);
 
   return {
     kpis: [
