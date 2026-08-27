@@ -10,6 +10,7 @@ import { Invoice } from "../../models/invoice";
 import { FollowUp } from "../../models/followUp";
 import { ApprovalRequest } from "../../models/approvalRequest";
 import { createNotification } from "../../lib/notification";
+import { getDataAccessScope, scopeOwnerFilter } from "../../lib/access-scope";
 
 /**
  * On-demand KPI / follow-up / overdue notification generator.
@@ -93,12 +94,17 @@ async function computeKPIs(
   startOfToday: Date,
   endOfToday: Date,
 ): Promise<Record<string, number>> {
+  const accessScope = await getDataAccessScope(user);
   const isAdmin = ["owner", "admin", "ops_manager"].includes(user.role);
   const isAccounting = user.role === "accounting";
   const isAgent = ["agent", "trainee"].includes(user.role);
   const isTeamLead = ["team_manager", "leadagent"].includes(user.role);
 
-  const userFilter = isAgent ? { agentId: new mongoose.Types.ObjectId(user.id) } : {};
+  const userFilter = isAgent
+    ? scopeOwnerFilter("agentId", accessScope)
+    : isTeamLead
+      ? scopeOwnerFilter("agentId", accessScope)
+      : {};
 
   const todayRange = { createdAt: { $gte: startOfToday, $lte: endOfToday } };
 
@@ -115,7 +121,11 @@ async function computeKPIs(
       Load.countDocuments({ ...todayRange, ...userFilter }).exec(),
       Customer.countDocuments({ ...todayRange, ...userFilter }).exec(),
       isAdmin || isTeamLead
-        ? ApprovalRequest.countDocuments({ status: "pending" }).exec()
+        ? ApprovalRequest.countDocuments(
+            isAdmin
+              ? { status: "pending" }
+              : { status: "pending", teamId: { $in: accessScope.teamIds } },
+          ).exec()
         : Promise.resolve(0),
       isAdmin
         ? Invoice.countDocuments({
