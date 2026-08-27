@@ -5,6 +5,7 @@ import { errorResponse, jsonResponse, parseJson } from "../../lib/api";
 import { Commission, type CommissionDocument } from "../../models/commission";
 import { Load } from "../../models/load";
 import { User } from "../../models/user";
+import { getDataAccessScope, scopeOwnerFilter } from "../../lib/access-scope";
 import {
   notifyUser,
   notifyAdmins,
@@ -85,6 +86,21 @@ function buildExcelHtml(columns: string[], rows: string[][]) {
 
 export async function commissionsListHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
+  const accessScope = await getDataAccessScope(user);
+  if (
+    ![
+      "owner",
+      "admin",
+      "ops_manager",
+      "accounting",
+      "team_manager",
+      "leadagent",
+      "agent",
+      "trainee",
+    ].includes(user.role)
+  ) {
+    throw new Error("Not authorized to access commissions");
+  }
   if (request.method === "POST") {
     requireRole(user, ["admin", "accounting"]);
 
@@ -224,7 +240,10 @@ export async function commissionsListHandler(request: Request) {
     requireRole(user, ["admin", "accounting"]);
 
     await connectDb();
-    const commission = await Commission.findById(new mongoose.Types.ObjectId(commissionId)).exec();
+    const commission = await Commission.findOne({
+      _id: new mongoose.Types.ObjectId(commissionId),
+      ...scopeOwnerFilter("agentId", accessScope),
+    }).exec();
     if (!commission) {
       throw new Error("Commission not found");
     }
@@ -397,7 +416,7 @@ export async function commissionsListHandler(request: Request) {
   const sortOrder = url.searchParams.get("sortOrder") === "asc" ? 1 : -1;
   const exportFormat = url.searchParams.get("export");
 
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { ...scopeOwnerFilter("agentId", accessScope) };
   if (status) {
     (filter as Record<string, string>).payoutStatus = status;
   }
