@@ -9,6 +9,7 @@ import { Customer } from "../../models/customer";
 import { ApprovalRequest } from "../../models/approvalRequest";
 import { notifyApprovers, notifyUser, type SenderContext } from "../../lib/notification";
 import type { Role } from "../../lib/roles";
+import { getDataAccessScope, scopeIncludesOwner, scopeOwnerFilter } from "../../lib/access-scope";
 
 const ROLES_THAT_NEED_APPROVAL: Role[] = ["agent", "trainee"];
 
@@ -26,6 +27,7 @@ function normalizeStatus(status: string) {
 
 export async function quotesListHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
+  const accessScope = await getDataAccessScope(user);
 
   // Helper to get agentMap and customerMap
   const getMaps = async () => {
@@ -34,9 +36,10 @@ export async function quotesListHandler(request: Request) {
         .select("_id name role")
         .lean()
         .exec() as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>>,
-      Customer.find({}).select("_id companyName").lean().exec() as Promise<
-        Array<{ _id: mongoose.Types.ObjectId; companyName: string }>
-      >,
+      Customer.find(scopeOwnerFilter("agentId", accessScope))
+        .select("_id companyName")
+        .lean()
+        .exec() as Promise<Array<{ _id: mongoose.Types.ObjectId; companyName: string }>>,
     ]);
     const agentMap = Object.fromEntries(
       agents.map((agentRecord) => [agentRecord._id.toString(), agentRecord.name]),
@@ -136,11 +139,7 @@ export async function quotesListHandler(request: Request) {
       throw new Error("Quote request not found");
     }
 
-    if (
-      quote.agentId?.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager"
-    ) {
+    if (!scopeIncludesOwner(accessScope, quote.agentId?.toString())) {
       throw new Error("Not authorized to edit this quote");
     }
 
@@ -378,10 +377,7 @@ export async function quotesListHandler(request: Request) {
 
   await connectDb();
 
-  const scope =
-    user.role === "agent" || user.role === "trainee"
-      ? { agentId: new mongoose.Types.ObjectId(user.id) }
-      : {};
+  const scope = scopeOwnerFilter("agentId", accessScope);
 
   // Fetch pending approval requests for quotes module
   let approvalRequests: any[] = [];
@@ -430,9 +426,10 @@ export async function quotesListHandler(request: Request) {
       .select("_id name role")
       .lean()
       .exec() as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>>,
-    Customer.find({}).select("_id companyName").lean().exec() as Promise<
-      Array<{ _id: mongoose.Types.ObjectId; companyName: string }>
-    >,
+    Customer.find(scopeOwnerFilter("agentId", accessScope))
+      .select("_id companyName")
+      .lean()
+      .exec() as Promise<Array<{ _id: mongoose.Types.ObjectId; companyName: string }>>,
   ]);
 
   const agentMap = Object.fromEntries(
