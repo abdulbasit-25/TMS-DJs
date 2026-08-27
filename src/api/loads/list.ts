@@ -8,6 +8,7 @@ import { Carrier } from "../../models/carrier";
 import { Customer } from "../../models/customer";
 import { User } from "../../models/user";
 import { can } from "../../lib/roles";
+import { getDataAccessScope, scopeOwnerFilter } from "../../lib/access-scope";
 import { ApprovalRequest } from "../../models/approvalRequest";
 import { doesUserNeedApproval } from "../approvals";
 import {
@@ -226,6 +227,7 @@ function mapPendingLoad(
 
 export async function loadsListHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
+  const accessScope = await getDataAccessScope(user);
 
   if (request.method === "POST") {
     if (!can(user.role as any, "booking_actions")) {
@@ -288,7 +290,12 @@ export async function loadsListHandler(request: Request) {
     const customerObjectId = ensureObjectId(customerId, "customerId");
     const carrierObjectId = ensureObjectId(carrierId, "carrierId");
 
-    const customer = await Customer.findById(customerObjectId).lean().exec();
+    const customer = await Customer.findOne({
+      _id: customerObjectId,
+      ...scopeOwnerFilter("agentId", accessScope),
+    })
+      .lean()
+      .exec();
     if (!customer) {
       throw new Error("Customer not found");
     }
@@ -772,7 +779,10 @@ export async function loadsListHandler(request: Request) {
     }
 
     // Otherwise, update existing load (check if user needs approval for edit)
-    const load = await Load.findById(ensureObjectId(loadId, "loadId")).exec();
+    const load = await Load.findOne({
+      _id: ensureObjectId(loadId, "loadId"),
+      ...scopeOwnerFilter("agentId", accessScope),
+    }).exec();
     if (!load) {
       const error = new Error("Load not found");
       (error as any).status = 404;
@@ -1318,7 +1328,10 @@ export async function loadsListHandler(request: Request) {
     // Try to delete the real load record first
     let deleted = null;
     if (mongoose.isValidObjectId(loadId)) {
-      deleted = await Load.findByIdAndDelete(new mongoose.Types.ObjectId(loadId)).exec();
+      deleted = await Load.findOneAndDelete({
+        _id: new mongoose.Types.ObjectId(loadId),
+        ...scopeOwnerFilter("agentId", accessScope),
+      }).exec();
     }
 
     if (!deleted) {
@@ -1378,7 +1391,7 @@ export async function loadsListHandler(request: Request) {
   await connectDb();
 
   const [loads, customers, carriers, users] = (await Promise.all([
-    Load.find().sort({ createdAt: -1 }).lean().exec(),
+    Load.find(scopeOwnerFilter("agentId", accessScope)).sort({ createdAt: -1 }).lean().exec(),
     Customer.find()
       .select("_id companyName contactName contactPhone contactEmail creditLimit creditStatus")
       .lean()
