@@ -11,6 +11,7 @@ import {
   forbidden,
   getDataAccessScope,
   scopeIncludesOwner,
+  scopeOwnerFilter,
   toObjectId,
 } from "../../lib/access-scope";
 import type { Role } from "../../lib/roles";
@@ -64,12 +65,9 @@ export async function leadsListHandler(request: Request) {
       throw new Error("Lead not found");
     }
 
-    if (
-      lead.ownerId?.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager"
-    ) {
-      throw new Error("Not authorized to delete this lead");
+    const deleteScope = await getDataAccessScope(user);
+    if (!scopeIncludesOwner(deleteScope, lead.ownerId?.toString())) {
+      throw forbidden("Not authorized to delete this lead");
     }
 
     await Lead.deleteOne({ _id: lead._id }).exec();
@@ -105,13 +103,9 @@ export async function leadsListHandler(request: Request) {
       throw new Error("Lead not found");
     }
 
-    if (
-      lead.ownerId?.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager" &&
-      user.role !== "team_manager"
-    ) {
-      throw new Error("Not authorized to edit this lead");
+    const editScope = await getDataAccessScope(user);
+    if (!scopeIncludesOwner(editScope, lead.ownerId?.toString())) {
+      throw forbidden("Not authorized to edit this lead");
     }
 
     // Track what changed
@@ -159,6 +153,18 @@ export async function leadsListHandler(request: Request) {
       lead.laneOrNeed = shippingNotes;
     }
     if (newOwnerId && newOwnerId !== lead.ownerId?.toString()) {
+      // Reassignment is a privileged action: organization roles may reassign
+      // to any active user; team roles only within their own team scope.
+      if (editScope.kind !== "org") {
+        throw forbidden("You are not authorized to reassign this lead");
+      }
+      const targetUser = await User.findById(toObjectId(newOwnerId))
+        .select("_id status role")
+        .lean()
+        .exec();
+      if (!targetUser || targetUser.status !== "active") {
+        throw new Error("New owner must be an active user");
+      }
       changes.push(`owner: ${lead.ownerId?.toString()} → ${newOwnerId}`);
       await ReassignmentHistory.create({
         leadId: lead._id,
@@ -236,7 +242,7 @@ export async function leadsListHandler(request: Request) {
     }
 
     const userRole = user.role as Role;
-    if (ROLES_THAT_NEED_APPROVAL.includes(userRole)) {
+    if (doesUserNeedApproval(userRole)) {
       // Create approval request instead of directly saving
       const newLeadId = new mongoose.Types.ObjectId();
       const approvalRequest = await ApprovalRequest.create({
@@ -360,10 +366,7 @@ export async function leadsListHandler(request: Request) {
 
   await connectDb();
 
-  const scope =
-    user.role === "agent" || user.role === "trainee"
-      ? { ownerId: new mongoose.Types.ObjectId(user.id) }
-      : {};
+  const scope = await getDataAccessScope(user);
 
   // Also fetch pending approval requests for leads module
   let approvalRequests: any[] = [];
@@ -372,12 +375,13 @@ export async function leadsListHandler(request: Request) {
       module: "leads",
       status: { $in: ["pending", "rejected", "changes_requested"] },
     };
-    if (user.role === "agent" || user.role === "trainee") {
+    if (scope.kind === "self") {
       approvalScope.requestedBy = new mongoose.Types.ObjectId(user.id);
-    } else if (user.role === "team_manager" || user.role === "leadagent") {
-      if (user.teamId) {
-        approvalScope.teamId = new mongoose.Types.ObjectId(user.teamId);
-      }
+    } else if (scope.kind === "team") {
+      approvalScope.$or = [
+        { requestedBy: new mongoose.Types.ObjectId(user.id) },
+        { teamId: { $in: scope.teamIds } },
+      ];
     }
 
     approvalRequests = await ApprovalRequest.find(approvalScope)
@@ -389,7 +393,7 @@ export async function leadsListHandler(request: Request) {
   }
 
   const [leads, agents] = await Promise.all([
-    Lead.find(scope).sort({ updatedAt: -1 }).lean().exec() as Promise<Array<any>>,
+    Lead.find(scopeOwnerFilter("ownerId", scope)).sort({ updatedAt: -1 }).lean().exec() as Promise<Array<any>>,
     User.find({ role: { $in: ["admin", "ops_manager", "team_manager", "agent"] } })
       .select("_id name role")
       .lean()
