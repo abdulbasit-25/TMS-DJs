@@ -23,6 +23,7 @@ import {
   type NotificationPayload,
 } from "../lib/notification";
 import type { Role } from "../lib/roles";
+import { getDataAccessScope, scopeOwnerFilter } from "../lib/access-scope";
 
 const ROLES_THAT_NEED_APPROVAL: Role[] = ["agent", "trainee"];
 const ROLES_THAT_CAN_APPROVE: Role[] = [
@@ -36,6 +37,7 @@ const ROLES_THAT_CAN_APPROVE: Role[] = [
 export async function approvalsHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
   await connectDb();
+  const accessScope = await getDataAccessScope(user);
 
   // GET: list approvals with visibility rules
   if (request.method === "GET") {
@@ -45,16 +47,14 @@ export async function approvalsHandler(request: Request) {
     if (userRole === "agent" || userRole === "trainee") {
       filter = { requestedBy: new mongoose.Types.ObjectId(user.id) };
     } else if (userRole === "leadagent" || userRole === "team_manager") {
-      if (user.teamId) {
-        filter = {
-          $or: [
-            { requestedBy: new mongoose.Types.ObjectId(user.id) },
-            { teamId: new mongoose.Types.ObjectId(user.teamId) },
-          ],
-        };
-      } else {
-        filter = { requestedBy: new mongoose.Types.ObjectId(user.id) };
-      }
+      filter = {
+        $or: [
+          { requestedBy: new mongoose.Types.ObjectId(user.id) },
+          { teamId: { $in: accessScope.teamIds } },
+        ],
+      };
+    } else if (userRole === "accounting" || userRole === "suspended") {
+      filter = { requestedBy: new mongoose.Types.ObjectId(user.id) };
     }
 
     const approvals = await ApprovalRequest.find(filter).sort({ createdAt: -1 }).exec();
@@ -88,6 +88,11 @@ export async function approvalsHandler(request: Request) {
 
   // POST: create an approval request (internal usage from other APIs)
   if (request.method === "POST") {
+    if (!ROLES_THAT_NEED_APPROVAL.includes(user.role as Role)) {
+      throw Object.assign(new Error("Only agents and trainees may submit approval requests"), {
+        status: 403,
+      });
+    }
     const payload = await parseJson(request);
     const { module, recordId, actionType, previousValues, newValues } = payload;
 
@@ -99,6 +104,45 @@ export async function approvalsHandler(request: Request) {
     }
     if (!newValues) {
       throw new Error("New values are required");
+    }
+
+    if (recordId && actionType !== "create") {
+      const targetId = new mongoose.Types.ObjectId(recordId);
+      const ownerFilter = scopeOwnerFilter(
+        module === "leads" ? "ownerId" : module === "followups" ? "assignedTo" : "agentId",
+        accessScope,
+      );
+      const target =
+        module === "leads"
+          ? await Lead.findOne({ _id: targetId, ...ownerFilter })
+              .select("_id")
+              .lean()
+              .exec()
+          : module === "followups"
+            ? await FollowUp.findOne({ _id: targetId, ...ownerFilter })
+                .select("_id")
+                .lean()
+                .exec()
+            : module === "customers"
+              ? await Customer.findOne({ _id: targetId, ...ownerFilter })
+                  .select("_id")
+                  .lean()
+                  .exec()
+              : module === "quotes"
+                ? await QuoteRequest.findOne({ _id: targetId, ...ownerFilter })
+                    .select("_id")
+                    .lean()
+                    .exec()
+                : module === "loads"
+                  ? await Load.findOne({ _id: targetId, ...ownerFilter })
+                      .select("_id")
+                      .lean()
+                      .exec()
+                  : null;
+      if (!target)
+        throw Object.assign(new Error("You cannot submit approval for this record"), {
+          status: 403,
+        });
     }
 
     const approvalRequest = await ApprovalRequest.create({
@@ -135,7 +179,19 @@ export async function approvalsHandler(request: Request) {
     const { approvalRequestId, action, rejectionReason, newValues, comment } = payload;
 
     if (!approvalRequestId) throw new Error("approvalRequestId is required");
-    const approvalRequest = await ApprovalRequest.findById(approvalRequestId).exec();
+    const approvalVisibility =
+      accessScope.kind === "org"
+        ? {}
+        : {
+            $or: [
+              { requestedBy: new mongoose.Types.ObjectId(user.id) },
+              ...(accessScope.teamIds.length ? [{ teamId: { $in: accessScope.teamIds } }] : []),
+            ],
+          };
+    const approvalRequest = await ApprovalRequest.findOne({
+      _id: approvalRequestId,
+      ...approvalVisibility,
+    }).exec();
     if (!approvalRequest) throw new Error("Approval request not found");
 
     // Handle adding comment
@@ -383,7 +439,19 @@ export async function approvalsHandler(request: Request) {
 }
 
 async function applyApprovalChanges(approvalRequest: any) {
-  const { module, recordId, actionType, newValues } = approvalRequest;
+  const { module, recordId, actionType } = approvalRequest;
+  const requestedBy = new mongoose.Types.ObjectId(approvalRequest.requestedBy);
+  const newValues = { ...(approvalRequest.newValues ?? {}) };
+  delete newValues.ownerId;
+  delete newValues.agentId;
+  delete newValues.assignedTo;
+  delete newValues.teamId;
+
+  if (actionType === "create") {
+    if (["leads"].includes(module)) newValues.ownerId = requestedBy;
+    if (["customers", "quotes", "loads"].includes(module)) newValues.agentId = requestedBy;
+    if (module === "followups") newValues.assignedTo = requestedBy;
+  }
 
   switch (module) {
     case "leads":
