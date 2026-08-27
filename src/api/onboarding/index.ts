@@ -408,7 +408,11 @@ export async function onboardingHandler(request: Request) {
       throw Object.assign(new Error("Forbidden"), { status: 403 });
     }
 
-    const document = await OnboardingDocument.findById(documentId).exec();
+    const document = await OnboardingDocument.findOne({
+      _id: documentId,
+      userId: new mongoose.Types.ObjectId(targetUserId),
+      deleted: false,
+    }).exec();
     if (!document || document.deleted) {
       throw Object.assign(new Error("Document not found"), { status: 404 });
     }
@@ -442,8 +446,8 @@ export async function onboardingHandler(request: Request) {
       update.rejectionReason = comments || "Document rejected";
     }
 
-    const updated = await OnboardingDocument.findByIdAndUpdate(
-      documentId,
+    const updated = await OnboardingDocument.findOneAndUpdate(
+      { _id: documentId, userId: new mongoose.Types.ObjectId(targetUserId), deleted: false },
       { $set: update },
       { new: true },
     ).exec();
@@ -526,7 +530,11 @@ export async function onboardingHandler(request: Request) {
     if (!canAccessUser(user, targetUserId)) {
       throw Object.assign(new Error("Forbidden"), { status: 403 });
     }
-    const document = await OnboardingDocument.findById(documentId).exec();
+    const document = await OnboardingDocument.findOne({
+      _id: documentId,
+      userId: new mongoose.Types.ObjectId(targetUserId),
+      deleted: false,
+    }).exec();
     if (!document || document.deleted) {
       throw Object.assign(new Error("Document not found"), { status: 404 });
     }
