@@ -14,6 +14,7 @@ import {
   notifyLeadAgents,
   type SenderContext,
 } from "../../lib/notification";
+import { getDataAccessScope, scopeIncludesOwner, scopeOwnerFilter } from "../../lib/access-scope";
 
 const ROLES_THAT_NEED_APPROVAL: Role[] = ["agent", "trainee"];
 
@@ -50,6 +51,7 @@ async function readJsonBody(request: Request) {
 
 export async function customersListHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
+  const accessScope = await getDataAccessScope(user);
 
   if (request.method === "DELETE") {
     const payload = await readJsonBody(request);
@@ -60,7 +62,10 @@ export async function customersListHandler(request: Request) {
     }
 
     await connectDb();
-    const customer = await Customer.findById(new mongoose.Types.ObjectId(customerId)).exec();
+    const customer = await Customer.findOne({
+      _id: new mongoose.Types.ObjectId(customerId),
+      ...scopeOwnerFilter("agentId", accessScope),
+    }).exec();
 
     if (!customer) {
       throw new Error("Customer not found");
@@ -68,8 +73,7 @@ export async function customersListHandler(request: Request) {
 
     if (
       customer.agentId?.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager"
+      !scopeIncludesOwner(accessScope, customer.agentId?.toString())
     ) {
       throw new Error("Not authorized to delete this customer");
     }
@@ -169,7 +173,10 @@ export async function customersListHandler(request: Request) {
     }
 
     // Otherwise, update existing customer
-    const customer = await Customer.findById(new mongoose.Types.ObjectId(customerId)).exec();
+    const customer = await Customer.findOne({
+      _id: new mongoose.Types.ObjectId(customerId),
+      ...scopeOwnerFilter("agentId", accessScope),
+    }).exec();
 
     if (!customer) {
       throw new Error("Customer not found");
@@ -177,8 +184,7 @@ export async function customersListHandler(request: Request) {
 
     if (
       customer.agentId?.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager"
+      !accessScope.userIds?.some((id) => id.toString() === customer.agentId?.toString())
     ) {
       throw new Error("Not authorized to edit this customer");
     }
@@ -511,10 +517,7 @@ export async function customersListHandler(request: Request) {
 
   await connectDb();
 
-  const scope =
-    user.role === "agent" || user.role === "trainee"
-      ? { agentId: new mongoose.Types.ObjectId(user.id) }
-      : {};
+  const scope = scopeOwnerFilter("agentId", accessScope);
 
   // Fetch pending approval requests for customers module
   let approvalRequests: any[] = [];
@@ -556,7 +559,10 @@ export async function customersListHandler(request: Request) {
         updatedAt: Date;
       }>
     >,
-    User.find({ role: { $in: ["admin", "ops_manager", "team_manager", "agent"] } })
+    User.find({
+      role: { $in: ["admin", "ops_manager", "team_manager", "agent"] },
+      ...(accessScope.kind === "org" ? {} : { _id: { $in: accessScope.userIds ?? [] } }),
+    })
       .select("_id name role")
       .lean()
       .exec() as Promise<Array<{ _id: mongoose.Types.ObjectId; name: string; role: string }>>,
