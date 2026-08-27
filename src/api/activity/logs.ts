@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { connectDb } from "../../lib/db";
-import { getSessionUserFromRequest, requireAuth, hasRole } from "../../lib/auth";
+import { getSessionUserFromRequest, requireAuth } from "../../lib/auth";
+import { getDataAccessScope, scopeOwnerFilter } from "../../lib/access-scope";
 import { jsonResponse } from "../../lib/api";
 import { DailyActivityLog } from "../../models/dailyActivityLog";
 import { User } from "../../models/user";
@@ -8,11 +9,11 @@ import { User } from "../../models/user";
 export async function activityLogsHandler(request: Request) {
   const user = await getSessionUserFromRequest(request);
   const sessionUser = requireAuth(user);
+  const scope = await getDataAccessScope(sessionUser);
 
   await connectDb();
 
-  const canSeeAll = hasRole(sessionUser, ["admin", "ops_manager", "team_manager"]);
-  const filter = canSeeAll ? {} : { userId: sessionUser.id };
+  const filter = scopeOwnerFilter("userId", scope);
 
   const logs = await DailyActivityLog.find(filter).sort({ date: -1 }).lean().exec();
 
