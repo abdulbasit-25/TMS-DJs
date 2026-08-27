@@ -6,6 +6,7 @@ import { jsonResponse, parseJson } from "../../lib/api";
 import { FollowUp } from "../../models/followUp";
 import { Lead } from "../../models/lead";
 import { User } from "../../models/user";
+import { getDataAccessScope, scopeOwnerFilter } from "../../lib/access-scope";
 import {
   notifyUser,
   notifyAdmins,
@@ -53,6 +54,7 @@ function mapFollowUp(
 
 export async function followUpsListHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
+  const accessScope = await getDataAccessScope(user);
 
   if (request.method === "POST") {
     const payload = await parseJson(request);
@@ -69,7 +71,13 @@ export async function followUpsListHandler(request: Request) {
 
     await connectDb();
     const leadObjectId = ensureObjectId(leadId, "lead ID");
-    const lead = await Lead.findById(leadObjectId).select("_id companyName ownerId").lean().exec();
+    const lead = await Lead.findOne({
+      _id: leadObjectId,
+      ...scopeOwnerFilter("ownerId", accessScope),
+    })
+      .select("_id companyName ownerId")
+      .lean()
+      .exec();
     if (!lead) {
       throw new Error("Lead not found");
     }
@@ -143,17 +151,15 @@ export async function followUpsListHandler(request: Request) {
 
     await connectDb();
     const followUpObjectId = ensureObjectId(followUpId, "follow-up ID");
-    const followUp = await FollowUp.findById(followUpObjectId).exec();
+    const followUp = await FollowUp.findOne({
+      _id: followUpObjectId,
+      ...scopeOwnerFilter("assignedTo", accessScope),
+    }).exec();
     if (!followUp) {
       throw new Error("Follow-up not found");
     }
 
-    if (
-      followUp.assignedTo.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager" &&
-      user.role !== "team_manager"
-    ) {
+    if (!accessScope.userIds?.some((id) => id.toString() === followUp.assignedTo.toString())) {
       throw new Error("Not authorized to edit this follow-up");
     }
 
@@ -193,8 +199,11 @@ export async function followUpsListHandler(request: Request) {
     }
 
     const [users, leads] = await Promise.all([
-      User.find({}).select("_id name").lean().exec(),
-      Lead.find({}).select("_id companyName").lean().exec(),
+      User.find({ _id: { $in: accessScope.userIds ?? [] } })
+        .select("_id name")
+        .lean()
+        .exec(),
+      Lead.find(scopeOwnerFilter("ownerId", accessScope)).select("_id companyName").lean().exec(),
     ]);
     const userMap = Object.fromEntries(users.map((u) => [u._id.toString(), u.name]));
     const leadMap = Object.fromEntries(
@@ -213,17 +222,15 @@ export async function followUpsListHandler(request: Request) {
 
     await connectDb();
     const followUpObjectId = ensureObjectId(followUpId, "follow-up ID");
-    const followUp = await FollowUp.findById(followUpObjectId).exec();
+    const followUp = await FollowUp.findOne({
+      _id: followUpObjectId,
+      ...scopeOwnerFilter("assignedTo", accessScope),
+    }).exec();
     if (!followUp) {
       throw new Error("Follow-up not found");
     }
 
-    if (
-      followUp.assignedTo.toString() !== user.id &&
-      user.role !== "admin" &&
-      user.role !== "ops_manager" &&
-      user.role !== "team_manager"
-    ) {
+    if (!accessScope.userIds?.some((id) => id.toString() === followUp.assignedTo.toString())) {
       throw new Error("Not authorized to delete this follow-up");
     }
 
@@ -233,15 +240,16 @@ export async function followUpsListHandler(request: Request) {
 
   await connectDb();
 
-  const scope =
-    user.role === "agent" || user.role === "trainee"
-      ? { assignedTo: new mongoose.Types.ObjectId(user.id) }
-      : {};
-
   const [followUps, users, leads] = await Promise.all([
-    FollowUp.find(scope).sort({ dueDate: 1, createdAt: -1 }).lean().exec(),
-    User.find({}).select("_id name").lean().exec(),
-    Lead.find({}).select("_id companyName").lean().exec(),
+    FollowUp.find(scopeOwnerFilter("assignedTo", accessScope))
+      .sort({ dueDate: 1, createdAt: -1 })
+      .lean()
+      .exec(),
+    User.find({ _id: { $in: accessScope.userIds ?? [] } })
+      .select("_id name")
+      .lean()
+      .exec(),
+    Lead.find(scopeOwnerFilter("ownerId", accessScope)).select("_id companyName").lean().exec(),
   ]);
 
   const userMap = Object.fromEntries(users.map((u) => [u._id.toString(), u.name]));
