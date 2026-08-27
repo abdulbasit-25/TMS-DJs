@@ -35,17 +35,38 @@ function buildTeamPayload(team: any, users: any[]) {
     name: team.name,
     managerId: team.managerId?.toString() ?? null,
     managerName: manager?.name ?? null,
-    manager: manager
-      ? {
-          id: manager._id.toString(),
-          name: manager.name,
-          role: manager.role,
-          status: manager.status,
-          email: manager.email,
-        }
-      : null,
     memberIds: (team.memberIds ?? []).map((item: any) => item.toString()),
     members: members,
+    memberNames: members.map((m: any) => m.name),
+    totalMembers: members.length,
+    createdAt: team.createdAt?.toISOString() ?? null,
+  };
+}
+
+// Limited payload for non-organization viewers: names/roles of their own
+// teammates only — no emails, statuses, or directory-wide user data.
+function buildLimitedTeamPayload(team: any, userMap: Record<string, any>) {
+  const manager = team.managerId ? userMap[team.managerId.toString()] : null;
+  const members = (team.memberIds ?? [])
+    .map((memberId: any) => {
+      const member = userMap[memberId.toString()];
+      if (!member) return null;
+      return {
+        id: member._id.toString(),
+        name: member.name,
+        role: member.role,
+      };
+    })
+    .filter(Boolean);
+
+  return {
+    id: team._id.toString(),
+    name: team.name,
+    managerId: team.managerId?.toString() ?? null,
+    managerName: manager?.name ?? null,
+    manager: manager ? { id: manager._id.toString(), name: manager.name, role: manager.role } : null,
+    memberIds: (team.memberIds ?? []).map((item: any) => item.toString()),
+    members,
     memberNames: members.map((m: any) => m.name),
     totalMembers: members.length,
     createdAt: team.createdAt?.toISOString() ?? null,
@@ -60,9 +81,50 @@ export async function teamsHandler(request: Request) {
   const teamIdParam = url.searchParams.get("id");
 
   if (request.method === "GET") {
+    // Organization roles see all teams plus the enriched directory. Everyone
+    // else only sees the team(s) they manage or belong to, with limited
+    // member details (name/role) and no organization-wide user directory.
+    if (!["owner", "admin", "ops_manager"].includes(user.role)) {
+      const selfId = new mongoose.Types.ObjectId(user.id);
+      const managed = await Team.find({ managerId: selfId }).sort({ name: 1 }).lean().exec();
+      const memberOfTeams = (user as any).teamId
+        ? await Team.find({ _id: new mongoose.Types.ObjectId((user as any).teamId) })
+            .sort({ name: 1 })
+            .lean()
+            .exec()
+        : [];
+
+      const visibleTeamsById = new Map<string, any>();
+      for (const t of [...managed, ...memberOfTeams]) visibleTeamsById.set(t._id.toString(), t);
+
+      const visibleTeams = Array.from(visibleTeamsById.values());
+      const visibleTeamIds = visibleTeams.map((t) => t._id);
+
+      // Fetch only members of the teams this user may see.
+      const memberDocs = visibleTeamIds.length
+        ? await User.find({ teamId: { $in: visibleTeamIds } })
+            .select("_id name role")
+            .lean()
+            .exec()
+        : [];
+      const limitedUserMap: Record<string, any> = Object.fromEntries(
+        memberDocs.map((m: any) => [m._id.toString(), m]),
+      );
+
+      if (teamIdParam) {
+        const team = visibleTeamsById.get(teamIdParam);
+        if (!team) throw Object.assign(new Error("Team not found"), { status: 404 });
+        return jsonResponse({ team: buildLimitedTeamPayload(team, limitedUserMap) });
+      }
+
+      return jsonResponse({
+        teams: visibleTeams.map((t) => buildLimitedTeamPayload(t, limitedUserMap)),
+      });
+    }
+
     const [teams, users] = await Promise.all([
       teamIdParam
-        ? [await Team.findById(teamIdParam).lean().exec()].filter(Boolean)
+        ? [await Team.findById(teamIdParam).lean().exec()]
         : Team.find().sort({ name: 1 }).lean().exec(),
       User.find().select("_id name role status email teamId").lean().exec(),
     ]);

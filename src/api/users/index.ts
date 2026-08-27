@@ -15,6 +15,7 @@ import { Team } from "../../models/team";
 import { LoginHistory } from "../../models/loginHistory";
 import { User, type EmploymentType, type UserStatus } from "../../models/user";
 import { ROLE_LABELS } from "../../lib/roles";
+import { canAssignRole, forbidden, toObjectId } from "../../lib/access-scope";
 
 const ROLE_ORDER = [
   "owner",
@@ -220,6 +221,9 @@ export async function usersHandler(request: Request) {
     const existingUsername = await User.findOne({ username }).lean().exec();
     if (existingUsername)
       throw Object.assign(new Error("Username is already in use"), { status: 400 });
+    // The requested role must be within the actor's authority to grant.
+    if (!canAssignRole(user.role, role))
+      throw forbidden("You cannot create a user with a role above your own authority");
     if (!canManageUser(user.role, role))
       throw Object.assign(new Error("Forbidden"), { status: 403 });
 
@@ -332,10 +336,37 @@ export async function usersHandler(request: Request) {
     const userId = typeof payload.userId === "string" ? payload.userId.trim() : "";
     const targetUser = await User.findById(userId).exec();
     if (!targetUser) throw Object.assign(new Error("User not found"), { status: 404 });
-    if (!hasManagerAccess(user.role) && user.id !== targetUser._id.toString())
+    const isSelfEdit = targetUser._id.toString() === user.id;
+    if (!hasManagerAccess(user.role) && !isSelfEdit)
       throw Object.assign(new Error("Forbidden"), { status: 403 });
     if (!canManageUser(user.role, targetUser.role))
       throw Object.assign(new Error("Forbidden"), { status: 403 });
+
+    // Users can never change their own role, status, team, commission or
+    // temporary-password state via the API.
+    if (isSelfEdit) {
+      const privileged =
+        typeof payload.role === "string" ||
+        typeof payload.status === "string" ||
+        typeof payload.teamId === "string" ||
+        typeof payload.commissionPercentage === "number" ||
+        typeof payload.temporaryPassword === "string";
+      if (privileged) {
+        throw new Error("You cannot modify your own role, status, team, or credential settings");
+      }
+    }
+
+    // Validate the requested NEW role/state against the actor's authority,
+    // not merely the target's current role (privilege-escalation guard).
+    const requestedRole = typeof payload.role === "string" ? normalizeRole(payload.role) : null;
+    if (requestedRole && !canAssignRole(user.role, requestedRole)) {
+      throw forbidden("You cannot assign a role above your own authority");
+    }
+
+    // Team assignment changes are organization-management actions.
+    if (typeof payload.teamId === "string" && !hasManagerAccess(user.role)) {
+      throw forbidden("You cannot reassign team membership");
+    }
 
     // Capture previous state for change detection + notifications
     const prevRole = targetUser.role;
@@ -683,6 +714,8 @@ export async function usersHandler(request: Request) {
     if (!userId) throw Object.assign(new Error("userId is required"), { status: 400 });
     const targetUser = await User.findById(userId).exec();
     if (!targetUser) throw Object.assign(new Error("User not found"), { status: 404 });
+    if (targetUser._id.toString() === user.id)
+      throw Object.assign(new Error("You cannot delete your own account"), { status: 403 });
     if (!canManageUser(user.role, targetUser.role))
       throw Object.assign(new Error("Forbidden"), { status: 403 });
     await targetUser.deleteOne();

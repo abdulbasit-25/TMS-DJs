@@ -6,16 +6,14 @@ import { Lead, PIPELINE_STAGES } from "../../models/lead";
 import { User } from "../../models/user";
 import { ReassignmentHistory } from "../../models/reassignmentHistory";
 import { ApprovalRequest } from "../../models/approvalRequest";
+import {
+  doesUserNeedApproval,
+  forbidden,
+  getDataAccessScope,
+  scopeIncludesOwner,
+  toObjectId,
+} from "../../lib/access-scope";
 import type { Role } from "../../lib/roles";
-
-const ROLES_THAT_NEED_APPROVAL: Role[] = ["agent", "trainee"];
-const ROLES_THAT_CAN_SKIP_APPROVAL: Role[] = [
-  "owner",
-  "admin",
-  "ops_manager",
-  "team_manager",
-  "leadagent",
-];
 
 function normalizeStatus(status: string) {
   const normalized = status.toLowerCase();
