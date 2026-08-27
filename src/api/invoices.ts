@@ -7,6 +7,7 @@ import { Invoice } from "../models/invoice";
 import { Load } from "../models/load";
 import { Customer } from "../models/customer";
 import { User } from "../models/user";
+import { getDataAccessScope, scopeOwnerFilter } from "../lib/access-scope";
 import {
   notifyUser,
   notifyAdmins,
@@ -48,13 +49,46 @@ function calculateTotals(items: any[], discount = 0, taxRate = 0) {
 export async function invoicesHandler(request: Request) {
   const user = requireAuth(await getSessionUserFromRequest(request));
   await connectDb();
+  const accessScope = await getDataAccessScope(user);
+  const financeRoles = [
+    "owner",
+    "admin",
+    "ops_manager",
+    "accounting",
+    "team_manager",
+    "leadagent",
+    "agent",
+    "trainee",
+  ];
+  if (!financeRoles.includes(user.role)) {
+    const error = new Error("Not authorized to access invoices");
+    (error as any).status = 403;
+    throw error;
+  }
+
+  let invoiceScope: Record<string, unknown> = {};
+  const customerScope = accessScope.kind === "org" ? {} : scopeOwnerFilter("agentId", accessScope);
+  const userScope = accessScope.kind === "org" ? {} : { _id: { $in: accessScope.userIds ?? [] } };
+  if (accessScope.kind !== "org") {
+    const [customers, loads] = await Promise.all([
+      Customer.find(scopeOwnerFilter("agentId", accessScope)).select("_id").lean().exec(),
+      Load.find(scopeOwnerFilter("agentId", accessScope)).select("_id").lean().exec(),
+    ]);
+    invoiceScope = {
+      $or: [
+        { createdBy: { $in: accessScope.userIds ?? [] } },
+        { customerId: { $in: customers.map((customer) => customer._id) } },
+        { loadIds: { $in: loads.map((load) => load._id) } },
+      ],
+    };
+  }
 
   // GET: List invoices
   if (request.method === "GET") {
     const [invoices, customers, users] = await Promise.all([
-      Invoice.find().sort({ createdAt: -1 }).lean().exec(),
-      Customer.find().lean().exec(),
-      User.find().select("_id name").lean().exec(),
+      Invoice.find(invoiceScope).sort({ createdAt: -1 }).lean().exec(),
+      Customer.find(customerScope).lean().exec(),
+      User.find(userScope).select("_id name").lean().exec(),
     ]);
 
     return jsonResponse({
@@ -91,13 +125,19 @@ export async function invoicesHandler(request: Request) {
     const existing = await Invoice.findOne({ invoiceNumber });
     if (existing) throw new Error("Invoice number already exists");
 
-    const customer = await Customer.findById(new mongoose.Types.ObjectId(customerId));
+    const customer = await Customer.findOne({
+      _id: new mongoose.Types.ObjectId(customerId),
+      ...scopeOwnerFilter("agentId", accessScope),
+    });
     if (!customer) throw new Error("Customer not found");
 
     // Validate loads (if provided)
     if (loadIds.length > 0) {
       for (const loadId of loadIds) {
-        const load = await Load.findById(new mongoose.Types.ObjectId(loadId));
+        const load = await Load.findOne({
+          _id: new mongoose.Types.ObjectId(loadId),
+          ...scopeOwnerFilter("agentId", accessScope),
+        });
         if (!load) throw new Error(`Load ${loadId} not found`);
         if (load.status === "cancelled") throw new Error(`Cannot invoice cancelled loads`);
         const existingInvoiceForLoad = await Invoice.findOne({
@@ -147,7 +187,10 @@ export async function invoicesHandler(request: Request) {
     // Mark loads as invoiced
     if (loadIds.length > 0) {
       await Load.updateMany(
-        { _id: { $in: loadIds.map((id) => new mongoose.Types.ObjectId(id)) } },
+        {
+          _id: { $in: loadIds.map((id) => new mongoose.Types.ObjectId(id)) },
+          ...scopeOwnerFilter("agentId", accessScope),
+        },
         { status: "invoiced" },
       );
     }
@@ -226,7 +269,10 @@ export async function invoicesHandler(request: Request) {
 
     if (!invoiceId) throw new Error("Invoice ID required");
 
-    const invoice = await Invoice.findById(new mongoose.Types.ObjectId(invoiceId));
+    const invoice = await Invoice.findOne({
+      _id: new mongoose.Types.ObjectId(invoiceId),
+      ...invoiceScope,
+    });
     if (!invoice) throw new Error("Invoice not found");
 
     // Handle adding a payment
@@ -321,8 +367,8 @@ export async function invoicesHandler(request: Request) {
       }
 
       const [customers, users] = await Promise.all([
-        Customer.find().lean().exec(),
-        User.find().select("_id name").lean().exec(),
+        Customer.find(customerScope).lean().exec(),
+        User.find(userScope).select("_id name").lean().exec(),
       ]);
 
       return jsonResponse({ invoice, customers, users });
@@ -382,8 +428,8 @@ export async function invoicesHandler(request: Request) {
     await invoice.save();
 
     const [customers, users] = await Promise.all([
-      Customer.find().lean().exec(),
-      User.find().select("_id name").lean().exec(),
+      Customer.find(customerScope).lean().exec(),
+      User.find(userScope).select("_id name").lean().exec(),
     ]);
 
     return jsonResponse({ invoice, customers, users });
@@ -394,7 +440,10 @@ export async function invoicesHandler(request: Request) {
     const body = await parseJson(request);
     const { invoiceId } = body;
 
-    const invoice = await Invoice.findByIdAndDelete(new mongoose.Types.ObjectId(invoiceId));
+    const invoice = await Invoice.findOneAndDelete({
+      _id: new mongoose.Types.ObjectId(invoiceId),
+      ...invoiceScope,
+    });
     if (!invoice) throw new Error("Invoice not found");
 
     // Update load statuses back if needed
