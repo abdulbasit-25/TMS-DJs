@@ -64,7 +64,9 @@ function buildLimitedTeamPayload(team: any, userMap: Record<string, any>) {
     name: team.name,
     managerId: team.managerId?.toString() ?? null,
     managerName: manager?.name ?? null,
-    manager: manager ? { id: manager._id.toString(), name: manager.name, role: manager.role } : null,
+    manager: manager
+      ? { id: manager._id.toString(), name: manager.name, role: manager.role }
+      : null,
     memberIds: (team.memberIds ?? []).map((item: any) => item.toString()),
     members,
     memberNames: members.map((m: any) => m.name),
@@ -151,6 +153,8 @@ export async function teamsHandler(request: Request) {
     if (!manager) throw Object.assign(new Error("Manager not found"), { status: 404 });
     if (manager.status !== "active")
       throw Object.assign(new Error("Manager must be an active user"), { status: 400 });
+    if (!["owner", "admin", "ops_manager", "team_manager", "leadagent"].includes(manager.role))
+      throw Object.assign(new Error("Selected user must have a management role"), { status: 400 });
 
     const created = await Team.create({
       name,
@@ -229,6 +233,10 @@ export async function teamsHandler(request: Request) {
       if (!newManager) throw Object.assign(new Error("Manager not found"), { status: 404 });
       if (newManager.status !== "active")
         throw Object.assign(new Error("Manager must be an active user"), { status: 400 });
+      if (!["owner", "admin", "ops_manager", "team_manager", "leadagent"].includes(newManager.role))
+        throw Object.assign(new Error("Selected user must have a management role"), {
+          status: 400,
+        });
 
       // Only update manager if changed
       if (team.managerId?.toString() !== newManagerId) {
