@@ -14,10 +14,11 @@ import {
 } from "../../lib/notification";
 import { jsonResponse, parseJson, parseZod, errorResponse } from "../../lib/api";
 import { quoteApproveSchema } from "../../lib/validation";
+import { getDataAccessScope, scopeOwnerFilter } from "../../lib/access-scope";
 
 export async function quoteApproveHandler(request: Request, params: Record<string, string>) {
   const user = await getSessionUserFromRequest(request);
-  const sessionUser = requireRole(user, ["admin", "ops_manager", "team_manager"]);
+  const sessionUser = requireRole(user, ["admin", "ops_manager", "team_manager", "leadagent"]);
 
   const quoteId = params.id;
   if (!quoteId) {
@@ -28,8 +29,12 @@ export async function quoteApproveHandler(request: Request, params: Record<strin
   const payload = parseZod(quoteApproveSchema, body);
 
   await connectDb();
+  const accessScope = await getDataAccessScope(sessionUser);
 
-  const quote = await QuoteRequest.findById(params.id);
+  const quote = await QuoteRequest.findOne({
+    _id: params.id,
+    ...scopeOwnerFilter("agentId", accessScope),
+  });
   if (!quote) {
     return errorResponse("Quote request not found", 404);
   }
