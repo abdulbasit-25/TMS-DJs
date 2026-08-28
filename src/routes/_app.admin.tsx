@@ -296,19 +296,27 @@ function AdminPage() {
 
         <div className="divide-y divide-border/30">
           <div className="flex flex-col gap-2 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-            <Label htmlFor="portal-company-name" className="flex items-center gap-2.5 text-xs text-muted-foreground">
+            <Label
+              htmlFor="portal-company-name"
+              className="flex items-center gap-2.5 text-xs text-muted-foreground"
+            >
               <Building2 className="size-3.5 shrink-0 opacity-60" />
               Company name
             </Label>
             <Input
               id="portal-company-name"
               value={settings.companyName}
-              onChange={(event) => setSettings((current) => ({ ...current, companyName: event.target.value }))}
+              onChange={(event) =>
+                setSettings((current) => ({ ...current, companyName: event.target.value }))
+              }
               className="h-8 sm:max-w-sm"
             />
           </div>
           <div className="flex flex-col gap-2 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-            <Label htmlFor="portal-support-email" className="flex items-center gap-2.5 text-xs text-muted-foreground">
+            <Label
+              htmlFor="portal-support-email"
+              className="flex items-center gap-2.5 text-xs text-muted-foreground"
+            >
               <Mail className="size-3.5 shrink-0 opacity-60" />
               Support email
             </Label>
@@ -317,7 +325,9 @@ function AdminPage() {
                 id="portal-support-email"
                 type="email"
                 value={settings.supportEmail}
-                onChange={(event) => setSettings((current) => ({ ...current, supportEmail: event.target.value }))}
+                onChange={(event) =>
+                  setSettings((current) => ({ ...current, supportEmail: event.target.value }))
+                }
                 className="h-8"
               />
               <a
@@ -344,7 +354,12 @@ function AdminPage() {
           </div>
           {role === "admin" || role === "owner" ? (
             <div className="flex justify-end px-5 py-3.5">
-              <Button size="sm" className="gap-1.5" onClick={() => void saveSettings()} disabled={savingSettings}>
+              <Button
+                size="sm"
+                className="gap-1.5"
+                onClick={() => void saveSettings()}
+                disabled={savingSettings}
+              >
                 <Save className="size-3.5" />
                 {savingSettings ? "Saving..." : "Save settings"}
               </Button>

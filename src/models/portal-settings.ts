@@ -10,7 +10,13 @@ export interface PortalSettingsDocument extends mongoose.Document {
 const portalSettingsSchema = new mongoose.Schema<PortalSettingsDocument>(
   {
     companyName: { type: String, required: true, trim: true, default: "TMS Freight Portal" },
-    supportEmail: { type: String, required: true, trim: true, lowercase: true, default: "ops@djfreight.example" },
+    supportEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      default: "ops@djfreight.example",
+    },
   },
   { timestamps: true },
 );

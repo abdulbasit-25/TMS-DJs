@@ -527,7 +527,9 @@ function SidebarBrand({
       <span className="font-mono text-xs font-bold">DJF</span>
     </div> */}
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-sidebar-foreground">{companyName}</div>
+            <div className="truncate text-sm font-semibold text-sidebar-foreground">
+              {companyName}
+            </div>
             <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
               Agent Portal - TMS
             </div>
