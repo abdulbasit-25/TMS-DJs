@@ -3,7 +3,31 @@ import { getSessionUserFromRequest, requireRole } from "../../lib/auth";
 import { errorResponse, jsonResponse, parseJson, parseZod } from "../../lib/api";
 import { User } from "../../models/user";
 import { emitSystemAlert, type SenderContext } from "../../lib/notification";
-import mongoose from "mongoose";
+import { recordAudit } from "../../lib/audit";
+import { AccessRequest } from "../../models/accessRequest";
+import { ApprovalRequest } from "../../models/approvalRequest";
+import { AuditLog } from "../../models/auditLog";
+import { Carrier } from "../../models/carrier";
+import { Commission } from "../../models/commission";
+import { Customer } from "../../models/customer";
+import { DailyActivityLog } from "../../models/dailyActivityLog";
+import { Document } from "../../models/document";
+import { ExportLog } from "../../models/exportLog";
+import { FollowUp } from "../../models/followUp";
+import { Invoice } from "../../models/invoice";
+import { Lead } from "../../models/lead";
+import { Load } from "../../models/load";
+import { LoginHistory } from "../../models/loginHistory";
+import { Notification } from "../../models/notification";
+import {
+  OnboardingDocument,
+  OnboardingRequirement,
+  OnboardingReview,
+} from "../../models/onboarding";
+import { QuoteRequest } from "../../models/quoteRequest";
+import { ReassignmentHistory } from "../../models/reassignmentHistory";
+import { Team } from "../../models/team";
+import { TrainingModule } from "../../models/trainingModule";
 import { z } from "zod";
 
 const resetSystemSchema = z.object({
@@ -12,6 +36,31 @@ const resetSystemSchema = z.object({
     message: "Type RESET to confirm",
   }),
 });
+
+const RESETTABLE_MODELS = [
+  AccessRequest,
+  ApprovalRequest,
+  AuditLog,
+  Carrier,
+  Commission,
+  Customer,
+  DailyActivityLog,
+  Document,
+  ExportLog,
+  FollowUp,
+  Invoice,
+  Lead,
+  Load,
+  LoginHistory,
+  Notification,
+  OnboardingDocument,
+  OnboardingRequirement,
+  OnboardingReview,
+  QuoteRequest,
+  ReassignmentHistory,
+  Team,
+  TrainingModule,
+];
 
 export async function resetSystemHandler(request: Request) {
   const user = await getSessionUserFromRequest(request);
@@ -31,16 +80,18 @@ export async function resetSystemHandler(request: Request) {
     return errorResponse("Incorrect password", 401);
   }
 
-  const db = mongoose.connection.db;
-  if (!db) {
-    throw new Error("Database unavailable");
+  const deletedCollections: Record<string, number> = {};
+  for (const model of RESETTABLE_MODELS) {
+    const result = await model.deleteMany({});
+    deletedCollections[model.collection.name] = result.deletedCount ?? 0;
   }
 
-  const collections = await db.listCollections().toArray();
-  for (const collection of collections) {
-    if (collection.name === "users") continue;
-    await db.collection(collection.name).deleteMany({});
-  }
+  await recordAudit({
+    actorId: sessionUser.id,
+    actionType: "system_reset",
+    targetType: "data_deletion",
+    metadata: { deletedCollections, preservedUsers: await User.countDocuments(), success: true },
+  });
 
   // Emit system alert after reset
   void emitSystemAlert(
@@ -58,5 +109,5 @@ export async function resetSystemHandler(request: Request) {
     } as SenderContext,
   );
 
-  return jsonResponse({ message: "System reset complete" });
+  return jsonResponse({ message: "System reset complete", deleted: deletedCollections });
 }
