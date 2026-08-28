@@ -396,3 +396,26 @@
     scroll-behavior: auto !important;
   }
 }
+/* Floating notification chip */
+@keyframes dj-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-float {
+  animation: dj-float 5s ease-in-out infinite;
+}
+
+/* Load card progress bar grows in on mount */
+@keyframes dj-progress-grow {
+  from {
+    width: 0%;
+  }
+}
+.dj-load-progress {
+  animation: dj-progress-grow 1.1s 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
