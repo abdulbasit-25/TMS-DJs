@@ -457,7 +457,43 @@ function ActivityPage() {
                 )}
               </div>
             </div>
-
+            {/* Emails */}
+            <div>
+              <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Mail className="size-3" /> Emailssss
+              </Label>
+              <div className="flex gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  value={emailsInput}
+                  onChange={(e) => {
+                    hasEditedRef.current = true;
+                    setEmailsInput(e.target.value.replace(/\D/g, ""));
+                  }}
+                  inputMode="numeric"
+                  className="text-center tabular-nums"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setEmailsInput(String(emails + 1))}
+                >
+                  <Plus className="size-3.5" />
+                </Button>
+                {emails > 0 && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setEmailsInput(String(Math.max(0, emails - 1)))}
+                  >
+                    <Minus className="size-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
             {/* Follow-ups */}
             <div>
               <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -508,44 +544,6 @@ function ActivityPage() {
                 rows={3}
                 placeholder="Anything worth remembering…"
               />
-            </div>
-
-            {/* Emails */}
-            <div>
-              <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Mail className="size-3" /> Emails
-              </Label>
-              <div className="flex gap-1.5">
-                <Input
-                  type="number"
-                  min={0}
-                  value={emailsInput}
-                  onChange={(e) => {
-                    hasEditedRef.current = true;
-                    setEmailsInput(e.target.value.replace(/\D/g, ""));
-                  }}
-                  inputMode="numeric"
-                  className="text-center tabular-nums"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => setEmailsInput(String(emails + 1))}
-                >
-                  <Plus className="size-3.5" />
-                </Button>
-                {emails > 0 && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="shrink-0"
-                    onClick={() => setEmailsInput(String(Math.max(0, emails - 1)))}
-                  >
-                    <Minus className="size-3.5" />
-                  </Button>
-                )}
-              </div>
             </div>
 
             <Button className="w-full gap-2" onClick={() => void saveLog()}>
