@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
@@ -2068,15 +2069,15 @@ function InvoicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ── View Dialog ────────────────────────────────────────────────── */}
-      <Dialog open={showView} onOpenChange={setShowView}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Invoice Details</DialogTitle>
-          </DialogHeader>
-          {renderInvoiceView()}
-        </DialogContent>
-      </Dialog>
+      {/* ── View Sheet ─────────────────────────────────────────────────── */}
+      <Sheet open={showView} onOpenChange={setShowView}>
+        <SheetContent className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-2xl">
+          <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+            <SheetTitle>Invoice Details</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-5">{renderInvoiceView()}</div>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Payment Dialog ─────────────────────────────────────────────── */}
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
