@@ -67,8 +67,11 @@ type CarrierItem = {
   address: string;
   taxId: string;
   equipmentTypes: string[];
-  serviceAreas: string[];
+  serviceAreas: Array<string | { region: string; states: string[] }>;
+  paymentTerms: string;
+  insuredVehicleVINs: string[];
   insuranceCarrier: string;
+  insuranceCertificateId: string;
   insurancePolicyNumber: string;
   insuranceExpiresAt: string | null;
   notes: string;
@@ -154,7 +157,11 @@ function CarriersPage() {
     taxId: "",
     equipmentTypes: "",
     serviceAreas: "",
+    paymentTerms: "",
+    insuredVehicleVINs: [] as string[],
+    vinInput: "",
     insuranceCarrier: "",
+    insuranceCertificateId: "",
     insurancePolicyNumber: "",
     insuranceExpiresAt: "",
     notes: "",
@@ -174,7 +181,11 @@ function CarriersPage() {
     taxId: "",
     equipmentTypes: "",
     serviceAreas: "",
+    paymentTerms: "",
+    insuredVehicleVINs: [] as string[],
+    vinInput: "",
     insuranceCarrier: "",
+    insuranceCertificateId: "",
     insurancePolicyNumber: "",
     insuranceExpiresAt: "",
     notes: "",
@@ -236,7 +247,11 @@ function CarriersPage() {
       taxId: "",
       equipmentTypes: "",
       serviceAreas: "",
+      paymentTerms: "",
+      insuredVehicleVINs: [],
+      vinInput: "",
       insuranceCarrier: "",
+      insuranceCertificateId: "",
       insurancePolicyNumber: "",
       insuranceExpiresAt: "",
       notes: "",
@@ -258,8 +273,12 @@ function CarriersPage() {
       address: open.address,
       taxId: open.taxId,
       equipmentTypes: open.equipmentTypes.join(", "),
-      serviceAreas: open.serviceAreas.join(", "),
+      serviceAreas: formatServiceAreas(open.serviceAreas),
+      paymentTerms: open.paymentTerms,
+      insuredVehicleVINs: open.insuredVehicleVINs,
+      vinInput: "",
       insuranceCarrier: open.insuranceCarrier,
+      insuranceCertificateId: open.insuranceCertificateId,
       insurancePolicyNumber: open.insurancePolicyNumber,
       insuranceExpiresAt: open.insuranceExpiresAt ?? "",
       notes: open.notes,
@@ -297,7 +316,10 @@ function CarriersPage() {
           taxId: form.taxId.trim(),
           equipmentTypes: form.equipmentTypes,
           serviceAreas: form.serviceAreas,
+          paymentTerms: form.paymentTerms.trim(),
+          insuredVehicleVINs: getVINPayload(form.insuredVehicleVINs, form.vinInput),
           insuranceCarrier: form.insuranceCarrier.trim(),
+          insuranceCertificateId: form.insuranceCertificateId.trim(),
           insurancePolicyNumber: form.insurancePolicyNumber.trim(),
           insuranceExpiresAt: form.insuranceExpiresAt || null,
           notes: form.notes.trim(),
@@ -342,7 +364,10 @@ function CarriersPage() {
           taxId: editForm.taxId.trim(),
           equipmentTypes: editForm.equipmentTypes,
           serviceAreas: editForm.serviceAreas,
+          paymentTerms: editForm.paymentTerms.trim(),
+          insuredVehicleVINs: getVINPayload(editForm.insuredVehicleVINs, editForm.vinInput),
           insuranceCarrier: editForm.insuranceCarrier.trim(),
+          insuranceCertificateId: editForm.insuranceCertificateId.trim(),
           insurancePolicyNumber: editForm.insurancePolicyNumber.trim(),
           insuranceExpiresAt: editForm.insuranceExpiresAt || null,
           notes: editForm.notes.trim(),
@@ -742,13 +767,23 @@ function CarriersPage() {
                     placeholder="Dry van, refrigerated"
                   />
                 </Field>
-                <Field label="Service areas">
+                <Field label="Payment terms">
                   <Input
+                    value={form.paymentTerms}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, paymentTerms: event.target.value }))
+                    }
+                    placeholder="50% on pickup, 50% on delivery"
+                  />
+                </Field>
+                <Field label="Service areas / regions" className="md:col-span-2">
+                  <Textarea
                     value={form.serviceAreas}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, serviceAreas: event.target.value }))
                     }
-                    placeholder="East coast, Midwest"
+                    placeholder={"Northeast: ME, VT, NH\nSoutheast: NC, SC, GA"}
+                    rows={3}
                   />
                 </Field>
                 <Field label="Insurance carrier">
@@ -767,12 +802,30 @@ function CarriersPage() {
                     }
                   />
                 </Field>
+                <Field label="Insurance certificate / ID">
+                  <Input
+                    value={form.insuranceCertificateId}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, insuranceCertificateId: event.target.value }))
+                    }
+                  />
+                </Field>
                 <Field label="Insurance expires">
                   <Input
                     type="date"
                     value={form.insuranceExpiresAt}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, insuranceExpiresAt: event.target.value }))
+                    }
+                  />
+                </Field>
+                <Field label="Insured vehicle VINs" className="md:col-span-2">
+                  <VINInput
+                    values={form.insuredVehicleVINs}
+                    draft={form.vinInput}
+                    onDraftChange={(vinInput) => setForm((prev) => ({ ...prev, vinInput }))}
+                    onChange={(insuredVehicleVINs) =>
+                      setForm((prev) => ({ ...prev, insuredVehicleVINs }))
                     }
                   />
                 </Field>
@@ -964,13 +1017,23 @@ function CarriersPage() {
                         placeholder="Dry van, refrigerated"
                       />
                     </Field>
-                    <Field label="Service areas">
+                    <Field label="Payment terms">
                       <Input
+                        value={editForm.paymentTerms}
+                        onChange={(event) =>
+                          setEditForm((prev) => ({ ...prev, paymentTerms: event.target.value }))
+                        }
+                        placeholder="50% on pickup, 50% on delivery"
+                      />
+                    </Field>
+                    <Field label="Service areas / regions" className="md:col-span-2">
+                      <Textarea
                         value={editForm.serviceAreas}
                         onChange={(event) =>
                           setEditForm((prev) => ({ ...prev, serviceAreas: event.target.value }))
                         }
-                        placeholder="East coast, Midwest"
+                        placeholder={"Northeast: ME, VT, NH\nSoutheast: NC, SC, GA"}
+                        rows={3}
                       />
                     </Field>
                     <Field label="Insurance carrier">
@@ -992,6 +1055,17 @@ function CarriersPage() {
                         }
                       />
                     </Field>
+                    <Field label="Insurance certificate / ID">
+                      <Input
+                        value={editForm.insuranceCertificateId}
+                        onChange={(event) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            insuranceCertificateId: event.target.value,
+                          }))
+                        }
+                      />
+                    </Field>
                     <Field label="Insurance expires">
                       <Input
                         type="date"
@@ -1001,6 +1075,16 @@ function CarriersPage() {
                             ...prev,
                             insuranceExpiresAt: event.target.value,
                           }))
+                        }
+                      />
+                    </Field>
+                    <Field label="Insured vehicle VINs" className="md:col-span-2">
+                      <VINInput
+                        values={editForm.insuredVehicleVINs}
+                        draft={editForm.vinInput}
+                        onDraftChange={(vinInput) => setEditForm((prev) => ({ ...prev, vinInput }))}
+                        onChange={(insuredVehicleVINs) =>
+                          setEditForm((prev) => ({ ...prev, insuredVehicleVINs }))
                         }
                       />
                     </Field>
@@ -1086,8 +1170,17 @@ function CarriersPage() {
                     <Field label="Address" value={open.address || "—"} />
                     <Field label="Tax ID / EIN" value={open.taxId || "—"} mono />
                     <Field label="Equipment types" value={open.equipmentTypes.join(", ") || "—"} />
-                    <Field label="Service areas" value={open.serviceAreas.join(", ") || "—"} />
+                    <Field label="Payment terms" value={open.paymentTerms || "—"} />
+                    <Field
+                      label="Service areas"
+                      value={formatServiceAreas(open.serviceAreas) || "—"}
+                    />
                     <Field label="Insurance" value={open.insuranceCarrier || "—"} />
+                    <Field
+                      label="Insurance certificate / ID"
+                      value={open.insuranceCertificateId || "—"}
+                      mono
+                    />
                     <Field label="Policy number" value={open.insurancePolicyNumber || "—"} mono />
                     <Field
                       label="Insurance expires"
@@ -1097,6 +1190,12 @@ function CarriersPage() {
                           : "—"
                       }
                       mono
+                    />
+                    <Field
+                      label="Insured vehicle VINs"
+                      value={open.insuredVehicleVINs.join(", ") || "—"}
+                      mono
+                      className="md:col-span-2"
                     />
                     <Field label="Status" value={<StatusBadge value={open.status} />} />
                     <Field
@@ -1208,6 +1307,89 @@ function Field({
         {label}
       </div>
       {children ?? <div className={`mt-0.5 ${mono ? "font-mono text-xs" : ""}`}>{value}</div>}
+    </div>
+  );
+}
+
+function formatServiceAreas(areas: Array<string | { region: string; states: string[] }>) {
+  return areas
+    .map((area) => (typeof area === "string" ? area : `${area.region}: ${area.states.join(", ")}`))
+    .join("; ");
+}
+
+function getVINPayload(values: string[], draft: string) {
+  const trimmedDraft = draft.trim().toUpperCase();
+  return trimmedDraft ? [...values, trimmedDraft] : values;
+}
+
+function VINInput({
+  values,
+  draft,
+  onDraftChange,
+  onChange,
+}: {
+  values: string[];
+  draft: string;
+  onDraftChange: (value: string) => void;
+  onChange: (values: string[]) => void;
+}) {
+  const addVIN = () => {
+    const vin = draft.trim().toUpperCase();
+    if (!vin) return;
+    if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(vin)) {
+      toast.error("VINs must be 17 characters and exclude I, O, and Q");
+      return;
+    }
+    if (values.includes(vin)) {
+      toast.error("That VIN is already listed");
+      return;
+    }
+    onChange([...values, vin]);
+    onDraftChange("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <Input
+          value={draft}
+          maxLength={17}
+          onChange={(event) => onDraftChange(event.target.value.toUpperCase())}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              addVIN();
+            }
+          }}
+          placeholder="Enter 17-character VIN"
+          className="font-mono"
+        />
+        <Button type="button" variant="outline" onClick={addVIN}>
+          <Plus className="size-4" /> Add VIN
+        </Button>
+      </div>
+      {values.length > 0 && (
+        <div className="space-y-1">
+          {values.map((vin) => (
+            <div
+              key={vin}
+              className="flex items-center justify-between rounded-md border border-border bg-card px-2.5 py-1.5 font-mono text-xs"
+            >
+              <span>{vin}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={() => onChange(values.filter((item) => item !== vin))}
+                aria-label={`Remove VIN ${vin}`}
+              >
+                <X className="size-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
