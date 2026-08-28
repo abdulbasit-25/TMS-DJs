@@ -1,4 +1,4 @@
-# TMS-DJs
+# TMS-Portal
 
 Freight operations portal for managing loads, customers, carriers, quotes, invoices, commissions, approvals, notifications, and team activity.
 
@@ -43,15 +43,15 @@ Freight operations portal for managing loads, customers, carriers, quotes, invoi
 
 ## Available commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
-| `npm run build:dev` | Create a development-mode build |
-| `npm run preview` | Preview the production build locally |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Format the project with Prettier |
-| `npm run seed:db` | Seed the database with demo data |
+| Command             | Purpose                              |
+| ------------------- | ------------------------------------ |
+| `npm run dev`       | Start the development server         |
+| `npm run build`     | Create a production build            |
+| `npm run build:dev` | Create a development-mode build      |
+| `npm run preview`   | Preview the production build locally |
+| `npm run lint`      | Run ESLint                           |
+| `npm run format`    | Format the project with Prettier     |
+| `npm run seed:db`   | Seed the database with demo data     |
 
 ## Demo accounts
 
