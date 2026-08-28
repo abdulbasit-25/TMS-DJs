@@ -67,6 +67,7 @@ type NavItem = {
   icon: typeof LayoutDashboard;
   cap: Parameters<typeof can>[1];
   section: "Operate" | "Records" | "Admin";
+  adminOnly?: boolean;
 };
 
 const NAV: NavItem[] = [
@@ -127,6 +128,14 @@ const NAV: NavItem[] = [
   { to: "/teams", label: "Teams", icon: Users, cap: "teams", section: "Admin" },
   { to: "/audit", label: "Session Log", icon: Shield, cap: "audit", section: "Admin" },
   { to: "/admin", label: "Admin Panel", icon: Settings, cap: "admin", section: "Admin" },
+  {
+    to: "/admin/data-deletion",
+    label: "Data Deletion",
+    icon: AlertTriangle,
+    cap: "admin",
+    section: "Admin",
+    adminOnly: true,
+  },
 ];
 
 const ROLE_OPTIONS: Role[] = [
@@ -213,7 +222,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       toast.error(error instanceof Error ? error.message : "Unable to sign out.");
     }
   }
-  const visibleNav = useMemo(() => NAV.filter((n) => can(role, n.cap)), [role]);
+  const visibleNav = useMemo(
+    () => NAV.filter((n) => can(role, n.cap) && (!n.adminOnly || role === "admin")),
+    [role],
+  );
 
   if (role === "suspended") {
     return (
