@@ -11,6 +11,7 @@ import {
   Play,
   Square,
   Phone,
+  Mail,
   MessageSquareText,
   StickyNote,
   CalendarClock,
@@ -45,6 +46,7 @@ type DailySessionRow = {
   endReason?: string;
   calls?: number;
   followups?: number;
+  emails?: number;
   notes?: string;
 };
 
@@ -58,6 +60,7 @@ type DailyLogRow = {
   checkedOutAt?: string;
   calls: number;
   followups: number;
+  emails: number;
   notes: string;
   clockStatus?: "checked_in" | "checked_out";
   endReason?: string;
@@ -97,6 +100,7 @@ function ActivityPage() {
   const [checkedOutAt, setCheckedOutAt] = useState<string | null>(null);
   const [callsInput, setCallsInput] = useState("0");
   const [followupsInput, setFollowupsInput] = useState("0");
+  const [emailsInput, setEmailsInput] = useState("0");
   const [notes, setNotes] = useState("");
   const [history, setHistory] = useState<DailyLogRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +116,7 @@ function ActivityPage() {
   );
   const calls = Number(callsInput) || 0;
   const followups = Number(followupsInput) || 0;
+  const emails = Number(emailsInput) || 0;
 
   useEffect(() => {
     if (!isCheckedIn) {
@@ -144,6 +149,7 @@ function ActivityPage() {
             setCheckedOutAt(null);
             setCallsInput(String(active?.calls ?? cur.calls ?? 0));
             setFollowupsInput(String(active?.followups ?? cur.followups ?? 0));
+            setEmailsInput(String(active?.emails ?? cur.emails ?? 0));
             setNotes(active?.notes ?? cur.notes ?? "");
             setClockedIn(true);
           } else {
@@ -151,6 +157,7 @@ function ActivityPage() {
             setCheckedOutAt(cur?.checkedOutAt ?? null);
             setCallsInput(String(cur.calls ?? 0));
             setFollowupsInput(String(cur.followups ?? 0));
+            setEmailsInput(String(cur.emails ?? 0));
             setNotes(cur.notes ?? "");
             setClockedIn(false);
           }
@@ -176,6 +183,7 @@ function ActivityPage() {
           checkedOutAt: checkedOutAt ?? undefined,
           calls,
           followups,
+          emails,
           notes,
           date: new Date().toISOString().slice(0, 10),
         }),
@@ -198,6 +206,7 @@ function ActivityPage() {
       setCheckedOutAt(null);
       setCallsInput("0");
       setFollowupsInput("0");
+      setEmailsInput("0");
       setNotes("");
       setClockedIn(true);
       hasHydratedRef.current = true;
@@ -220,6 +229,7 @@ function ActivityPage() {
             reason: "manual",
             calls,
             followups,
+            emails,
             notes,
             date: new Date().toISOString().slice(0, 10),
           }),
@@ -285,6 +295,7 @@ function ActivityPage() {
             {[
               { label: "Calls", value: calls, warn: calls <= 0 },
               { label: "Follow-ups", value: followups, warn: followups <= 0 },
+              { label: "Emails", value: emails, warn: emails <= 0 },
               { label: "Notes", value: notes.trim() ? `"${notes}"` : "None", warn: !notes.trim() },
             ].map((item) => (
               <div
@@ -499,6 +510,44 @@ function ActivityPage() {
               />
             </div>
 
+            {/* Emails */}
+            <div>
+              <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Mail className="size-3" /> Emails
+              </Label>
+              <div className="flex gap-1.5">
+                <Input
+                  type="number"
+                  min={0}
+                  value={emailsInput}
+                  onChange={(e) => {
+                    hasEditedRef.current = true;
+                    setEmailsInput(e.target.value.replace(/\D/g, ""));
+                  }}
+                  inputMode="numeric"
+                  className="text-center tabular-nums"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setEmailsInput(String(emails + 1))}
+                >
+                  <Plus className="size-3.5" />
+                </Button>
+                {emails > 0 && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setEmailsInput(String(Math.max(0, emails - 1)))}
+                  >
+                    <Minus className="size-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <Button className="w-full gap-2" onClick={() => void saveLog()}>
               <Save className="size-3.5" />
               Save
@@ -548,6 +597,7 @@ function ActivityPage() {
                       checkedOutAt: log.checkedOutAt,
                       calls: log.calls,
                       followups: log.followups,
+                      emails: log.emails,
                       notes: log.notes,
                     },
                   ];
@@ -587,6 +637,9 @@ function ActivityPage() {
                       <span>
                         <span className="font-semibold text-foreground">{log.followups}</span>{" "}
                         follow-ups
+                      </span>
+                      <span>
+                        <span className="font-semibold text-foreground">{log.emails}</span> emails
                       </span>
                       <span>
                         {sessions.length} session{sessions.length !== 1 ? "s" : ""}
@@ -632,6 +685,10 @@ function ActivityPage() {
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground/60">Follow-ups</span>
                                 <span className="font-medium">{s.followups ?? 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground/60">Emails</span>
+                                <span className="font-medium">{s.emails ?? 0}</span>
                               </div>
                             </div>
                             {s.notes && (

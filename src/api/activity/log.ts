@@ -9,6 +9,7 @@ const activityLogSchema = z.object({
   checkedOutAt: z.string().optional(),
   calls: z.number().int().nonnegative(),
   followups: z.number().int().nonnegative(),
+  emails: z.number().int().nonnegative(),
   notes: z.string().optional(),
   date: z.string().optional(),
 });
@@ -33,6 +34,7 @@ export async function activityLogHandler(request: Request) {
       checkedOutAt: payload.checkedOutAt,
       calls: payload.calls,
       followups: payload.followups,
+      emails: payload.emails,
       notes: payload.notes ?? "",
       clockStatus: "checked_out",
       sessions: [],
@@ -45,6 +47,7 @@ export async function activityLogHandler(request: Request) {
       endReason?: string;
       calls?: number;
       followups?: number;
+      emails?: number;
       notes?: string;
     }>;
     const activeSession = [...sessionList]
@@ -57,6 +60,7 @@ export async function activityLogHandler(request: Request) {
           endReason?: string;
           calls?: number;
           followups?: number;
+          emails?: number;
           notes?: string;
         }) => session.clockStatus === "checked_in",
       );
@@ -65,6 +69,7 @@ export async function activityLogHandler(request: Request) {
     if (targetSession) {
       targetSession.calls = payload.calls;
       targetSession.followups = payload.followups;
+      targetSession.emails = payload.emails;
       targetSession.notes = payload.notes ?? "";
       if (payload.checkedInAt) {
         targetSession.checkedInAt = payload.checkedInAt;
@@ -81,6 +86,7 @@ export async function activityLogHandler(request: Request) {
           clockStatus: payload.checkedOutAt ? "checked_out" : "checked_in",
           calls: payload.calls,
           followups: payload.followups,
+          emails: payload.emails,
           notes: payload.notes ?? "",
         },
       ];
@@ -90,6 +96,7 @@ export async function activityLogHandler(request: Request) {
     log.checkedOutAt = payload.checkedOutAt ?? log.checkedOutAt;
     log.calls = payload.calls;
     log.followups = payload.followups;
+    log.emails = payload.emails;
     log.notes = payload.notes ?? "";
 
     if (payload.checkedInAt && !log.checkedOutAt) {
@@ -109,6 +116,7 @@ export async function activityLogHandler(request: Request) {
       checkedOutAt: log.checkedOutAt,
       calls: log.calls,
       followups: log.followups,
+      emails: log.emails ?? 0,
       notes: log.notes,
       clockStatus: log.clockStatus,
       sessions: (log.sessions ?? []).map(
@@ -119,6 +127,7 @@ export async function activityLogHandler(request: Request) {
           endReason?: string;
           calls?: number;
           followups?: number;
+          emails?: number;
           notes?: string;
         }) => ({
           checkedInAt: session.checkedInAt,
@@ -127,6 +136,7 @@ export async function activityLogHandler(request: Request) {
           endReason: session.endReason,
           calls: session.calls ?? 0,
           followups: session.followups ?? 0,
+          emails: session.emails ?? 0,
           notes: session.notes ?? "",
         }),
       ),

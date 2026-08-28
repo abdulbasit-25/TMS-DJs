@@ -10,6 +10,7 @@ type ActivitySession = {
   endReason?: string;
   calls?: number;
   followups?: number;
+  emails?: number;
   notes?: string;
 };
 
@@ -32,11 +33,19 @@ export async function clockInHandler(request: Request) {
       checkedOutAt: undefined,
       calls: 0,
       followups: 0,
+      emails: 0,
       notes: "",
       clockStatus: "checked_in",
       endReason: undefined,
       sessions: [
-        { checkedInAt: now, clockStatus: "checked_in", calls: 0, followups: 0, notes: "" },
+        {
+          checkedInAt: now,
+          clockStatus: "checked_in",
+          calls: 0,
+          followups: 0,
+          emails: 0,
+          notes: "",
+        },
       ],
     });
   } else {
@@ -52,6 +61,7 @@ export async function clockInHandler(request: Request) {
       log.checkedOutAt = undefined;
       log.calls = 0;
       log.followups = 0;
+      log.emails = 0;
       log.notes = "";
       log.clockStatus = "checked_in";
       log.endReason = undefined;
@@ -68,6 +78,7 @@ export async function clockInHandler(request: Request) {
       checkedOutAt: log.checkedOutAt,
       calls: log.calls,
       followups: log.followups,
+      emails: log.emails ?? 0,
       notes: log.notes,
       clockStatus: log.clockStatus,
       endReason: log.endReason,
@@ -78,6 +89,7 @@ export async function clockInHandler(request: Request) {
         endReason: session.endReason,
         calls: session.calls ?? 0,
         followups: session.followups ?? 0,
+        emails: session.emails ?? 0,
         notes: session.notes ?? "",
       })),
     },

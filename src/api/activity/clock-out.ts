@@ -9,6 +9,7 @@ const clockOutSchema = z.object({
   reason: z.string().optional(),
   calls: z.number().int().nonnegative().optional(),
   followups: z.number().int().nonnegative().optional(),
+  emails: z.number().int().nonnegative().optional(),
   notes: z.string().optional(),
   date: z.string().optional(),
 });
@@ -33,6 +34,7 @@ export async function clockOutHandler(request: Request) {
       checkedOutAt: now,
       calls: payload.calls ?? 0,
       followups: payload.followups ?? 0,
+      emails: payload.emails ?? 0,
       notes: payload.notes ?? "",
       clockStatus: "checked_out",
       endReason: payload.reason,
@@ -42,6 +44,7 @@ export async function clockOutHandler(request: Request) {
           clockStatus: "checked_out",
           calls: payload.calls ?? 0,
           followups: payload.followups ?? 0,
+          emails: payload.emails ?? 0,
           notes: payload.notes ?? "",
         },
       ],
@@ -54,6 +57,7 @@ export async function clockOutHandler(request: Request) {
       endReason?: string;
       calls?: number;
       followups?: number;
+      emails?: number;
       notes?: string;
     }>;
     const activeSession = [...sessionList]
@@ -67,6 +71,7 @@ export async function clockOutHandler(request: Request) {
       targetSession.endReason = payload.reason;
       targetSession.calls = payload.calls ?? targetSession.calls ?? 0;
       targetSession.followups = payload.followups ?? targetSession.followups ?? 0;
+      targetSession.emails = payload.emails ?? targetSession.emails ?? 0;
       targetSession.notes = payload.notes ?? targetSession.notes ?? "";
     } else {
       log.sessions = [
@@ -77,6 +82,7 @@ export async function clockOutHandler(request: Request) {
           endReason: payload.reason,
           calls: payload.calls ?? 0,
           followups: payload.followups ?? 0,
+          emails: payload.emails ?? 0,
           notes: payload.notes ?? "",
         },
       ];
@@ -87,6 +93,7 @@ export async function clockOutHandler(request: Request) {
     log.endReason = payload.reason;
     log.calls = payload.calls ?? log.calls ?? 0;
     log.followups = payload.followups ?? log.followups ?? 0;
+    log.emails = payload.emails ?? log.emails ?? 0;
     log.notes = payload.notes ?? log.notes ?? "";
     await log.save();
   }
@@ -139,6 +146,7 @@ export async function clockOutHandler(request: Request) {
       checkedOutAt: log.checkedOutAt,
       calls: log.calls,
       followups: log.followups,
+      emails: log.emails ?? 0,
       notes: log.notes,
       clockStatus: log.clockStatus,
       endReason: log.endReason,
@@ -150,6 +158,7 @@ export async function clockOutHandler(request: Request) {
           endReason?: string;
           calls?: number;
           followups?: number;
+          emails?: number;
           notes?: string;
         }) => ({
           checkedInAt: session.checkedInAt,
@@ -158,6 +167,7 @@ export async function clockOutHandler(request: Request) {
           endReason: session.endReason,
           calls: session.calls ?? 0,
           followups: session.followups ?? 0,
+          emails: session.emails ?? 0,
           notes: session.notes ?? "",
         }),
       ),

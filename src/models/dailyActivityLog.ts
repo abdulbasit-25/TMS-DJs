@@ -7,6 +7,7 @@ export interface DailyActivitySession {
   endReason?: string;
   calls?: number;
   followups?: number;
+  emails?: number;
   notes?: string;
 }
 
@@ -17,6 +18,7 @@ export interface DailyActivityLogDocument extends mongoose.Document {
   checkedOutAt?: string;
   calls: number;
   followups: number;
+  emails: number;
   notes: string;
   clockStatus: "checked_in" | "checked_out";
   endReason?: string;
@@ -33,6 +35,7 @@ const dailyActivityLogSchema = new mongoose.Schema<DailyActivityLogDocument>(
     checkedOutAt: { type: String, required: false, trim: true },
     calls: { type: Number, default: 0, min: 0 },
     followups: { type: Number, default: 0, min: 0 },
+    emails: { type: Number, default: 0, min: 0 },
     notes: { type: String, default: "" },
     clockStatus: { type: String, enum: ["checked_in", "checked_out"], default: "checked_out" },
     endReason: { type: String, required: false, trim: true },
@@ -45,6 +48,7 @@ const dailyActivityLogSchema = new mongoose.Schema<DailyActivityLogDocument>(
           endReason: { type: String, trim: true },
           calls: { type: Number, default: 0, min: 0 },
           followups: { type: Number, default: 0, min: 0 },
+          emails: { type: Number, default: 0, min: 0 },
           notes: { type: String, default: "" },
         },
       ],

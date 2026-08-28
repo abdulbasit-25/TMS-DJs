@@ -43,6 +43,7 @@ export async function activityLogsHandler(request: Request) {
       checkedOutAt: log.checkedOutAt,
       calls: log.calls,
       followups: log.followups,
+      emails: log.emails ?? 0,
       notes: log.notes,
       clockStatus: log.clockStatus,
       endReason: log.endReason,
@@ -56,6 +57,7 @@ export async function activityLogsHandler(request: Request) {
               endReason: log.endReason,
               calls: log.calls ?? 0,
               followups: log.followups ?? 0,
+              emails: log.emails ?? 0,
               notes: log.notes ?? "",
             },
           ]
@@ -66,6 +68,7 @@ export async function activityLogsHandler(request: Request) {
         endReason: session.endReason,
         calls: session.calls ?? 0,
         followups: session.followups ?? 0,
+        emails: session.emails ?? 0,
         notes: session.notes ?? "",
       })),
     })),
