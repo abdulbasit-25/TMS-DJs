@@ -150,6 +150,16 @@ function AdminPage() {
       <PageHeader
         title="Admin Panel"
         description="Configuration and oversight tools for administrators."
+        actions={
+          role === "admin" ? (
+            <Button asChild variant="destructive" size="sm">
+              <Link to="/admin/data-deletion">
+                <Trash2 className="size-4" />
+                Manage deletions
+              </Link>
+            </Button>
+          ) : undefined
+        }
       />
 
       {/* Quick-access tiles */}
