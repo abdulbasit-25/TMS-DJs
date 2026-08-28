@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { DataTable } from "@/components/data-table";
@@ -26,7 +26,22 @@ import { usd, fmtDate, relative } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api-client";
 import { can } from "@/lib/roles";
-import { Check, Download, Edit, FileText, MessageSquare, Plus, X } from "lucide-react";
+import {
+  Check,
+  Download,
+  Edit,
+  FileText,
+  MessageSquare,
+  Plus,
+  X,
+  MapPin,
+  Truck,
+  DollarSign,
+  Building2,
+  TrendingUp,
+  TrendingDown,
+  Lock,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/quotes")({
@@ -74,6 +89,119 @@ const STATUSES: QuoteItem["status"][] = [
   "rejected",
   "changes_requested",
 ];
+
+/* ------------------------------------------------------------------------ */
+/* Shared approval badge — same visual language as leads/customers/loads.   */
+/* ------------------------------------------------------------------------ */
+
+function ApprovalStatusBadge({ status }: { status?: string }) {
+  if (!status) return null;
+  if (status === "rejected") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+        Rejected
+      </span>
+    );
+  }
+  if (status === "changes_requested") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+        Changes Requested
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+      Pending Approval
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Margin labeling — same pattern as the loads page's gross-margin chip.    */
+/* ------------------------------------------------------------------------ */
+
+function marginTone(margin: number) {
+  if (margin > 0) {
+    return {
+      color: "text-emerald-600",
+      bg: "bg-emerald-500/10",
+      label: "Profit",
+      Icon: TrendingUp,
+    };
+  }
+  if (margin < 0) {
+    return { color: "text-red-500", bg: "bg-red-500/10", label: "Loss", Icon: TrendingDown };
+  }
+  return { color: "text-muted-foreground", bg: "bg-muted", label: "Break-even", Icon: TrendingUp };
+}
+
+function MarginChip({ margin }: { margin: number }) {
+  const tone = marginTone(margin);
+  const Icon = tone.Icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone.bg} ${tone.color}`}
+    >
+      <Icon className="size-3" /> {tone.label}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Read-only detail primitives — mirrors the leads/customers/loads pages so */
+/* every detail sheet in the app feels the same.                            */
+/* ------------------------------------------------------------------------ */
+
+function DetailSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function DetailRow({
+  label,
+  value,
+  mono,
+  span2,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  mono?: boolean;
+  span2?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className={span2 ? "sm:col-span-2" : undefined}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-0.5 flex items-start gap-1.5 ${mono ? "font-mono text-xs" : "text-sm"}`}>
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <span>{value || "—"}</span>
+      </div>
+    </div>
+  );
+}
 
 function QuotesPage() {
   const { session } = useAuth();
@@ -521,101 +649,91 @@ function QuotesPage() {
             ))}
           </SelectContent>
         </Select>
+        <span className="ml-auto text-xs text-muted-foreground">
+          {filtered.length} {filtered.length === 1 ? "quote" : "quotes"}
+        </span>
       </div>
 
-      <DataTable
-        empty={
-          <EmptyState
-            icon={<FileText className="size-6" />}
-            title="No quotes"
-            description="Try creating a quote or adjusting your filters."
-          />
-        }
-        rows={filtered}
-        onRowClick={(q) => setOpenId(q.id)}
-        columns={[
-          {
-            head: "Quote",
-            cell: (q) => <span className="font-mono text-xs">{q.id.toUpperCase()}</span>,
-          },
-          {
-            head: "Customer",
-            cell: (q) => (
-              <div>
-                <span className="font-medium">{q.customerName || q.customerId}</span>
-                {q.pendingApproval && (
-                  <span
-                    className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      q.approvalStatus === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : q.approvalStatus === "changes_requested"
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {q.approvalStatus === "changes_requested"
-                      ? "Changes Requested"
-                      : q.approvalStatus === "rejected"
-                        ? "Rejected"
-                        : "Pending Approval"}
-                  </span>
-                )}
-              </div>
-            ),
-          },
-          {
-            head: "Lane",
-            cell: (q) => (
-              <div className="text-sm">
-                {q.origin} <span className="text-muted-foreground">→</span> {q.destination}
-              </div>
-            ),
-          },
-          {
-            head: "Equipment",
-            cell: (q) => <span className="text-xs text-muted-foreground">{q.equipment}</span>,
-          },
-          { head: "Pickup", cell: (q) => <span className="text-xs">{fmtDate(q.pickupDate)}</span> },
-          {
-            head: "Cust rate",
-            cell: (q) => <span className="font-mono text-sm">{usd(q.customerRate)}</span>,
-          },
-          {
-            head: "Margin",
-            cell: (q) => (
-              <span className="font-mono text-sm text-success">
-                {usd(q.customerRate - q.carrierEstimate)}
-              </span>
-            ),
-          },
-          { head: "Status", cell: (q) => <StatusBadge value={q.status} /> },
-        ]}
-      />
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <DataTable
+          empty={
+            <EmptyState
+              icon={<FileText className="size-6" />}
+              title="No quotes"
+              description="Try creating a quote or adjusting your filters."
+            />
+          }
+          rows={filtered}
+          onRowClick={(q) => setOpenId(q.id)}
+          columns={[
+            {
+              head: "Quote",
+              cell: (q) => <span className="font-mono text-xs">{q.id.toUpperCase()}</span>,
+            },
+            {
+              head: "Customer",
+              cell: (q) => (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{q.customerName || q.customerId}</span>
+                  {q.pendingApproval && <ApprovalStatusBadge status={q.approvalStatus} />}
+                </div>
+              ),
+            },
+            {
+              head: "Lane",
+              cell: (q) => (
+                <div className="text-sm">
+                  {q.origin} <span className="text-muted-foreground">→</span> {q.destination}
+                </div>
+              ),
+            },
+            {
+              head: "Equipment",
+              cell: (q) => <span className="text-xs text-muted-foreground">{q.equipment}</span>,
+            },
+            {
+              head: "Pickup",
+              cell: (q) => <span className="text-xs">{fmtDate(q.pickupDate)}</span>,
+            },
+            {
+              head: "Cust rate",
+              cell: (q) => <span className="font-mono text-sm">{usd(q.customerRate)}</span>,
+            },
+            {
+              head: "Margin",
+              cell: (q) => {
+                const margin = q.customerRate - q.carrierEstimate;
+                return (
+                  <div className="flex items-center gap-1.5">
+                    <span className={`font-mono text-sm font-medium ${marginTone(margin).color}`}>
+                      {usd(margin)}
+                    </span>
+                  </div>
+                );
+              },
+            },
+            { head: "Status", cell: (q) => <StatusBadge value={q.status} /> },
+          ]}
+        />
+      </div>
 
       <Sheet open={!!open} onOpenChange={(v) => !v && setOpenId(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+        <SheetContent className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-xl">
           {open && (
             <>
-              <SheetHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <SheetTitle>Quote {open.id.toUpperCase()}</SheetTitle>
-                    {open.pendingApproval && (
-                      <span
-                        className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                          open.approvalStatus === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : open.approvalStatus === "changes_requested"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {open.approvalStatus === "changes_requested"
-                          ? "Changes Requested"
-                          : open.approvalStatus === "rejected"
-                            ? "Rejected"
-                            : "Pending Approval"}
-                      </span>
+              <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SheetTitle>Quote {open.id.toUpperCase()}</SheetTitle>
+                      {open.pendingApproval && <ApprovalStatusBadge status={open.approvalStatus} />}
+                    </div>
+                    {!editing && (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span>{open.customerName || open.customerId}</span>
+                        <span>·</span>
+                        <span>Agent {open.agentName}</span>
+                      </div>
                     )}
                   </div>
                   {!editing && canEdit && (
@@ -624,192 +742,307 @@ function QuotesPage() {
                     </Button>
                   )}
                 </div>
-              </SheetHeader>
-              <div className="space-y-4 px-4 pb-6 pt-2">
-                {editing ? (
-                  <form className="space-y-3" onSubmit={updateQuote}>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between mb-2">
-                        <Label htmlFor="edit-quote-customer">Customer</Label>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowAddCustomer(!showAddCustomer)}
-                        >
-                          {showAddCustomer ? "Select existing" : "Add new"}
-                        </Button>
+
+                {/* Quick-glance summary strip */}
+                {!editing && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Status
                       </div>
-                      {showAddCustomer ? (
-                        <div className="flex gap-2">
-                          <Input
-                            value={newCustomerName}
-                            onChange={(e) => setNewCustomerName(e.target.value)}
-                            placeholder="Enter new customer name"
-                          />
-                          <Button type="button" onClick={createCustomer} disabled={addingCustomer}>
-                            {addingCustomer ? "Adding..." : "Add"}
+                      <div className="mt-0.5">
+                        <StatusBadge value={open.status} />
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Pickup
+                      </div>
+                      <div className="mt-0.5 text-sm font-medium">{fmtDate(open.pickupDate)}</div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Customer rate
+                      </div>
+                      <div className="mt-0.5 font-mono text-sm">{usd(open.customerRate)}</div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Margin
+                      </div>
+                      <div
+                        className={`mt-0.5 flex items-center gap-1 font-mono text-sm font-medium ${
+                          marginTone(open.customerRate - open.carrierEstimate).color
+                        }`}
+                      >
+                        {(() => {
+                          const MarginIcon = marginTone(
+                            open.customerRate - open.carrierEstimate,
+                          ).Icon;
+                          return <MarginIcon className="size-3" />;
+                        })()}
+                        {usd(open.customerRate - open.carrierEstimate)}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </SheetHeader>
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+                {editing ? (
+                  <form className="space-y-4" onSubmit={updateQuote}>
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <Building2 className="size-4 text-muted-foreground" /> Customer
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="mb-2 flex items-center justify-between">
+                          <Label htmlFor="edit-quote-customer">Customer</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAddCustomer(!showAddCustomer)}
+                          >
+                            {showAddCustomer ? "Select existing" : "Add new"}
                           </Button>
                         </div>
-                      ) : (
-                        <Select
-                          value={editForm.customerId}
-                          onValueChange={(val) =>
-                            setEditForm((prev) => ({ ...prev, customerId: val }))
-                          }
-                        >
-                          <SelectTrigger id="edit-quote-customer">
-                            <SelectValue placeholder="Select a customer" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {customers.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.company}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                        {showAddCustomer ? (
+                          <div className="flex gap-2">
+                            <Input
+                              value={newCustomerName}
+                              onChange={(e) => setNewCustomerName(e.target.value)}
+                              placeholder="Enter new customer name"
+                            />
+                            <Button
+                              type="button"
+                              onClick={createCustomer}
+                              disabled={addingCustomer}
+                            >
+                              {addingCustomer ? "Adding..." : "Add"}
+                            </Button>
+                          </div>
+                        ) : (
+                          <Select
+                            value={editForm.customerId}
+                            onValueChange={(val) =>
+                              setEditForm((prev) => ({ ...prev, customerId: val }))
+                            }
+                          >
+                            <SelectTrigger id="edit-quote-customer">
+                              <SelectValue placeholder="Select a customer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customers.map((c) => (
+                                <SelectItem key={c.id} value={c.id}>
+                                  {c.company}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-origin">Origin</Label>
-                      <Input
-                        id="edit-quote-origin"
-                        value={editForm.origin}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, origin: e.target.value }))
-                        }
-                        required
-                      />
+
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <MapPin className="size-4 text-muted-foreground" /> Lane & freight
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-origin">Origin</Label>
+                          <Input
+                            id="edit-quote-origin"
+                            value={editForm.origin}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, origin: e.target.value }))
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-destination">Destination</Label>
+                          <Input
+                            id="edit-quote-destination"
+                            value={editForm.destination}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, destination: e.target.value }))
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-equipment">Equipment</Label>
+                          <Input
+                            id="edit-quote-equipment"
+                            value={editForm.equipmentType}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, equipmentType: e.target.value }))
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-commodity">Commodity</Label>
+                          <Input
+                            id="edit-quote-commodity"
+                            value={editForm.commodity}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, commodity: e.target.value }))
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-destination">Destination</Label>
-                      <Input
-                        id="edit-quote-destination"
-                        value={editForm.destination}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, destination: e.target.value }))
-                        }
-                        required
-                      />
+
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <DollarSign className="size-4 text-muted-foreground" /> Pricing & status
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-customer-rate">Customer rate</Label>
+                          <Input
+                            id="edit-quote-customer-rate"
+                            type="number"
+                            value={editForm.customerRate}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, customerRate: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-carrier-cost">Carrier estimate</Label>
+                          <Input
+                            id="edit-quote-carrier-cost"
+                            type="number"
+                            value={editForm.carrierCost}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, carrierCost: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <Label>Calculated margin</Label>
+                          <div className="flex items-center justify-between rounded-md border border-border bg-muted p-2 text-xs">
+                            <span
+                              className={`font-mono font-medium ${
+                                marginTone(
+                                  Number(editForm.customerRate || 0) -
+                                    Number(editForm.carrierCost || 0),
+                                ).color
+                              }`}
+                            >
+                              {usd(
+                                Number(editForm.customerRate || 0) -
+                                  Number(editForm.carrierCost || 0),
+                              )}
+                            </span>
+                            <MarginChip
+                              margin={
+                                Number(editForm.customerRate || 0) -
+                                Number(editForm.carrierCost || 0)
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-quote-status">Status</Label>
+                          <Select
+                            value={editForm.status}
+                            onValueChange={(value) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                status: value as QuoteItem["status"],
+                              }))
+                            }
+                          >
+                            <SelectTrigger id="edit-quote-status">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUSES.map((s) => (
+                                <SelectItem key={s} value={s}>
+                                  {s.replace("_", " ")}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <Label htmlFor="edit-quote-notes">Review notes</Label>
+                          <Textarea
+                            id="edit-quote-notes"
+                            value={editForm.notes}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, notes: e.target.value }))
+                            }
+                            rows={2}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-equipment">Equipment</Label>
-                      <Input
-                        id="edit-quote-equipment"
-                        value={editForm.equipmentType}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, equipmentType: e.target.value }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-commodity">Commodity</Label>
-                      <Input
-                        id="edit-quote-commodity"
-                        value={editForm.commodity}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, commodity: e.target.value }))
-                        }
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-customer-rate">Customer rate</Label>
-                      <Input
-                        id="edit-quote-customer-rate"
-                        type="number"
-                        value={editForm.customerRate}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, customerRate: e.target.value }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-carrier-cost">Carrier estimate</Label>
-                      <Input
-                        id="edit-quote-carrier-cost"
-                        type="number"
-                        value={editForm.carrierCost}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, carrierCost: e.target.value }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-status">Status</Label>
-                      <Select
-                        value={editForm.status}
-                        onValueChange={(value) =>
-                          setEditForm((prev) => ({ ...prev, status: value as QuoteItem["status"] }))
-                        }
-                      >
-                        <SelectTrigger id="edit-quote-status">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUSES.map((s) => (
-                            <SelectItem key={s} value={s}>
-                              {s.replace("_", " ")}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-quote-notes">Review notes</Label>
-                      <Textarea
-                        id="edit-quote-notes"
-                        value={editForm.notes}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, notes: e.target.value }))
-                        }
-                        rows={2}
-                      />
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <Button type="button" variant="outline" onClick={() => setEditing(false)}>
-                        Cancel
-                      </Button>
+
+                    <div className="sticky bottom-0 -mx-6 flex flex-wrap items-center gap-2 border-t border-border bg-background/95 px-6 py-4 backdrop-blur">
                       <Button type="submit" disabled={updating}>
                         {updating ? "Saving…" : "Save changes"}
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setEditing(false)}>
+                        Cancel
                       </Button>
                     </div>
                   </form>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <Field label="Customer" value={open.customerName || open.customerId} />
-                      <Field label="Status" value={<StatusBadge value={open.status} />} />
-                      <Field label="Origin" value={open.origin} />
-                      <Field label="Destination" value={open.destination} />
-                      <Field label="Equipment" value={open.equipment} />
-                      <Field label="Commodity" value={open.commodity} />
-                      <Field label="Weight" value={`${open.weight.toLocaleString()} lbs`} />
-                      <Field label="Pickup" value={fmtDate(open.pickupDate)} />
-                      <Field label="Customer rate" value={usd(open.customerRate)} mono />
-                      <Field label="Carrier est." value={usd(open.carrierEstimate)} mono />
-                      <Field
-                        label="Margin"
-                        value={
-                          <span className="text-success">
+                    <DetailSection icon={<MapPin className="size-4" />} title="Lane & freight">
+                      <DetailGrid>
+                        <DetailRow label="Origin" value={open.origin} />
+                        <DetailRow label="Destination" value={open.destination} />
+                        <DetailRow
+                          label="Equipment"
+                          value={open.equipment}
+                          icon={<Truck className="size-3.5" />}
+                        />
+                        <DetailRow label="Commodity" value={open.commodity} />
+                        <DetailRow label="Weight" value={`${open.weight.toLocaleString()} lbs`} />
+                        <DetailRow label="Pickup" value={fmtDate(open.pickupDate)} />
+                      </DetailGrid>
+                    </DetailSection>
+
+                    <DetailSection icon={<DollarSign className="size-4" />} title="Pricing">
+                      <DetailGrid>
+                        <DetailRow label="Customer rate" value={usd(open.customerRate)} mono />
+                        <DetailRow
+                          label="Carrier estimate"
+                          value={usd(open.carrierEstimate)}
+                          mono
+                        />
+                      </DetailGrid>
+                      <div className="mt-3 flex items-center justify-between rounded-md border border-border bg-muted p-3">
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Margin
+                          </div>
+                          <div
+                            className={`font-mono text-sm font-medium ${
+                              marginTone(open.customerRate - open.carrierEstimate).color
+                            }`}
+                          >
                             {usd(open.customerRate - open.carrierEstimate)}
-                          </span>
-                        }
-                        mono
-                      />
-                    </div>
+                          </div>
+                        </div>
+                        <MarginChip margin={open.customerRate - open.carrierEstimate} />
+                      </div>
+                    </DetailSection>
 
                     {open.status !== "approved" && role !== "trainee" && (
-                      <div className="rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+                      <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+                        <Lock className="size-3.5 shrink-0" />
                         Booking is locked until this quote is approved.
                       </div>
                     )}
 
-                    <div>
-                      <div className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        <MessageSquare className="size-3.5" /> Comments
-                      </div>
+                    <DetailSection icon={<MessageSquare className="size-4" />} title="Comments">
                       <ul className="space-y-2">
                         {open.comments.length === 0 && (
                           <li className="text-xs text-muted-foreground">No comments yet.</li>
@@ -833,7 +1066,7 @@ function QuotesPage() {
                         rows={2}
                         className="mt-2"
                       />
-                    </div>
+                    </DetailSection>
 
                     {canApprove && !open.pendingApproval && (
                       <div className="flex flex-wrap gap-2">
@@ -861,17 +1094,6 @@ function QuotesPage() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
-  );
-}
-
-function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={`mt-0.5 ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
     </div>
   );
 }
