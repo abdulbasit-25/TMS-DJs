@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,32 @@ import { DataTable } from "@/components/data-table";
 import { relative } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api-client";
-import { Plus, Search, ClipboardList, CheckCircle2, Trash2, Download } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ClipboardList,
+  CheckCircle2,
+  Trash2,
+  Download,
+  Calendar,
+  User,
+  StickyNote,
+  AlertTriangle,
+  Flag,
+  Edit,
+} from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +57,8 @@ export const Route = createFileRoute("/_app/followups")({
   component: FollowupsPage,
 });
 
+type Priority = "low" | "medium" | "high";
+
 type FollowUpItem = {
   id: string;
   leadId: string;
@@ -42,7 +68,7 @@ type FollowUpItem = {
   assignedToName: string;
   title: string;
   notes?: string;
-  priority: "low" | "medium" | "high";
+  priority: Priority;
   dueDate: string;
   isCompleted: boolean;
   completedAt?: string;
@@ -64,6 +90,124 @@ type LeadsApiResponse = {
   leads: LeadOption[];
 };
 
+/* ------------------------------------------------------------------------ */
+/* Priority / due-date labeling — colored chips, same visual language as    */
+/* the margin/hazmat/insurance labeling on the loads and carriers pages.    */
+/* ------------------------------------------------------------------------ */
+
+function priorityTone(priority: Priority) {
+  if (priority === "high") {
+    return { color: "text-red-500", bg: "bg-red-500/10", label: "High priority" };
+  }
+  if (priority === "medium") {
+    return { color: "text-amber-600", bg: "bg-amber-500/10", label: "Medium priority" };
+  }
+  return { color: "text-sky-600", bg: "bg-sky-500/10", label: "Low priority" };
+}
+
+function PriorityChip({ priority }: { priority: Priority }) {
+  const tone = priorityTone(priority);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone.bg} ${tone.color}`}
+    >
+      <Flag className="size-3" /> {priority}
+    </span>
+  );
+}
+
+/** Due-date state relative to today, independent of completion. */
+function dueDateState(dueDate: string, isCompleted: boolean): "overdue" | "due_today" | "upcoming" {
+  const due = new Date(dueDate);
+  const today = new Date();
+  due.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  if (isCompleted) return "upcoming";
+  if (due.getTime() < today.getTime()) return "overdue";
+  if (due.getTime() === today.getTime()) return "due_today";
+  return "upcoming";
+}
+
+function DueDateBadge({ dueDate, isCompleted }: { dueDate: string; isCompleted: boolean }) {
+  const state = dueDateState(dueDate, isCompleted);
+  const formatted = new Date(dueDate).toLocaleDateString();
+
+  if (state === "overdue") {
+    return (
+      <span className="inline-flex items-center gap-1 text-sm font-semibold text-red-500">
+        <AlertTriangle className="size-3.5" /> {formatted}
+        <span className="rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+          Overdue
+        </span>
+      </span>
+    );
+  }
+  if (state === "due_today") {
+    return (
+      <span className="inline-flex items-center gap-1 text-sm font-medium text-amber-600">
+        {formatted}
+        <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+          Due today
+        </span>
+      </span>
+    );
+  }
+  return <span className="text-sm text-muted-foreground">{formatted}</span>;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Read-only detail primitives — mirrors the leads/carriers/loads pages so  */
+/* every detail sheet in the app feels the same.                            */
+/* ------------------------------------------------------------------------ */
+
+function DetailSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function DetailRow({
+  label,
+  value,
+  span2,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  span2?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className={span2 ? "sm:col-span-2" : undefined}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-0.5 flex items-start gap-1.5 text-sm">
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <span>{value || "—"}</span>
+      </div>
+    </div>
+  );
+}
+
 function FollowupsPage() {
   const { session } = useAuth();
   const role = session?.role ?? "agent";
@@ -76,11 +220,12 @@ function FollowupsPage() {
   const [status, setStatus] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [form, setForm] = useState({
     leadId: "",
     title: "",
     notes: "",
-    priority: "medium" as "low" | "medium" | "high",
+    priority: "medium" as Priority,
     dueDate: new Date().toISOString().split("T")[0],
   });
 
@@ -125,6 +270,8 @@ function FollowupsPage() {
       }),
     [items, q, priority, status],
   );
+
+  const open = items.find((f) => f.id === openId) ?? null;
 
   async function createFollowUp(event: FormEvent) {
     event.preventDefault();
@@ -190,15 +337,12 @@ function FollowupsPage() {
         body: JSON.stringify({ followUpId: id }),
       });
       setItems((prev) => prev.filter((i) => i.id !== id));
+      if (openId === id) setOpenId(null);
       toast.success("Follow-up deleted");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to delete follow-up");
     }
   }
-
-  const isOverdue = (dueDate: string) => {
-    return new Date(dueDate) < new Date() && !items.find((i) => i.dueDate === dueDate)?.isCompleted;
-  };
 
   function exportFollowUps(format: "csv" | "xlsx") {
     const rows = filtered.length > 0 ? filtered : items;
@@ -222,6 +366,11 @@ function FollowupsPage() {
       toast.success("Follow-ups exported");
     }
   }
+
+  const overdueCount = useMemo(
+    () => items.filter((f) => dueDateState(f.dueDate, f.isCompleted) === "overdue").length,
+    [items],
+  );
 
   return (
     <div className="space-y-5">
@@ -263,7 +412,7 @@ function FollowupsPage() {
           </div>
           <form className="grid gap-3 md:grid-cols-2" onSubmit={createFollowUp}>
             <div className="space-y-1.5 md:col-span-2">
-              <Label htmlFor="leadId">Lead ID</Label>
+              <Label htmlFor="leadId">Lead</Label>
               <Select
                 value={form.leadId}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, leadId: value }))}
@@ -295,7 +444,7 @@ function FollowupsPage() {
               <Select
                 value={form.priority}
                 onValueChange={(value) =>
-                  setForm((prev) => ({ ...prev, priority: value as "low" | "medium" | "high" }))
+                  setForm((prev) => ({ ...prev, priority: value as Priority }))
                 }
               >
                 <SelectTrigger id="priority">
@@ -368,66 +517,210 @@ function FollowupsPage() {
             <SelectItem value="high">High</SelectItem>
           </SelectContent>
         </Select>
+        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+          {overdueCount > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 font-semibold text-red-500">
+              <AlertTriangle className="size-3" /> {overdueCount} overdue
+            </span>
+          )}
+          <span>
+            {filtered.length} {filtered.length === 1 ? "follow-up" : "follow-ups"}
+          </span>
+        </div>
       </div>
 
-      <DataTable
-        empty={
-          <EmptyState
-            icon={<ClipboardList className="size-6" />}
-            title="No follow-ups match your filters"
-            description="Try clearing filters or create a new follow-up."
-          />
-        }
-        rows={filtered}
-        columns={[
-          { head: "Title", cell: (f) => <span className="font-medium">{f.title}</span> },
-          { head: "Lead", cell: (f) => <span className="text-sm">{f.leadName ?? f.leadId}</span> },
-          {
-            head: "Priority",
-            cell: (f) => (
-              <StatusBadge
-                value={f.priority}
-                tone={
-                  f.priority === "high" ? "critical" : f.priority === "medium" ? "warning" : "info"
-                }
-              />
-            ),
-          },
-          {
-            head: "Due Date",
-            cell: (f) => (
-              <span
-                className={`text-sm ${isOverdue(f.dueDate) ? "text-red-500 font-semibold" : ""}`}
-              >
-                {new Date(f.dueDate).toLocaleDateString()}
-              </span>
-            ),
-          },
-          { head: "Assigned To", cell: (f) => <span className="text-sm">{f.assignedToName}</span> },
-          {
-            head: "Status",
-            cell: (f) => (
-              <StatusBadge
-                value={f.isCompleted ? "completed" : "pending"}
-                tone={f.isCompleted ? "success" : "info"}
-              />
-            ),
-          },
-          {
-            head: "Actions",
-            cell: (f) => (
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => toggleComplete(f.id)}>
-                  <CheckCircle2 className="size-4" /> {f.isCompleted ? "Undo" : "Complete"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => removeFollowUp(f.id)}>
-                  <Trash2 className="size-4" />
-                </Button>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <DataTable
+          empty={
+            <EmptyState
+              icon={<ClipboardList className="size-6" />}
+              title="No follow-ups match your filters"
+              description="Try clearing filters or create a new follow-up."
+            />
+          }
+          rows={filtered}
+          onRowClick={(f) => setOpenId(f.id)}
+          columns={[
+            { head: "Title", cell: (f) => <span className="font-medium">{f.title}</span> },
+            {
+              head: "Lead",
+              cell: (f) => <span className="text-sm">{f.leadName ?? f.leadId}</span>,
+            },
+            { head: "Priority", cell: (f) => <PriorityChip priority={f.priority} /> },
+            {
+              head: "Due Date",
+              cell: (f) => <DueDateBadge dueDate={f.dueDate} isCompleted={f.isCompleted} />,
+            },
+            {
+              head: "Assigned To",
+              cell: (f) => <span className="text-sm">{f.assignedToName}</span>,
+            },
+            {
+              head: "Status",
+              cell: (f) => (
+                <StatusBadge
+                  value={f.isCompleted ? "completed" : "pending"}
+                  tone={f.isCompleted ? "success" : "info"}
+                />
+              ),
+            },
+            {
+              head: "Actions",
+              cell: (f) => (
+                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                  <Button variant="outline" size="sm" onClick={() => toggleComplete(f.id)}>
+                    <CheckCircle2 className="size-4" /> {f.isCompleted ? "Undo" : "Complete"}
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete "{f.title}"?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => void removeFollowUp(f.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ),
+            },
+          ]}
+        />
+      </div>
+
+      {/* Detail sheet — same layout language as the leads/carriers/loads pages */}
+      <Sheet open={!!open} onOpenChange={(v) => !v && setOpenId(null)}>
+        <SheetContent className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-lg">
+          {open && (
+            <>
+              <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <SheetTitle>{open.title}</SheetTitle>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span>{open.leadName ?? open.leadId}</span>
+                      <span>·</span>
+                      <span>Assigned to {open.assignedToName}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => toggleComplete(open.id)}>
+                      <CheckCircle2 className="size-4" /> {open.isCompleted ? "Undo" : "Complete"}
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" /> Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete "{open.title}"?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => void removeFollowUp(open.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+
+                {/* Quick-glance summary strip */}
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Status
+                    </div>
+                    <div className="mt-0.5">
+                      <StatusBadge
+                        value={open.isCompleted ? "completed" : "pending"}
+                        tone={open.isCompleted ? "success" : "info"}
+                      />
+                    </div>
+                  </div>
+                  <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Priority
+                    </div>
+                    <div className="mt-0.5">
+                      <PriorityChip priority={open.priority} />
+                    </div>
+                  </div>
+                  <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5 sm:col-span-2">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Due date
+                    </div>
+                    <div className="mt-0.5">
+                      <DueDateBadge dueDate={open.dueDate} isCompleted={open.isCompleted} />
+                    </div>
+                  </div>
+                </div>
+              </SheetHeader>
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
+                <DetailSection icon={<User className="size-4" />} title="Overview">
+                  <DetailGrid>
+                    <DetailRow label="Lead" value={open.leadName ?? open.leadId} />
+                    <DetailRow label="Assigned to" value={open.assignedToName} />
+                    <DetailRow
+                      label="Due date"
+                      value={new Date(open.dueDate).toLocaleDateString()}
+                      icon={<Calendar className="size-3.5" />}
+                    />
+                    <DetailRow
+                      label="Priority"
+                      value={<span className="capitalize">{open.priority}</span>}
+                      icon={<Flag className="size-3.5" />}
+                    />
+                  </DetailGrid>
+                </DetailSection>
+
+                {open.notes && (
+                  <DetailSection icon={<StickyNote className="size-4" />} title="Notes">
+                    <p className="whitespace-pre-wrap text-sm">{open.notes}</p>
+                  </DetailSection>
+                )}
+
+                {open.isCompleted && (
+                  <DetailSection icon={<CheckCircle2 className="size-4" />} title="Completion">
+                    <DetailGrid>
+                      <DetailRow
+                        label="Completed by"
+                        value={open.completedByName ?? open.completedBy ?? "—"}
+                      />
+                      <DetailRow
+                        label="Completed"
+                        value={open.completedAt ? relative(open.completedAt) : "—"}
+                      />
+                    </DetailGrid>
+                  </DetailSection>
+                )}
               </div>
-            ),
-          },
-        ]}
-      />
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
