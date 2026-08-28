@@ -36,6 +36,7 @@ import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppTeamsRouteImport } from './routes/_app.teams'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
+import { Route as AppAdminDataDeletionRouteImport } from './routes/_app.admin.data-deletion'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -171,6 +172,11 @@ const AppUsersRoute = AppUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdminDataDeletionRoute = AppAdminDataDeletionRouteImport.update({
+  id: '/data-deletion',
+  path: '/data-deletion',
+  getParentRoute: () => AppAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,7 +186,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
-  '/admin': typeof AppAdminRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/approvals': typeof AppApprovalsRoute
   '/audit': typeof AppAuditRoute
   '/carriers': typeof AppCarriersRoute
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AppSearchRoute
   '/teams': typeof AppTeamsRoute
   '/users': typeof AppUsersRoute
+  '/admin/data-deletion': typeof AppAdminDataDeletionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -208,7 +215,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
-  '/admin': typeof AppAdminRoute
+  '/admin': typeof AppAdminRouteWithChildren
   '/approvals': typeof AppApprovalsRoute
   '/audit': typeof AppAuditRoute
   '/carriers': typeof AppCarriersRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/search': typeof AppSearchRoute
   '/teams': typeof AppTeamsRoute
   '/users': typeof AppUsersRoute
+  '/admin/data-deletion': typeof AppAdminDataDeletionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -238,7 +246,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/activity': typeof AppActivityRoute
-  '/_app/admin': typeof AppAdminRoute
+  '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/approvals': typeof AppApprovalsRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/carriers': typeof AppCarriersRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/_app/search': typeof AppSearchRoute
   '/_app/teams': typeof AppTeamsRoute
   '/_app/users': typeof AppUsersRoute
+  '/_app/admin/data-deletion': typeof AppAdminDataDeletionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/teams'
     | '/users'
+    | '/admin/data-deletion'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/teams'
     | '/users'
+    | '/admin/data-deletion'
   id:
     | '__root__'
     | '/'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/_app/search'
     | '/_app/teams'
     | '/_app/users'
+    | '/_app/admin/data-deletion'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -547,12 +559,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUsersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admin/data-deletion': {
+      id: '/_app/admin/data-deletion'
+      path: '/data-deletion'
+      fullPath: '/admin/data-deletion'
+      preLoaderRoute: typeof AppAdminDataDeletionRouteImport
+      parentRoute: typeof AppAdminRoute
+    }
   }
 }
 
+interface AppAdminRouteChildren {
+  AppAdminDataDeletionRoute: typeof AppAdminDataDeletionRoute
+}
+
+const AppAdminRouteChildren: AppAdminRouteChildren = {
+  AppAdminDataDeletionRoute: AppAdminDataDeletionRoute,
+}
+
+const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
+  AppAdminRouteChildren,
+)
+
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
-  AppAdminRoute: typeof AppAdminRoute
+  AppAdminRoute: typeof AppAdminRouteWithChildren
   AppApprovalsRoute: typeof AppApprovalsRoute
   AppAuditRoute: typeof AppAuditRoute
   AppCarriersRoute: typeof AppCarriersRoute
@@ -575,7 +606,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
-  AppAdminRoute: AppAdminRoute,
+  AppAdminRoute: AppAdminRouteWithChildren,
   AppApprovalsRoute: AppApprovalsRoute,
   AppAuditRoute: AppAuditRoute,
   AppCarriersRoute: AppCarriersRoute,
