@@ -304,7 +304,11 @@ export async function carriersListHandler(request: Request) {
       });
     }
 
-    const updated = await carrier.save();
+    await carrier.save();
+    const updated = await Carrier.findById(carrier._id).exec();
+    if (!updated) {
+      throw new Error("Carrier was saved but could not be read back from MongoDB");
+    }
 
     // Emit carrier status change notifications
     if (["approved", "rejected", "suspended"].includes(status) && status !== prevCarrierStatus) {
@@ -421,6 +425,10 @@ export async function carriersListHandler(request: Request) {
       },
       reviewHistory: [],
     });
+    const persisted = await Carrier.findById(created._id).exec();
+    if (!persisted) {
+      throw new Error("Carrier was created but could not be read back from MongoDB");
+    }
 
     // Notify approvers about the new carrier submission (org-wide — carriers aren't team-scoped)
     const sender: SenderContext = {
@@ -429,7 +437,7 @@ export async function carriersListHandler(request: Request) {
       role: user.role,
       teamId: user.teamId,
     };
-    const actionUrl = `/carriers?focus=${created._id.toString()}`;
+    const actionUrl = `/carriers?focus=${persisted._id.toString()}`;
     void notifyApprovers(
       {
         title: "New carrier submitted",
@@ -437,7 +445,7 @@ export async function carriersListHandler(request: Request) {
         notificationType: "carrier_submitted",
         relatedModule: "carriers",
         recordType: "Carrier",
-        recordId: created._id.toString(),
+        recordId: persisted._id.toString(),
         actionUrl,
         priority: "medium",
         metadata: { legalName, mcNumber, dotNumber },
@@ -445,7 +453,7 @@ export async function carriersListHandler(request: Request) {
       { excludeUserId: user.id, sender },
     );
 
-    return jsonResponse({ carrier: mapCarrier(created) });
+    return jsonResponse({ carrier: mapCarrier(persisted) });
   }
 
   const url = new URL(request.url);
