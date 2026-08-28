@@ -18,6 +18,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AppActivityRouteImport } from './routes/_app.activity'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppAdmincopyRouteImport } from './routes/_app.admin copy'
 import { Route as AppApprovalsRouteImport } from './routes/_app.approvals'
 import { Route as AppAuditRouteImport } from './routes/_app.audit'
 import { Route as AppAuditcopyRouteImport } from './routes/_app.audit copy'
@@ -91,6 +92,11 @@ const AppActivityRoute = AppActivityRouteImport.update({
 const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdmincopyRoute = AppAdmincopyRouteImport.update({
+  id: '/admin copy',
+  path: '/admin copy',
   getParentRoute: () => AppRoute,
 } as any)
 const AppApprovalsRoute = AppApprovalsRouteImport.update({
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
   '/admin': typeof AppAdminRouteWithChildren
+  '/admin copy': typeof AppAdmincopyRoute
   '/approvals': typeof AppApprovalsRoute
   '/audit': typeof AppAuditRoute
   '/audit copy': typeof AppAuditcopyRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/activity': typeof AppActivityRoute
   '/admin': typeof AppAdminRouteWithChildren
+  '/admin copy': typeof AppAdmincopyRoute
   '/approvals': typeof AppApprovalsRoute
   '/audit': typeof AppAuditRoute
   '/audit copy': typeof AppAuditcopyRoute
@@ -335,6 +343,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_app/activity': typeof AppActivityRoute
   '/_app/admin': typeof AppAdminRouteWithChildren
+  '/_app/admin copy': typeof AppAdmincopyRoute
   '/_app/approvals': typeof AppApprovalsRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/audit copy': typeof AppAuditcopyRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/activity'
     | '/admin'
+    | '/admin copy'
     | '/approvals'
     | '/audit'
     | '/audit copy'
@@ -417,6 +427,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/activity'
     | '/admin'
+    | '/admin copy'
     | '/approvals'
     | '/audit'
     | '/audit copy'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_app/activity'
     | '/_app/admin'
+    | '/_app/admin copy'
     | '/_app/approvals'
     | '/_app/audit'
     | '/_app/audit copy'
@@ -563,6 +575,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin copy': {
+      id: '/_app/admin copy'
+      path: '/admin copy'
+      fullPath: '/admin copy'
+      preLoaderRoute: typeof AppAdmincopyRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/approvals': {
@@ -793,6 +812,7 @@ const AppAdminRouteWithChildren = AppAdminRoute._addFileChildren(
 interface AppRouteChildren {
   AppActivityRoute: typeof AppActivityRoute
   AppAdminRoute: typeof AppAdminRouteWithChildren
+  AppAdmincopyRoute: typeof AppAdmincopyRoute
   AppApprovalsRoute: typeof AppApprovalsRoute
   AppAuditRoute: typeof AppAuditRoute
   AppAuditcopyRoute: typeof AppAuditcopyRoute
@@ -827,6 +847,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppActivityRoute: AppActivityRoute,
   AppAdminRoute: AppAdminRouteWithChildren,
+  AppAdmincopyRoute: AppAdmincopyRoute,
   AppApprovalsRoute: AppApprovalsRoute,
   AppAuditRoute: AppAuditRoute,
   AppAuditcopyRoute: AppAuditcopyRoute,
