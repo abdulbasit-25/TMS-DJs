@@ -230,8 +230,8 @@ function BrandLogo({ glow = false }: { glow?: boolean }) {
 
 function CompanyLink({ className }: { className?: string }) {
   return (
-    <div>
-      <div>VISIT</div>
+    <div className="flex items-center gap-2">
+      <span>VISIT</span>
 
       <a href={COMPANY_URL} target="_blank" rel="noopener noreferrer" className={className}>
         ARCHER
