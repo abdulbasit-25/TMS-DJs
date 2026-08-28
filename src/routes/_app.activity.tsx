@@ -460,7 +460,7 @@ function ActivityPage() {
             {/* Emails */}
             <div>
               <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Mail className="size-3" /> Emailssss
+                <Mail className="size-3" /> Emails
               </Label>
               <div className="flex gap-1.5">
                 <Input
