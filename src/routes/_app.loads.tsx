@@ -33,12 +33,19 @@ import {
   Clock,
   LayoutGrid,
   List,
+  Mail,
+  MapPin,
   MessageSquare,
   Package,
   Pencil,
+  Phone,
   Plus,
+  ShieldAlert,
   Trash2,
   Truck,
+  TrendingDown,
+  TrendingUp,
+  User,
   DollarSign,
   FileText,
   StickyNote,
@@ -314,6 +321,112 @@ function ApprovalStatusBadge({ status }: { status?: string }) {
   return (
     <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
       Pending Approval
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Margin / profit-loss labeling — used in the table, board, header strip,  */
+/* and both the read-only and form calculated-values displays.              */
+/* ------------------------------------------------------------------------ */
+
+function marginTone(margin: number) {
+  if (margin > 0) {
+    return {
+      color: "text-emerald-600",
+      bg: "bg-emerald-500/10",
+      label: "Profit",
+      Icon: TrendingUp,
+    };
+  }
+  if (margin < 0) {
+    return {
+      color: "text-red-500",
+      bg: "bg-red-500/10",
+      label: "Loss",
+      Icon: TrendingDown,
+    };
+  }
+  return {
+    color: "text-muted-foreground",
+    bg: "bg-muted",
+    label: "Break-even",
+    Icon: TrendingUp,
+  };
+}
+
+function MarginChip({ margin }: { margin: number }) {
+  const tone = marginTone(margin);
+  const Icon = tone.Icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone.bg} ${tone.color}`}
+    >
+      <Icon className="size-3" /> {tone.label}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Read-only detail primitives — mirrors the carriers page so both detail   */
+/* sheets feel the same: bordered cards with icon headers, key/value grids, */
+/* and pills for list-like values.                                         */
+/* ------------------------------------------------------------------------ */
+
+function DetailSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function DetailRow({
+  label,
+  value,
+  mono,
+  span2,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  mono?: boolean;
+  span2?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className={span2 ? "sm:col-span-2" : undefined}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-0.5 flex items-start gap-1.5 ${mono ? "font-mono text-xs" : "text-sm"}`}>
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <span>{value ?? "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+function Pill({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium">
+      {children}
     </span>
   );
 }
@@ -634,7 +747,14 @@ function FreightFields({
             onChange={(e) => onChange("hazmat", e.target.checked)}
             className="rounded border-border"
           />
-          <Label htmlFor={`${idPrefix}-hazmat`}>Hazmat</Label>
+          <Label htmlFor={`${idPrefix}-hazmat`} className="flex items-center gap-1.5">
+            Hazmat
+            {values.hazmat && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-500">
+                <ShieldAlert className="size-3" /> Flagged
+              </span>
+            )}
+          </Label>
         </div>
         <div className="flex items-center gap-3">
           <input
@@ -662,6 +782,7 @@ function PricingFields({
   onChange: FieldChange;
   financials: { revenue: number; grossMargin: number; marginPercent: number };
 }) {
+  const tone = marginTone(financials.grossMargin);
   return (
     <SectionCard title="Pricing" eyebrow="Revenue">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -700,18 +821,25 @@ function PricingFields({
         </div>
         <div className="space-y-1.5">
           <Label>Calculated Values</Label>
-          <div className="space-y-1 rounded-md border border-border bg-muted p-2 text-xs">
+          <div className="space-y-1.5 rounded-md border border-border bg-muted p-2 text-xs">
             <div className="flex justify-between">
               <span>Revenue</span>
               <span className="tabular-nums">{usd(financials.revenue)}</span>
             </div>
             <div className="flex justify-between">
               <span>Gross Margin</span>
-              <span className="tabular-nums text-success">{usd(financials.grossMargin)}</span>
+              <span className={`tabular-nums font-medium ${tone.color}`}>
+                {usd(financials.grossMargin)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Margin %</span>
-              <span className="tabular-nums">{financials.marginPercent.toFixed(2)}%</span>
+              <span className={`tabular-nums font-medium ${tone.color}`}>
+                {financials.marginPercent.toFixed(2)}%
+              </span>
+            </div>
+            <div className="pt-0.5">
+              <MarginChip margin={financials.grossMargin} />
             </div>
           </div>
         </div>
@@ -780,17 +908,6 @@ function NotesFields({
         </div>
       </div>
     </SectionCard>
-  );
-}
-
-function Field({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
-  return (
-    <div>
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={`mt-0.5 text-sm ${mono ? "font-mono text-xs" : ""}`}>{value || "—"}</div>
-    </div>
   );
 }
 
@@ -1047,7 +1164,7 @@ function LoadsPage() {
     const cc = Number(createForm.carrierCost || 0);
     const ac = Number(createForm.accessorialCharges || 0);
     const rev = cr + ac;
-    const gm = rev > cc ? rev - cc : 0;
+    const gm = rev - cc;
     const mp = rev > 0 ? (gm / rev) * 100 : 0;
     return { revenue: rev, grossMargin: gm, marginPercent: mp };
   }, [createForm.customerRate, createForm.carrierCost, createForm.accessorialCharges]);
@@ -1057,7 +1174,7 @@ function LoadsPage() {
     const cc = Number(editForm.carrierCost || 0);
     const ac = Number(editForm.accessorialCharges || 0);
     const rev = cr + ac;
-    const gm = rev > cc ? rev - cc : 0;
+    const gm = rev - cc;
     const mp = rev > 0 ? (gm / rev) * 100 : 0;
     return { revenue: rev, grossMargin: gm, marginPercent: mp };
   }, [editForm.customerRate, editForm.carrierCost, editForm.accessorialCharges]);
@@ -1168,7 +1285,11 @@ function LoadsPage() {
               {
                 head: "Gross Margin",
                 cell: (l) => (
-                  <span className="font-mono text-sm text-success">{usd(l.grossMargin)}</span>
+                  <span
+                    className={`font-mono text-sm font-medium ${marginTone(l.grossMargin).color}`}
+                  >
+                    {usd(l.grossMargin)}
+                  </span>
                 ),
               },
             ]}
@@ -1203,8 +1324,17 @@ function LoadsPage() {
                         </div>
                       )}
                       <div className="text-xs text-muted-foreground">{l.carrierName}</div>
-                      <div className="mt-1 font-mono text-xs text-success">
-                        {usd(l.grossMargin)}
+                      <div className="mt-1 flex items-center gap-1.5">
+                        {l.hazmat && (
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-red-500">
+                            <ShieldAlert className="size-2.5" /> Hazmat
+                          </span>
+                        )}
+                        <span
+                          className={`font-mono text-xs font-medium ${marginTone(l.grossMargin).color}`}
+                        >
+                          {usd(l.grossMargin)}
+                        </span>
                       </div>
                     </button>
                   ))}
@@ -1297,6 +1427,11 @@ function LoadsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <SheetTitle>Load {open.loadNumber || open.ref}</SheetTitle>
                       {open.pendingApproval && <ApprovalStatusBadge status={open.approvalStatus} />}
+                      {open.hazmat && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-500">
+                          <ShieldAlert className="size-3" /> Hazmat
+                        </span>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span>{open.customerName}</span>
@@ -1366,7 +1501,13 @@ function LoadsPage() {
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       Gross Margin
                     </div>
-                    <div className="mt-0.5 font-mono text-sm text-success">
+                    <div
+                      className={`mt-0.5 flex items-center gap-1 font-mono text-sm font-medium ${marginTone(open.grossMargin).color}`}
+                    >
+                      {(() => {
+                        const MarginIcon = marginTone(open.grossMargin).Icon;
+                        return <MarginIcon className="size-3" />;
+                      })()}
                       {usd(open.grossMargin)}
                     </div>
                   </div>
@@ -1374,7 +1515,11 @@ function LoadsPage() {
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       Margin %
                     </div>
-                    <div className="mt-0.5 font-mono text-sm">{open.marginPercent.toFixed(1)}%</div>
+                    <div
+                      className={`mt-0.5 font-mono text-sm font-medium ${marginTone(open.grossMargin).color}`}
+                    >
+                      {open.marginPercent.toFixed(1)}%
+                    </div>
                   </div>
                 </div>
               </SheetHeader>
@@ -1568,88 +1713,132 @@ function LoadsPage() {
                       <TabsTrigger value="history">History</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="overview" className="space-y-5 pt-4">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <Field label="Customer" value={open.customerName} />
-                        <Field label="Carrier" value={open.carrierName} />
-                        <Field label="Agent" value={open.agentName} />
-                        <Field label="Status" value={<StatusBadge value={open.status} />} />
-                        <Field label="Customer Reference" value={open.customerReference} />
-                        <Field label="Load Number" value={open.loadNumber} mono />
-                        <Field
-                          label="Invoice Status"
-                          value={<StatusBadge value={open.invoiceStatus} />}
-                        />
-                        <Field
-                          label="Payment Status"
-                          value={<StatusBadge value={open.paymentStatus} />}
-                        />
-                      </div>
+                    {/* -------------------------------------------------------------- */}
+                    {/* Overview — load summary, then Customer and Carrier each once,   */}
+                    {/* matching the carriers page's sectioned-card layout.             */}
+                    {/* -------------------------------------------------------------- */}
+                    <TabsContent value="overview" className="space-y-4 pt-4">
+                      <DetailSection icon={<Package className="size-4" />} title="Load summary">
+                        <DetailGrid>
+                          <DetailRow label="Agent" value={open.agentName} />
+                          <DetailRow label="Load Number" value={open.loadNumber || open.ref} mono />
+                          <DetailRow
+                            label="Customer Reference"
+                            value={open.customerReference || "—"}
+                          />
+                          <DetailRow
+                            label="Invoice Status"
+                            value={<StatusBadge value={open.invoiceStatus} />}
+                          />
+                          <DetailRow
+                            label="Payment Status"
+                            value={<StatusBadge value={open.paymentStatus} />}
+                          />
+                        </DetailGrid>
+                      </DetailSection>
 
                       {open.customer && (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Customer Info
-                          </h4>
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <Field label="Company" value={open.customer.company} />
-                            <Field label="Contact" value={open.customer.contact} />
-                            <Field label="Phone" value={open.customer.phone} />
-                            <Field label="Email" value={open.customer.email} />
-                          </div>
-                        </div>
+                        <DetailSection icon={<User className="size-4" />} title="Customer">
+                          <DetailGrid>
+                            <DetailRow label="Company" value={open.customer.company || "—"} />
+                            <DetailRow label="Contact" value={open.customer.contact || "—"} />
+                            <DetailRow
+                              label="Phone"
+                              value={open.customer.phone || "—"}
+                              icon={<Phone className="size-3.5" />}
+                            />
+                            <DetailRow
+                              label="Email"
+                              value={open.customer.email || "—"}
+                              icon={<Mail className="size-3.5" />}
+                            />
+                          </DetailGrid>
+                        </DetailSection>
                       )}
 
                       {open.carrier && (
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Carrier Info
-                          </h4>
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <Field label="Legal Name" value={open.carrier.legalName} />
-                            <Field label="DBA" value={open.carrier.dba} />
-                            <Field label="MC #" value={open.carrier.mcNumber} mono />
-                            <Field label="DOT #" value={open.carrier.dotNumber} mono />
-                            <Field label="Contact" value={open.carrier.contactName} />
-                            <Field label="Phone" value={open.carrier.contactPhone} />
-                            <Field label="Email" value={open.carrier.contactEmail} />
-                            <Field label="Address" value={open.carrier.address} />
-                            <Field
-                              label="Equipment Types"
-                              value={open.carrier.equipmentTypes?.join(", ")}
+                        <DetailSection icon={<Truck className="size-4" />} title="Carrier">
+                          <DetailGrid>
+                            <DetailRow label="Legal Name" value={open.carrier.legalName || "—"} />
+                            <DetailRow label="DBA" value={open.carrier.dba || "—"} />
+                            <DetailRow label="MC #" value={open.carrier.mcNumber || "—"} mono />
+                            <DetailRow label="DOT #" value={open.carrier.dotNumber || "—"} mono />
+                            <DetailRow label="Contact" value={open.carrier.contactName || "—"} />
+                            <DetailRow
+                              label="Phone"
+                              value={open.carrier.contactPhone || "—"}
+                              icon={<Phone className="size-3.5" />}
                             />
-                            <Field
-                              label="Service Areas"
-                              value={open.carrier.serviceAreas?.join(", ")}
+                            <DetailRow
+                              label="Email"
+                              value={open.carrier.contactEmail || "—"}
+                              icon={<Mail className="size-3.5" />}
                             />
-                            <Field
+                            <DetailRow
+                              label="Address"
+                              value={open.carrier.address || "—"}
+                              icon={<MapPin className="size-3.5" />}
+                              span2
+                            />
+                            <DetailRow
                               label="Insurance Carrier"
-                              value={open.carrier.insuranceCarrier}
+                              value={open.carrier.insuranceCarrier || "—"}
                             />
-                            <Field
-                              label="Insurance Expires At"
+                            <DetailRow
+                              label="Insurance Expires"
                               value={
                                 open.carrier.insuranceExpiresAt
                                   ? fmtDate(open.carrier.insuranceExpiresAt)
-                                  : ""
+                                  : "—"
                               }
+                              mono
                             />
-                            <Field
+                            <DetailRow
                               label="Status"
                               value={<StatusBadge value={open.carrier.status} />}
                             />
-                          </div>
-                        </div>
+                          </DetailGrid>
+
+                          {(open.carrier.equipmentTypes?.length ||
+                            open.carrier.serviceAreas?.length) && (
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                              {open.carrier.equipmentTypes?.length > 0 && (
+                                <div>
+                                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Equipment types
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {open.carrier.equipmentTypes.map((type: string) => (
+                                      <Pill key={type}>{type}</Pill>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {open.carrier.serviceAreas?.length > 0 && (
+                                <div>
+                                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Service areas
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {open.carrier.serviceAreas.map((area: string, i: number) => (
+                                      <Pill key={i}>{area}</Pill>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </DetailSection>
                       )}
 
                       {open.pendingApproval &&
                       (open.comments?.length || open.auditHistory?.length) ? (
-                        <div className="space-y-4">
+                        <>
                           {open.comments && open.comments.length > 0 && (
-                            <div className="space-y-2">
-                              <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                <MessageSquare className="size-3.5" /> Conversation
-                              </h4>
+                            <DetailSection
+                              icon={<MessageSquare className="size-4" />}
+                              title="Conversation"
+                            >
                               <ul className="space-y-2">
                                 {open.comments.map((c, i) => (
                                   <li
@@ -1666,13 +1855,10 @@ function LoadsPage() {
                                   </li>
                                 ))}
                               </ul>
-                            </div>
+                            </DetailSection>
                           )}
                           {open.auditHistory && open.auditHistory.length > 0 && (
-                            <div className="space-y-2">
-                              <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                <Clock className="size-3.5" /> Audit Trail
-                              </h4>
+                            <DetailSection icon={<Clock className="size-4" />} title="Audit trail">
                               <ul className="space-y-1.5">
                                 {(open.auditHistory as any[]).map((h, i) => (
                                   <li
@@ -1696,244 +1882,302 @@ function LoadsPage() {
                                   </li>
                                 ))}
                               </ul>
-                            </div>
+                            </DetailSection>
                           )}
-                        </div>
+                        </>
                       ) : null}
                     </TabsContent>
 
-                    <TabsContent value="route" className="space-y-6 pt-4">
-                      <div className="grid gap-6 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Pickup Details
-                          </h4>
-                          <div className="grid gap-3">
-                            <Field label="Company" value={open.pickupCompany} />
-                            <Field label="Contact" value={open.pickupContact} />
-                            <Field label="Phone" value={open.pickupPhone} />
-                            <Field label="Address" value={open.pickupAddress} />
-                            <Field
-                              label="City / State"
-                              value={[open.pickupCity, open.pickupState, open.pickupZip]
+                    {/* -------------------------------------------------------------- */}
+                    {/* Route                                                            */}
+                    {/* -------------------------------------------------------------- */}
+                    <TabsContent value="route" className="space-y-4 pt-4">
+                      <DetailSection icon={<MapPin className="size-4" />} title="Pickup">
+                        <DetailGrid>
+                          <DetailRow label="Company" value={open.pickupCompany || "—"} />
+                          <DetailRow label="Contact" value={open.pickupContact || "—"} />
+                          <DetailRow
+                            label="Phone"
+                            value={open.pickupPhone || "—"}
+                            icon={<Phone className="size-3.5" />}
+                          />
+                          <DetailRow
+                            label="Address"
+                            value={open.pickupAddress || "—"}
+                            icon={<MapPin className="size-3.5" />}
+                            span2
+                          />
+                          <DetailRow
+                            label="City / State"
+                            value={
+                              [open.pickupCity, open.pickupState, open.pickupZip]
                                 .filter(Boolean)
-                                .join(", ")}
-                            />
-                            <Field
-                              label="Date & Time"
-                              value={
-                                open.pickupDate
-                                  ? fmtDateTime(
-                                      open.pickupDate +
-                                        (open.pickupTime ? `T${open.pickupTime}` : ""),
-                                    )
-                                  : ""
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Delivery Details
-                          </h4>
-                          <div className="grid gap-3">
-                            <Field label="Company" value={open.deliveryCompany} />
-                            <Field label="Contact" value={open.deliveryContact} />
-                            <Field label="Phone" value={open.deliveryPhone} />
-                            <Field label="Address" value={open.deliveryAddress} />
-                            <Field
-                              label="City / State"
-                              value={[open.deliveryCity, open.deliveryState, open.deliveryZip]
+                                .join(", ") || "—"
+                            }
+                          />
+                          <DetailRow
+                            label="Date & Time"
+                            value={
+                              open.pickupDate
+                                ? fmtDateTime(
+                                    open.pickupDate +
+                                      (open.pickupTime ? `T${open.pickupTime}` : ""),
+                                  )
+                                : "—"
+                            }
+                          />
+                        </DetailGrid>
+                      </DetailSection>
+
+                      <DetailSection icon={<MapPin className="size-4" />} title="Delivery">
+                        <DetailGrid>
+                          <DetailRow label="Company" value={open.deliveryCompany || "—"} />
+                          <DetailRow label="Contact" value={open.deliveryContact || "—"} />
+                          <DetailRow
+                            label="Phone"
+                            value={open.deliveryPhone || "—"}
+                            icon={<Phone className="size-3.5" />}
+                          />
+                          <DetailRow
+                            label="Address"
+                            value={open.deliveryAddress || "—"}
+                            icon={<MapPin className="size-3.5" />}
+                            span2
+                          />
+                          <DetailRow
+                            label="City / State"
+                            value={
+                              [open.deliveryCity, open.deliveryState, open.deliveryZip]
                                 .filter(Boolean)
-                                .join(", ")}
-                            />
-                            <Field
-                              label="Date & Time"
-                              value={
-                                open.deliveryDate
-                                  ? fmtDateTime(
-                                      open.deliveryDate +
-                                        (open.deliveryTime ? `T${open.deliveryTime}` : ""),
-                                    )
-                                  : ""
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
+                                .join(", ") || "—"
+                            }
+                          />
+                          <DetailRow
+                            label="Date & Time"
+                            value={
+                              open.deliveryDate
+                                ? fmtDateTime(
+                                    open.deliveryDate +
+                                      (open.deliveryTime ? `T${open.deliveryTime}` : ""),
+                                  )
+                                : "—"
+                            }
+                          />
+                        </DetailGrid>
+                      </DetailSection>
                     </TabsContent>
 
-                    <TabsContent value="freight" className="space-y-6 pt-4">
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Freight Details
-                        </h4>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          <Field label="Commodity" value={open.commodity} />
-                          <Field label="Weight" value={open.weight?.toString()} />
-                          <Field label="Pieces" value={open.pieces?.toString()} />
-                          <Field label="Pallets" value={open.pallets?.toString()} />
-                          <Field label="Equipment Type" value={open.equipmentType} />
-                          <Field label="Trailer Length" value={open.trailerLength?.toString()} />
-                          <Field label="Load Type" value={open.loadType?.toUpperCase()} />
-                          <Field label="Temperature" value={open.temperature?.toString()} />
-                          <div>
-                            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                              Hazmat
-                            </div>
-                            <div
-                              className={
-                                open.hazmat
-                                  ? "font-medium text-destructive"
-                                  : "text-muted-foreground"
-                              }
-                            >
-                              {open.hazmat ? "Yes" : "No"}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                              Stackable
-                            </div>
-                            <div className="text-muted-foreground">
-                              {open.stackable ? "Yes" : "No"}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    {/* -------------------------------------------------------------- */}
+                    {/* Freight — hazmat gets a warning banner, margin gets colored     */}
+                    {/* labeling, mirroring the carriers page's insurance-expiry state. */}
+                    {/* -------------------------------------------------------------- */}
+                    <TabsContent value="freight" className="space-y-4 pt-4">
+                      <DetailSection icon={<Truck className="size-4" />} title="Freight details">
+                        <DetailGrid>
+                          <DetailRow label="Commodity" value={open.commodity || "—"} />
+                          <DetailRow label="Weight" value={open.weight?.toString() || "—"} />
+                          <DetailRow label="Pieces" value={open.pieces?.toString() || "—"} />
+                          <DetailRow label="Pallets" value={open.pallets?.toString() || "—"} />
+                          <DetailRow label="Equipment Type" value={open.equipmentType || "—"} />
+                          <DetailRow
+                            label="Trailer Length"
+                            value={open.trailerLength?.toString() || "—"}
+                          />
+                          <DetailRow
+                            label="Load Type"
+                            value={open.loadType?.toUpperCase() || "—"}
+                          />
+                          <DetailRow
+                            label="Temperature"
+                            value={open.temperature?.toString() || "—"}
+                          />
+                          <DetailRow label="Stackable" value={open.stackable ? "Yes" : "No"} />
+                        </DetailGrid>
 
-                      <div className="space-y-2">
-                        <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          <DollarSign className="size-3.5" /> Pricing
-                        </h4>
-                        <div className="grid gap-3 sm:grid-cols-4">
-                          <Field label="Customer Rate" value={usd(open.customerRate)} mono />
-                          <Field label="Carrier Cost" value={usd(open.carrierCost)} mono />
-                          <Field
+                        {open.hazmat && (
+                          <div className="mt-3 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                            <ShieldAlert className="size-4 shrink-0" />
+                            This load is marked as hazardous material — confirm carrier hazmat
+                            certification before dispatch.
+                          </div>
+                        )}
+                      </DetailSection>
+
+                      <DetailSection icon={<DollarSign className="size-4" />} title="Pricing">
+                        <DetailGrid>
+                          <DetailRow label="Customer Rate" value={usd(open.customerRate)} mono />
+                          <DetailRow label="Carrier Cost" value={usd(open.carrierCost)} mono />
+                          <DetailRow
                             label="Accessorials"
                             value={open.accessorialCharges ? usd(open.accessorialCharges) : "—"}
                             mono
                           />
-                          <div className="rounded-md border border-border bg-muted p-2">
-                            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                              Calculated
+                          <DetailRow label="Revenue" value={usd(open.revenue)} mono />
+                        </DetailGrid>
+
+                        <div className="mt-3 rounded-md border border-border bg-muted p-3">
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Calculated result
+                            </span>
+                            <MarginChip margin={open.grossMargin} />
+                          </div>
+                          <div className="grid gap-1 text-xs">
+                            <div className="flex justify-between">
+                              <span>Gross Margin</span>
+                              <span
+                                className={`tabular-nums font-medium ${marginTone(open.grossMargin).color}`}
+                              >
+                                {usd(open.grossMargin)}
+                              </span>
                             </div>
-                            <div className="grid gap-1 text-xs">
-                              <div className="flex justify-between">
-                                <span>Revenue</span>
-                                <span className="tabular-nums">{usd(open.revenue)}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Gross Margin</span>
-                                <span className="tabular-nums text-success">
-                                  {usd(open.grossMargin)}
-                                </span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Margin %</span>
-                                <span className="tabular-nums">
-                                  {open.marginPercent.toFixed(2)}%
-                                </span>
-                              </div>
+                            <div className="flex justify-between">
+                              <span>Margin %</span>
+                              <span
+                                className={`tabular-nums font-medium ${marginTone(open.grossMargin).color}`}
+                              >
+                                {open.marginPercent.toFixed(2)}%
+                              </span>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Mileage
-                        </h4>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <Field label="Loaded Miles" value={open.loadedMiles?.toString()} />
-                          <Field label="Deadhead Miles" value={open.deadheadMiles?.toString()} />
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                          <DetailRow
+                            label="Loaded Miles"
+                            value={open.loadedMiles?.toString() || "—"}
+                          />
+                          <DetailRow
+                            label="Deadhead Miles"
+                            value={open.deadheadMiles?.toString() || "—"}
+                          />
                         </div>
-                      </div>
+                      </DetailSection>
                     </TabsContent>
 
-                    <TabsContent value="documents" className="space-y-2 pt-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Documents
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {(open.documents || []).map((d) => (
-                          <li
-                            key={d.kind}
-                            className="flex items-center justify-between rounded-md border border-border bg-card/50 p-2"
-                          >
-                            <div className="text-sm">{DOCUMENT_LABELS[d.kind]}</div>
-                            {d.uploaded ? (
-                              <span className="text-xs text-success">Uploaded</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Not uploaded</span>
-                            )}
-                          </li>
-                        ))}
-                        {(open.documents || []).length === 0 && (
-                          <li className="text-sm text-muted-foreground">
-                            No documents tracked for this load.
-                          </li>
-                        )}
-                      </ul>
+                    {/* -------------------------------------------------------------- */}
+                    {/* Documents                                                        */}
+                    {/* -------------------------------------------------------------- */}
+                    <TabsContent value="documents" className="pt-4">
+                      <DetailSection icon={<FileText className="size-4" />} title="Documents">
+                        <div className="overflow-hidden rounded-md border border-border">
+                          <table className="w-full text-sm">
+                            <tbody>
+                              {(open.documents || []).map((d, index) => (
+                                <tr
+                                  key={d.kind}
+                                  className={`border-b border-border last:border-b-0 ${
+                                    index % 2 === 0 ? "bg-background" : "bg-card/60"
+                                  }`}
+                                >
+                                  <td className="px-3 py-2">{DOCUMENT_LABELS[d.kind]}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    {d.uploaded ? (
+                                      <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                        <CheckCircle2 className="size-3.5" /> Uploaded
+                                      </span>
+                                    ) : (
+                                      <span className="text-xs text-muted-foreground">
+                                        Not uploaded
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                              {(open.documents || []).length === 0 && (
+                                <tr>
+                                  <td
+                                    className="px-3 py-2 text-sm text-muted-foreground"
+                                    colSpan={2}
+                                  >
+                                    No documents tracked for this load.
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </DetailSection>
                     </TabsContent>
 
+                    {/* -------------------------------------------------------------- */}
+                    {/* Notes                                                            */}
+                    {/* -------------------------------------------------------------- */}
                     <TabsContent value="notes" className="space-y-4 pt-4">
                       {open.internalNotes && (
-                        <div>
-                          <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            <StickyNote className="size-3.5" /> Internal Notes
-                          </div>
-                          <div className="whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-2 text-sm">
+                        <DetailSection
+                          icon={<StickyNote className="size-4" />}
+                          title="Internal notes"
+                        >
+                          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
                             {open.internalNotes}
-                          </div>
-                        </div>
+                          </p>
+                        </DetailSection>
                       )}
                       {open.driverInstructions && (
-                        <div>
-                          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Driver Instructions
-                          </div>
-                          <div className="whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-2 text-sm">
+                        <DetailSection
+                          icon={<FileText className="size-4" />}
+                          title="Driver instructions"
+                        >
+                          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
                             {open.driverInstructions}
-                          </div>
-                        </div>
+                          </p>
+                        </DetailSection>
                       )}
                       {open.customerNotes && (
-                        <div>
-                          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Customer Notes
-                          </div>
-                          <div className="whitespace-pre-wrap rounded-md border border-border bg-muted/50 p-2 text-sm">
+                        <DetailSection
+                          icon={<MessageSquare className="size-4" />}
+                          title="Customer notes"
+                        >
+                          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
                             {open.customerNotes}
-                          </div>
-                        </div>
+                          </p>
+                        </DetailSection>
                       )}
                       {!open.internalNotes && !open.driverInstructions && !open.customerNotes && (
                         <p className="text-sm text-muted-foreground">No notes on this load.</p>
                       )}
                     </TabsContent>
 
-                    <TabsContent value="history" className="space-y-2 pt-4">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Status History
-                      </h4>
-                      <ul className="space-y-1.5">
+                    {/* -------------------------------------------------------------- */}
+                    {/* History — real table, matching the carriers review-history UI. */}
+                    {/* -------------------------------------------------------------- */}
+                    <TabsContent value="history" className="pt-4">
+                      <DetailSection icon={<Clock className="size-4" />} title="Status history">
                         {open.statusHistory?.length ? (
-                          open.statusHistory.map((h, i) => (
-                            <li
-                              key={i}
-                              className="flex items-center justify-between rounded-md border border-border bg-card/50 px-2.5 py-1.5"
-                            >
-                              <StatusBadge value={h.status} />
-                              <div className="text-xs text-muted-foreground">
-                                {h.changedBy} · {h.at ? fmtDateTime(h.at) : ""}
-                              </div>
-                            </li>
-                          ))
+                          <div className="overflow-x-auto rounded-md border border-border">
+                            <table className="w-full min-w-[420px] text-sm">
+                              <thead>
+                                <tr className="border-b border-border bg-muted/50 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  <th className="px-3 py-2">Date</th>
+                                  <th className="px-3 py-2">Changed By</th>
+                                  <th className="px-3 py-2">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {open.statusHistory.map((h, i) => (
+                                  <tr
+                                    key={i}
+                                    className={`border-b border-border last:border-b-0 ${
+                                      i % 2 === 0 ? "bg-background" : "bg-card/60"
+                                    }`}
+                                  >
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                                      {h.at ? fmtDateTime(h.at) : "—"}
+                                    </td>
+                                    <td className="px-3 py-2 font-medium">{h.changedBy}</td>
+                                    <td className="px-3 py-2">
+                                      <StatusBadge value={h.status} />
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         ) : (
-                          <li className="text-xs text-muted-foreground">No history</li>
+                          <div className="text-sm text-muted-foreground">No history.</div>
                         )}
-                      </ul>
+                      </DetailSection>
                     </TabsContent>
                   </Tabs>
                 )}
