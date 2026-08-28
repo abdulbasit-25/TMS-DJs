@@ -23,7 +23,20 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Check, X, FileDiff, Clock, User, Calendar, MessageSquare } from "lucide-react";
+import {
+  Loader2,
+  Check,
+  X,
+  FileDiff,
+  Clock,
+  User,
+  Calendar,
+  MessageSquare,
+  Search,
+  Minus,
+  Plus,
+  Inbox,
+} from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -94,6 +107,49 @@ function formatPrimitive(v: unknown): string {
   return String(v);
 }
 
+/** "Jane Doe" -> "JD", "cindy" -> "CI" — used for the small avatar chips throughout. */
+function getInitials(name?: string | null): string {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/** Deterministic, quiet accent color for an avatar based on the person's name. */
+function avatarTint(name?: string | null): string {
+  const tints = [
+    "bg-primary/10 text-primary",
+    "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  ];
+  if (!name) return tints[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return tints[hash % tints.length];
+}
+
+function Avatar({
+  name,
+  className = "size-7 text-[11px]",
+}: {
+  name?: string | null;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold ${avatarTint(
+        name,
+      )} ${className}`}
+    >
+      {getInitials(name)}
+    </span>
+  );
+}
+
 /**
  * Renders a changed field's value in plain language instead of dumping raw JSON.
  * Handles the shapes this app actually produces (documents checklists, *History
@@ -108,11 +164,20 @@ function renderChangeValue(key: string, value: unknown): ReactNode {
   if (key === "documents" && Array.isArray(value)) {
     if (value.length === 0) return <span className="text-muted-foreground">(none)</span>;
     return (
-      <ul className="space-y-1">
+      <ul className="space-y-1.5">
         {value.map((doc: any, i: number) => (
           <li key={i} className="flex items-center justify-between gap-3">
             <span>{DOC_LABELS[doc.kind] || humanizeKey(doc.kind || "Document")}</span>
-            <span className={doc.uploaded ? "text-success" : "text-muted-foreground"}>
+            <span
+              className={
+                doc.uploaded
+                  ? "inline-flex items-center gap-1 text-success"
+                  : "inline-flex items-center gap-1 text-muted-foreground"
+              }
+            >
+              <span
+                className={`size-1.5 rounded-full ${doc.uploaded ? "bg-success" : "bg-muted-foreground/40"}`}
+              />
               {doc.uploaded
                 ? `Uploaded${doc.uploadedAt ? ` · ${formatPrimitive(doc.uploadedAt)}` : ""}`
                 : "Not uploaded"}
@@ -127,7 +192,7 @@ function renderChangeValue(key: string, value: unknown): ReactNode {
   if (/history$/i.test(key) && Array.isArray(value)) {
     if (value.length === 0) return <span className="text-muted-foreground">(none)</span>;
     return (
-      <ul className="space-y-1">
+      <ul className="space-y-1.5">
         {value.map((entry: any, i: number) => {
           const when = entry.changedAt || entry.at;
           const label = entry.status ? String(entry.status).replace(/_/g, " ") : humanizeKey(key);
@@ -149,7 +214,7 @@ function renderChangeValue(key: string, value: unknown): ReactNode {
       return (
         <ul className="space-y-2">
           {value.map((entry: any, i: number) => (
-            <li key={i} className="rounded border border-border/60 p-2">
+            <li key={i} className="rounded-lg border border-border/60 bg-background/60 p-2.5">
               {Object.entries(entry)
                 .filter(([k, v]) => !(/by$/i.test(k) && looksLikeId(v)))
                 .map(([k, v]) => (
@@ -169,7 +234,7 @@ function renderChangeValue(key: string, value: unknown): ReactNode {
   // Generic object
   if (typeof value === "object") {
     return (
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {Object.entries(value as Record<string, unknown>)
           .filter(([k, v]) => !(/by$/i.test(k) && looksLikeId(v)))
           .map(([k, v]) => (
@@ -186,36 +251,64 @@ function renderChangeValue(key: string, value: unknown): ReactNode {
   return <span>{formatPrimitive(value)}</span>;
 }
 
+const STATUS_META: Record<
+  ApprovalRequest["status"],
+  { label: string; dot: string; text: string; ring: string }
+> = {
+  pending: {
+    label: "Pending",
+    dot: "bg-warning",
+    text: "text-warning",
+    ring: "ring-warning/20",
+  },
+  approved: {
+    label: "Approved",
+    dot: "bg-success",
+    text: "text-success",
+    ring: "ring-success/20",
+  },
+  changes_requested: {
+    label: "Changes Requested",
+    dot: "bg-warning",
+    text: "text-warning",
+    ring: "ring-warning/20",
+  },
+  rejected: {
+    label: "Rejected",
+    dot: "bg-destructive",
+    text: "text-destructive",
+    ring: "ring-destructive/20",
+  },
+};
+
+const STATUS_ACCENT: Record<ApprovalRequest["status"], string> = {
+  pending: "before:bg-warning",
+  approved: "before:bg-success",
+  changes_requested: "before:bg-warning",
+  rejected: "before:bg-destructive",
+};
+
 function StatusPill({ status }: { status: ApprovalRequest["status"] }) {
-  const styles: Record<ApprovalRequest["status"], string> = {
-    pending: "border-warning/30 bg-warning/10 text-warning",
-    approved: "border-success/30 bg-success/10 text-success",
-    changes_requested: "border-warning/30 bg-warning/10 text-warning",
-    rejected: "border-destructive/30 bg-destructive/10 text-destructive",
-  };
-  const labels: Record<ApprovalRequest["status"], string> = {
-    pending: "Pending",
-    approved: "Approved",
-    changes_requested: "Changes Requested",
-    rejected: "Rejected",
-  };
+  const meta = STATUS_META[status];
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${styles[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${meta.ring}`}
     >
-      {labels[status]}
+      <span className={`size-1.5 rounded-full ${meta.dot}`} />
+      <span className={meta.text}>{meta.label}</span>
     </span>
   );
 }
 
 function ApprovalCardSkeleton() {
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 space-y-2">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="absolute inset-y-0 left-0 w-1 bg-muted" />
+      <div className="flex items-start justify-between gap-4 pl-2">
+        <div className="flex-1 space-y-2.5">
           <div className="flex gap-2">
             <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
-            <div className="h-5 w-20 animate-pulse rounded-full bg-muted" />
+            <div className="h-5 w-24 animate-pulse rounded-full bg-muted" />
           </div>
           <div className="h-3 w-48 animate-pulse rounded bg-muted" />
         </div>
@@ -385,29 +478,44 @@ function ApprovalsPage() {
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+  const pendingCount = items.filter(
+    (i) => i.status === "pending" || i.status === "changes_requested",
+  ).length;
+
   return (
     <div className="space-y-6 print:hidden">
       <PageHeader
         title="Approvals"
         description="Unified queue for everything awaiting your decision"
         actions={
-          <Button variant="outline" onClick={loadData} disabled={isRefreshing} size="sm">
-            {isRefreshing ? <Loader2 className="size-4 animate-spin" /> : null}
-            Refresh
-          </Button>
+          <div className="flex items-center gap-3">
+            {pendingCount > 0 && (
+              <span className="hidden items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:inline-flex">
+                <span className="size-1.5 rounded-full bg-primary" />
+                {pendingCount} awaiting decision
+              </span>
+            )}
+            <Button variant="outline" onClick={loadData} disabled={isRefreshing} size="sm">
+              {isRefreshing ? <Loader2 className="size-4 animate-spin" /> : null}
+              Refresh
+            </Button>
+          </div>
         }
       />
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <Input
-          placeholder="Search approvals…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1"
-        />
+      <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-card/50 p-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by requester, module, or action…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Select value={moduleFilter} onValueChange={setModuleFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full sm:w-[190px]">
             <SelectValue placeholder="Module" />
           </SelectTrigger>
           <SelectContent>
@@ -435,7 +543,8 @@ function ApprovalsPage() {
 
       {!loading && items.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          {filteredItems.length} of {items.length} {items.length === 1 ? "request" : "requests"}
+          Showing <span className="font-medium text-foreground">{filteredItems.length}</span> of{" "}
+          {items.length} {items.length === 1 ? "request" : "requests"}
         </p>
       )}
 
@@ -447,37 +556,43 @@ function ApprovalsPage() {
         </div>
       ) : filteredItems.length === 0 ? (
         <EmptyState
-          icon={<FileDiff className="size-6" />}
+          icon={<Inbox className="size-6" />}
           title="All caught up"
           description="No pending approvals in this queue"
         />
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {filteredItems.map((item) => (
-            <Card key={item.id} className="overflow-hidden">
-              <CardHeader className="pb-3">
+            <Card
+              key={item.id}
+              className={`group relative overflow-hidden border-border/70 transition-all duration-150 before:absolute before:inset-y-0 before:left-0 before:w-1 before:content-[''] hover:border-border hover:shadow-md ${STATUS_ACCENT[item.status]}`}
+            >
+              <CardHeader className="pb-3 pl-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                        {item.module.charAt(0).toUpperCase() + item.module.slice(1)}
-                      </span>
-                      <StatusPill status={item.status} />
-                      <span className="text-xs text-muted-foreground">
-                        {item.actionType.charAt(0).toUpperCase() + item.actionType.slice(1)}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        <User className="size-3.5" /> {item.requestedByName}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Calendar className="size-3.5" /> {relative(item.createdAt)}
-                      </span>
+                  <div className="flex min-w-0 flex-1 gap-3">
+                    <Avatar name={item.requestedByName} className="mt-0.5 size-9 text-xs" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                          {item.module.charAt(0).toUpperCase() + item.module.slice(1)}
+                        </span>
+                        <StatusPill status={item.status} />
+                      </div>
+                      <div className="mt-1.5 text-sm">
+                        <span className="font-medium text-foreground">{item.requestedByName}</span>
+                        <span className="text-muted-foreground">
+                          {" "}
+                          requested to {item.actionType.toLowerCase()}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Clock className="size-3" />
+                        {relative(item.createdAt)}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 pl-12 sm:pl-0">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -491,7 +606,11 @@ function ApprovalsPage() {
 
                     {canAct && ["pending", "changes_requested"].includes(item.status) && (
                       <>
-                        <Button size="sm" onClick={() => handleDecide(item.id, "approve")}>
+                        <Button
+                          size="sm"
+                          className="bg-success text-success-foreground shadow-sm hover:bg-success/90"
+                          onClick={() => handleDecide(item.id, "approve")}
+                        >
                           <Check className="size-4" />
                           <span className="hidden sm:inline">Approve</span>
                         </Button>
@@ -510,7 +629,11 @@ function ApprovalsPage() {
                         />
                         <ReasonDialog
                           trigger={
-                            <Button size="sm" variant="outline">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            >
                               <X className="size-4" />
                               <span className="hidden sm:inline">Reject</span>
                             </Button>
@@ -539,8 +662,11 @@ function ApprovalsPage() {
         }}
       >
         <SheetContent className="flex w-full flex-col overflow-hidden p-0 sm:max-w-4xl">
-          <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 text-left backdrop-blur">
-            <SheetTitle>Approval Request Details</SheetTitle>
+          <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 text-left shadow-sm backdrop-blur">
+            <SheetTitle className="flex items-center gap-2">
+              <FileDiff className="size-4.5 text-primary" />
+              Approval Request Details
+            </SheetTitle>
             <p className="text-sm text-muted-foreground">
               Review the changes before making a decision
             </p>
@@ -641,105 +767,85 @@ function ApprovalDetails({
     }
   };
 
-  const statusTextClass: Record<ApprovalRequest["status"], string> = {
-    pending: "text-warning",
-    approved: "text-success",
-    changes_requested: "text-warning",
-    rejected: "text-destructive",
-  };
+  const decisionMeta =
+    approval.status === "approved"
+      ? { label: "Approved by", by: approval.approvedByName, at: approval.approvedAt }
+      : approval.status === "changes_requested"
+        ? { label: "Requested by", by: approval.rejectedByName, at: approval.rejectedAt }
+        : { label: "Rejected by", by: approval.rejectedByName, at: approval.rejectedAt };
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Request Info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+      {/* Meta strip */}
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-card">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 p-4">
+          <div className="flex items-center gap-3">
+            <Avatar name={approval.requestedByName} className="size-10 text-sm" />
             <div>
-              <span className="text-muted-foreground">Module:</span>{" "}
-              <span className="font-medium">{approval.module}</span>
+              <div className="text-sm font-medium text-foreground">{approval.requestedByName}</div>
+              <div className="text-xs text-muted-foreground">requested this change</div>
             </div>
-            <div>
-              <span className="text-muted-foreground">Action:</span>{" "}
-              <span className="font-medium">{approval.actionType}</span>
+          </div>
+          <div className="hidden h-8 w-px bg-border sm:block" />
+          <div className="space-y-0.5">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Module</div>
+            <div className="text-sm font-medium capitalize text-foreground">{approval.module}</div>
+          </div>
+          <div className="space-y-0.5">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Action</div>
+            <div className="text-sm font-medium capitalize text-foreground">
+              {approval.actionType}
             </div>
-            <div>
-              <span className="text-muted-foreground">Requested by:</span>{" "}
-              <span className="font-medium">{approval.requestedByName}</span>
+          </div>
+          <div className="space-y-0.5">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Requested</div>
+            <div className="text-sm font-medium text-foreground">
+              {new Date(approval.createdAt).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
             </div>
-            <div>
-              <span className="text-muted-foreground">Requested at:</span>{" "}
-              <span className="font-medium">{new Date(approval.createdAt).toLocaleString()}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Status:</span>{" "}
-              <span className={`font-medium ${statusTextClass[approval.status]}`}>
-                {approval.status === "changes_requested" ? "Changes Requested" : approval.status}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="ml-auto">
+            <StatusPill status={approval.status} />
+          </div>
+        </div>
 
         {(approval.status === "approved" ||
           approval.status === "rejected" ||
           approval.status === "changes_requested") && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                {approval.status === "approved"
-                  ? "Approval Info"
-                  : approval.status === "changes_requested"
-                    ? "Changes Requested Info"
-                    : "Rejection Info"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border/70 bg-muted/30 px-4 py-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">{decisionMeta.label}:</span>{" "}
+              <span className="font-medium text-foreground">{decisionMeta.by}</span>
+            </div>
+            {decisionMeta.at && (
               <div>
-                <span className="text-muted-foreground">
-                  {approval.status === "approved"
-                    ? "Approved by"
-                    : approval.status === "changes_requested"
-                      ? "Requested by"
-                      : "Rejected by"}
-                  :
-                </span>{" "}
-                <span className="font-medium">
-                  {approval.status === "approved"
-                    ? approval.approvedByName
-                    : approval.rejectedByName}
+                <span className="text-muted-foreground">At:</span>{" "}
+                <span className="font-medium text-foreground">
+                  {new Date(decisionMeta.at).toLocaleString()}
                 </span>
               </div>
-              <div>
-                <span className="text-muted-foreground">
-                  {approval.status === "approved" ? "Approved at" : "Processed at"}:
-                </span>{" "}
-                <span className="font-medium">
-                  {new Date(
-                    (approval.status === "approved"
-                      ? approval.approvedAt
-                      : approval.rejectedAt) as string,
-                  ).toLocaleString()}
-                </span>
+            )}
+            {approval.rejectionReason && (
+              <div className="basis-full text-sm">
+                <span className="text-muted-foreground">Reason:</span>{" "}
+                <span className="font-medium text-foreground">{approval.rejectionReason}</span>
               </div>
-              {approval.rejectionReason && (
-                <div>
-                  <span className="text-muted-foreground">Reason:</span>{" "}
-                  <span className="font-medium">{approval.rejectionReason}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </div>
         )}
       </div>
 
       {/* Changes */}
-      <Card>
+      <Card className="border-border/70">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <FileDiff className="size-4" />
+            <FileDiff className="size-4 text-primary" />
             Changes
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
+              {changedFields.length}
+            </span>
             {canEdit && (
               <Button
                 variant="ghost"
@@ -769,22 +875,26 @@ function ApprovalDetails({
           ) : changedFields.length === 0 ? (
             <div className="text-sm text-muted-foreground">No changes detected</div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-border/60">
               {changedFields.map(({ key, oldValue, newValue }) => (
-                <div key={key} className="space-y-1.5">
+                <div key={key} className="space-y-1.5 py-3 first:pt-0 last:pb-0">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {humanizeKey(key)}
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs font-normal text-muted-foreground">Previous</Label>
-                      <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2.5 text-sm text-foreground">
+                      <Label className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                        <Minus className="size-3" /> Previous
+                      </Label>
+                      <div className="rounded-lg border border-destructive/25 bg-destructive/5 p-2.5 text-sm text-foreground">
                         {renderChangeValue(key, oldValue)}
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs font-normal text-muted-foreground">New</Label>
-                      <div className="rounded-md border border-success/30 bg-success/5 p-2.5 text-sm text-foreground">
+                      <Label className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
+                        <Plus className="size-3" /> New
+                      </Label>
+                      <div className="rounded-lg border border-success/25 bg-success/5 p-2.5 text-sm text-foreground">
                         {renderChangeValue(key, newValue)}
                       </div>
                     </div>
@@ -797,25 +907,35 @@ function ApprovalDetails({
       </Card>
 
       {/* Comments */}
-      <Card>
+      <Card className="border-border/70">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <MessageSquare className="size-4" />
+            <MessageSquare className="size-4 text-primary" />
             Comments
+            {approval.comments?.length > 0 && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">
+                {approval.comments.length}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {approval.comments && approval.comments.length > 0 ? (
             <div className="space-y-3">
               {approval.comments.map((comment: any) => (
-                <div key={comment.id} className="rounded-md border border-border p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold">{comment.userName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {relative(comment.createdAt)}
-                    </span>
+                <div key={comment.id} className="flex gap-3">
+                  <Avatar name={comment.userName} className="mt-0.5 size-7 text-[11px]" />
+                  <div className="min-w-0 flex-1 rounded-lg border border-border/60 bg-muted/30 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-foreground">
+                        {comment.userName}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {relative(comment.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-foreground/90">{comment.text}</p>
                   </div>
-                  <p className="mt-1 text-sm">{comment.text}</p>
                 </div>
               ))}
             </div>
@@ -824,7 +944,7 @@ function ApprovalDetails({
           )}
 
           {/* Add Comment */}
-          <div className="border-t border-border pt-3">
+          <div className="border-t border-border/70 pt-3">
             <div className="flex flex-col gap-2 sm:flex-row">
               <Textarea
                 value={newComment}
@@ -847,7 +967,7 @@ function ApprovalDetails({
 
       {/* Decide buttons */}
       {canAct && ["pending", "changes_requested"].includes(approval.status) && (
-        <div className="space-y-3 border-t border-border pt-4">
+        <div className="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4">
           <div className="space-y-1.5">
             <Label htmlFor="rejectionReason">
               Reason (required for Request Changes, optional otherwise)
@@ -857,11 +977,13 @@ function ApprovalDetails({
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Enter a reason if requesting changes or rejecting"
+              className="bg-background"
             />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => onDecide(approval.id, "reject", rejectionReason)}
             >
               <X className="size-4" /> Reject
@@ -873,7 +995,10 @@ function ApprovalDetails({
             >
               <MessageSquare className="size-4" /> Request Changes
             </Button>
-            <Button onClick={() => onDecide(approval.id, "approve")}>
+            <Button
+              className="bg-success text-success-foreground shadow-sm hover:bg-success/90"
+              onClick={() => onDecide(approval.id, "approve")}
+            >
               <Check className="size-4" /> Approve
             </Button>
           </div>
