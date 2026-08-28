@@ -230,11 +230,22 @@ function BrandLogo({ glow = false }: { glow?: boolean }) {
 
 function CompanyLink({ className }: { className?: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <span>VISIT</span>
+    <div className="flex items-center gap-3">
+      <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
+        Powered by
+      </span>
 
-      <a href={COMPANY_URL} target="_blank" rel="noopener noreferrer" className={className}>
-        ARCHER
+      <a
+        href={COMPANY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`group inline-flex items-center gap-1.5 text-sm font-semibold tracking-tight transition-all duration-200 hover:opacity-80 ${className ?? ""}`}
+      >
+        <span className="relative">
+          ARCHER
+          <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-current transition-all duration-300 group-hover:w-full" />
+        </span>
+
         <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </a>
     </div>
