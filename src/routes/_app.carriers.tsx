@@ -32,15 +32,27 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Building2,
+  Calendar,
   Check,
+  CheckCircle2,
+  ClipboardCheck,
   Download,
   Edit,
+  FileText,
+  History,
+  Mail,
+  MapPin,
+  Phone,
   Plus,
   Search,
   ShieldAlert,
+  ShieldCheck,
   Trash2,
   Truck,
+  User,
   X,
+  XCircle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -111,6 +123,14 @@ const SORTABLE_FIELDS = [
   "createdAt",
   "updatedAt",
 ] as const;
+
+const VETTING_CHECK_LABELS: Record<keyof CarrierItem["vettingChecks"], string> = {
+  authorityVerified: "Authority verified",
+  insuranceVerified: "Insurance verified",
+  safetyVerified: "Safety verified",
+  fraudChecked: "Fraud checked",
+  complianceVerified: "Compliance verified",
+};
 
 function CarriersPage() {
   const { session } = useAuth();
@@ -459,7 +479,7 @@ function CarriersPage() {
     () => (item: CarrierItem) => {
       const total = Object.values(item.vettingChecks).length;
       const complete = Object.values(item.vettingChecks).filter(Boolean).length;
-      return `${complete}/${total}`;
+      return { complete, total, label: `${complete}/${total}` };
     },
     [],
   );
@@ -618,9 +638,24 @@ function CarriersPage() {
             },
             {
               head: "Vetting",
-              cell: (carrier) => (
-                <span className="font-mono text-xs">{vettingProgress(carrier)}</span>
-              ),
+              cell: (carrier) => {
+                const progress = vettingProgress(carrier);
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-14 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={`h-full rounded-full ${
+                          progress.complete === progress.total ? "bg-emerald-500" : "bg-amber-500"
+                        }`}
+                        style={{ width: `${(progress.complete / progress.total) * 100}%` }}
+                      />
+                    </div>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {progress.label}
+                    </span>
+                  </div>
+                );
+              },
             },
             {
               head: (
@@ -1117,24 +1152,22 @@ function CarriersPage() {
                     </Field>
                     <Field label="Vetting checks" className="md:col-span-2">
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {[
-                          { label: "Authority verified", key: "authorityVerified" as const },
-                          { label: "Insurance verified", key: "insuranceVerified" as const },
-                          { label: "Safety verified", key: "safetyVerified" as const },
-                          { label: "Fraud checked", key: "fraudChecked" as const },
-                          { label: "Compliance verified", key: "complianceVerified" as const },
-                        ].map((check) => (
+                        {(
+                          Object.keys(VETTING_CHECK_LABELS) as Array<
+                            keyof CarrierItem["vettingChecks"]
+                          >
+                        ).map((key) => (
                           <label
-                            key={check.key}
+                            key={key}
                             className="flex items-center gap-2 rounded-md border border-border bg-card/50 px-3 py-2 text-sm"
                           >
                             <Switch
-                              checked={editForm[check.key]}
+                              checked={editForm[key]}
                               onCheckedChange={(value) =>
-                                setEditForm((prev) => ({ ...prev, [check.key]: value }))
+                                setEditForm((prev) => ({ ...prev, [key]: value }))
                               }
                             />
-                            {check.label}
+                            {VETTING_CHECK_LABELS[key]}
                           </label>
                         ))}
                       </div>
@@ -1159,126 +1192,24 @@ function CarriersPage() {
                   </div>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <Field label="MC number" value={open.mcNumber || "—"} mono />
-                    <Field label="DOT number" value={open.dotNumber || "—"} mono />
-                    <Field label="Company" value={open.companyName || "—"} />
-                    <Field label="Contact" value={open.contactName || "—"} />
-                    <Field label="Email" value={open.contactEmail || "—"} />
-                    <Field label="Phone" value={open.contactPhone || "—"} />
-                    <Field label="Address" value={open.address || "—"} />
-                    <Field label="Tax ID / EIN" value={open.taxId || "—"} mono />
-                    <Field label="Equipment types" value={open.equipmentTypes.join(", ") || "—"} />
-                    <Field label="Payment terms" value={open.paymentTerms || "—"} />
-                    <Field
-                      label="Service areas"
-                      value={formatServiceAreas(open.serviceAreas) || "—"}
-                    />
-                    <Field label="Insurance" value={open.insuranceCarrier || "—"} />
-                    <Field
-                      label="Insurance certificate / ID"
-                      value={open.insuranceCertificateId || "—"}
-                      mono
-                    />
-                    <Field label="Policy number" value={open.insurancePolicyNumber || "—"} mono />
-                    <Field
-                      label="Insurance expires"
-                      value={
-                        open.insuranceExpiresAt
-                          ? new Date(open.insuranceExpiresAt).toLocaleDateString()
-                          : "—"
-                      }
-                      mono
-                    />
-                    <Field
-                      label="Insured vehicle VINs"
-                      value={open.insuredVehicleVINs.join(", ") || "—"}
-                      mono
-                      className="md:col-span-2"
-                    />
-                    <Field label="Status" value={<StatusBadge value={open.status} />} />
-                    <Field
-                      label="Vetting progress"
-                      value={<span className="font-mono text-xs">{vettingProgress(open)}</span>}
-                    />
-                    <Field label="Notes" value={open.notes || "—"} className="md:col-span-2" />
-                  </div>
-
-                  <div className="rounded-lg border border-border bg-card p-4">
-                    <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Review history
-                    </div>
-                    {open.reviewHistory.length === 0 ? (
-                      <div className="text-sm text-muted-foreground">No review history yet.</div>
-                    ) : (
-                      <div className="space-y-3">
-                        {open.reviewHistory.map((entry, index) => (
-                          <div
-                            key={`${entry.reviewerId}-${index}`}
-                            className="rounded-md border border-border bg-background p-3"
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-medium">
-                              <span>{entry.reviewerName}</span>
-                              <span className="text-muted-foreground">
-                                {new Date(entry.reviewDate).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className="mt-1 text-sm">
-                              {entry.comments || "No comments provided."}
-                            </div>
-                            <div className="mt-2 text-xs text-muted-foreground">
-                              Status: {entry.status.replace("_", " ")}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {canApprove && (
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <Button
-                        variant="secondary"
-                        onClick={async () => {
-                          if (!open) return;
-                          setEditForm((prev) => ({ ...prev, status: "approved" }));
-                          setReviewComment("Approved by reviewer");
-                          await saveCarrier(new Event("submit") as unknown as FormEvent);
-                        }}
-                        disabled={saving}
-                      >
-                        <Check className="size-4" /> Approve
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={async () => {
-                          if (!open) return;
-                          setEditForm((prev) => ({ ...prev, status: "rejected" }));
-                          setReviewComment("Rejected by reviewer");
-                          await saveCarrier(new Event("submit") as unknown as FormEvent);
-                        }}
-                        disabled={saving}
-                      >
-                        Reject
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setEditing(true)}
-                        disabled={!canManage}
-                      >
-                        Edit details
-                      </Button>
-                    </div>
-                  )}
-
-                  {open.status !== "approved" && (
-                    <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
-                      <ShieldAlert className="size-4 shrink-0" />
-                      This carrier is not approved and cannot be assigned to loads.
-                    </div>
-                  )}
-                </div>
+                <CarrierDetailView
+                  carrier={open}
+                  vettingProgress={vettingProgress(open)}
+                  canApprove={canApprove}
+                  canManage={canManage}
+                  saving={saving}
+                  onApprove={async () => {
+                    setEditForm((prev) => ({ ...prev, status: "approved" }));
+                    setReviewComment("Approved by reviewer");
+                    await saveCarrier(new Event("submit") as unknown as FormEvent);
+                  }}
+                  onReject={async () => {
+                    setEditForm((prev) => ({ ...prev, status: "rejected" }));
+                    setReviewComment("Rejected by reviewer");
+                    await saveCarrier(new Event("submit") as unknown as FormEvent);
+                  }}
+                  onEdit={() => setEditing(true)}
+                />
               )}
             </div>
           ) : null}
@@ -1287,6 +1218,390 @@ function CarriersPage() {
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Read-only carrier detail view                                       */
+/* ------------------------------------------------------------------ */
+
+function CarrierDetailView({
+  carrier,
+  vettingProgress,
+  canApprove,
+  canManage,
+  saving,
+  onApprove,
+  onReject,
+  onEdit,
+}: {
+  carrier: CarrierItem;
+  vettingProgress: { complete: number; total: number; label: string };
+  canApprove: boolean;
+  canManage: boolean;
+  saving: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+  onEdit: () => void;
+}) {
+  const insurance = getInsuranceState(carrier.insuranceExpiresAt);
+
+  return (
+    <div className="space-y-4">
+      {/* Summary strip */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-base font-semibold">{carrier.legalName}</span>
+              <StatusBadge value={carrier.status} />
+            </div>
+            {carrier.dba && <div className="text-sm text-muted-foreground">DBA: {carrier.dba}</div>}
+          </div>
+          <div className="flex flex-wrap items-center gap-5">
+            <SummaryStat label="MC" value={carrier.mcNumber || "—"} mono />
+            <SummaryStat label="DOT" value={carrier.dotNumber || "—"} mono />
+            <SummaryStat
+              label="Vetting"
+              value={
+                <span className="inline-flex items-center gap-1.5">
+                  <span
+                    className={`inline-block h-2 w-2 rounded-full ${
+                      vettingProgress.complete === vettingProgress.total
+                        ? "bg-emerald-500"
+                        : vettingProgress.complete === 0
+                          ? "bg-red-400"
+                          : "bg-amber-500"
+                    }`}
+                  />
+                  {vettingProgress.label}
+                </span>
+              }
+            />
+          </div>
+        </div>
+
+        {carrier.status !== "approved" && (
+          <div className="mt-3 flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs text-warning">
+            <ShieldAlert className="size-4 shrink-0" />
+            This carrier is not approved and cannot be assigned to loads.
+          </div>
+        )}
+      </div>
+
+      {/* Review actions */}
+      {canApprove && (
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Button variant="secondary" onClick={onApprove} disabled={saving}>
+            <Check className="size-4" /> Approve
+          </Button>
+          <Button variant="destructive" onClick={onReject} disabled={saving}>
+            Reject
+          </Button>
+          <Button variant="outline" onClick={onEdit} disabled={!canManage}>
+            Edit details
+          </Button>
+        </div>
+      )}
+
+      {/* Company details */}
+      <DetailSection icon={<Building2 className="size-4" />} title="Company">
+        <DetailGrid>
+          <DetailRow label="Company" value={carrier.companyName || "—"} />
+          <DetailRow label="Tax ID / EIN" value={carrier.taxId || "—"} mono />
+          <DetailRow label="Payment terms" value={carrier.paymentTerms || "—"} />
+          <DetailRow
+            label="Address"
+            value={carrier.address || "—"}
+            icon={<MapPin className="size-3.5" />}
+            span2
+          />
+        </DetailGrid>
+      </DetailSection>
+
+      {/* Primary contact */}
+      <DetailSection icon={<User className="size-4" />} title="Primary contact">
+        <DetailGrid>
+          <DetailRow label="Name" value={carrier.contactName || "—"} />
+          <DetailRow
+            label="Email"
+            value={carrier.contactEmail || "—"}
+            icon={<Mail className="size-3.5" />}
+          />
+          <DetailRow
+            label="Phone"
+            value={carrier.contactPhone || "—"}
+            icon={<Phone className="size-3.5" />}
+          />
+        </DetailGrid>
+      </DetailSection>
+
+      {/* Equipment & coverage */}
+      <DetailSection icon={<Truck className="size-4" />} title="Equipment & coverage">
+        <div className="space-y-3">
+          <div>
+            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Equipment types
+            </div>
+            {carrier.equipmentTypes.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {carrier.equipmentTypes.map((type) => (
+                  <Pill key={type}>{type}</Pill>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">—</div>
+            )}
+          </div>
+          <div>
+            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Service areas
+            </div>
+            {carrier.serviceAreas.length > 0 ? (
+              <div className="space-y-1 text-sm">
+                {carrier.serviceAreas.map((area, index) => (
+                  <div
+                    key={index}
+                    className="rounded-md border border-border bg-background px-2.5 py-1.5"
+                  >
+                    {typeof area === "string" ? area : `${area.region}: ${area.states.join(", ")}`}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">—</div>
+            )}
+          </div>
+        </div>
+      </DetailSection>
+
+      {/* Insurance */}
+      <DetailSection icon={<ShieldCheck className="size-4" />} title="Insurance">
+        <DetailGrid>
+          <DetailRow label="Carrier" value={carrier.insuranceCarrier || "—"} />
+          <DetailRow label="Policy #" value={carrier.insurancePolicyNumber || "—"} mono />
+          <DetailRow label="Certificate / ID" value={carrier.insuranceCertificateId || "—"} mono />
+          <DetailRow
+            label="Expires"
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                <Calendar className="size-3.5 text-muted-foreground" />
+                {insurance.label}
+                {insurance.state !== "ok" && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                      insurance.state === "expired"
+                        ? "bg-red-500/10 text-red-500"
+                        : "bg-amber-500/10 text-amber-600"
+                    }`}
+                  >
+                    {insurance.state === "expired" ? "Expired" : "Expiring soon"}
+                  </span>
+                )}
+              </span>
+            }
+            mono
+          />
+        </DetailGrid>
+
+        {carrier.insuredVehicleVINs.length > 0 && (
+          <div className="mt-3">
+            <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Insured vehicle VINs ({carrier.insuredVehicleVINs.length})
+            </div>
+            <div className="overflow-hidden rounded-md border border-border">
+              <table className="w-full text-sm">
+                <tbody>
+                  {carrier.insuredVehicleVINs.map((vin, index) => (
+                    <tr key={vin} className={index % 2 === 0 ? "bg-background" : "bg-card/60"}>
+                      <td className="px-3 py-1.5 font-mono text-xs">{vin}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </DetailSection>
+
+      {/* Vetting checks */}
+      <DetailSection icon={<ClipboardCheck className="size-4" />} title="Vetting checks">
+        <div className="overflow-hidden rounded-md border border-border">
+          <table className="w-full text-sm">
+            <tbody>
+              {(Object.keys(VETTING_CHECK_LABELS) as Array<keyof CarrierItem["vettingChecks"]>).map(
+                (key, index) => {
+                  const passed = carrier.vettingChecks[key];
+                  return (
+                    <tr
+                      key={key}
+                      className={`border-b border-border last:border-b-0 ${
+                        index % 2 === 0 ? "bg-background" : "bg-card/60"
+                      }`}
+                    >
+                      <td className="px-3 py-2">{VETTING_CHECK_LABELS[key]}</td>
+                      <td className="px-3 py-2 text-right">
+                        {passed ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                            <CheckCircle2 className="size-3.5" /> Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                            <XCircle className="size-3.5" /> Pending
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                },
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DetailSection>
+
+      {/* Notes */}
+      <DetailSection icon={<FileText className="size-4" />} title="Notes">
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+          {carrier.notes || "No notes recorded."}
+        </p>
+      </DetailSection>
+
+      {/* Review history */}
+      <DetailSection icon={<History className="size-4" />} title="Review history">
+        {carrier.reviewHistory.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No review history yet.</div>
+        ) : (
+          <div className="overflow-x-auto rounded-md border border-border">
+            <table className="w-full min-w-[480px] text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Reviewer</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Comments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {carrier.reviewHistory.map((entry, index) => (
+                  <tr
+                    key={`${entry.reviewerId}-${index}`}
+                    className={`border-b border-border last:border-b-0 align-top ${
+                      index % 2 === 0 ? "bg-background" : "bg-card/60"
+                    }`}
+                  >
+                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                      {new Date(entry.reviewDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 py-2 font-medium">{entry.reviewerName}</td>
+                    <td className="px-3 py-2">
+                      <StatusBadge value={entry.status} />
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {entry.comments || "No comments provided."}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </DetailSection>
+    </div>
+  );
+}
+
+function DetailSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function DetailRow({
+  label,
+  value,
+  mono,
+  span2,
+  icon,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+  span2?: boolean;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className={span2 ? "sm:col-span-2" : undefined}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-0.5 flex items-start gap-1.5 ${mono ? "font-mono text-xs" : "text-sm"}`}>
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <span>{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStat({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={mono ? "font-mono text-sm" : "text-sm"}>{value}</div>
+    </div>
+  );
+}
+
+function Pill({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium">
+      {children}
+    </span>
+  );
+}
+
+function getInsuranceState(expiresAt: string | null): {
+  label: string;
+  state: "ok" | "soon" | "expired";
+} {
+  if (!expiresAt) return { label: "—", state: "ok" };
+  const expiry = new Date(expiresAt);
+  const label = expiry.toLocaleDateString();
+  const daysUntil = Math.floor((expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  if (daysUntil < 0) return { label, state: "expired" };
+  if (daysUntil <= 30) return { label, state: "soon" };
+  return { label, state: "ok" };
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared form field + VIN input                                       */
+/* ------------------------------------------------------------------ */
 
 function Field({
   label,
