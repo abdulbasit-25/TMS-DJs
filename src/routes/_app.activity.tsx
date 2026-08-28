@@ -683,12 +683,12 @@ function ActivityPage() {
                                 <span className="font-medium">{s.calls ?? 0}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground/60">Follow-ups</span>
-                                <span className="font-medium">{s.followups ?? 0}</span>
-                              </div>
-                              <div className="flex justify-between">
                                 <span className="text-muted-foreground/60">Emails</span>
                                 <span className="font-medium">{s.emails ?? 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground/60">Follow-ups</span>
+                                <span className="font-medium">{s.followups ?? 0}</span>
                               </div>
                             </div>
                             {s.notes && (
