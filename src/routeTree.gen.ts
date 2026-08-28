@@ -37,6 +37,7 @@ import { Route as AppLoadscopyRouteImport } from './routes/_app.loads copy'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppOnboardingRouteImport } from './routes/_app.onboarding'
 import { Route as AppQuotesRouteImport } from './routes/_app.quotes'
+import { Route as AppQuotescopyRouteImport } from './routes/_app.quotes copy'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppTeamsRouteImport } from './routes/_app.teams'
@@ -182,6 +183,11 @@ const AppQuotesRoute = AppQuotesRouteImport.update({
   path: '/quotes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppQuotescopyRoute = AppQuotescopyRouteImport.update({
+  id: '/quotes copy',
+  path: '/quotes copy',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReportsRoute = AppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -236,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/onboarding': typeof AppOnboardingRoute
   '/quotes': typeof AppQuotesRoute
+  '/quotes copy': typeof AppQuotescopyRoute
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
   '/teams': typeof AppTeamsRoute
@@ -270,6 +277,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/onboarding': typeof AppOnboardingRoute
   '/quotes': typeof AppQuotesRoute
+  '/quotes copy': typeof AppQuotescopyRoute
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
   '/teams': typeof AppTeamsRoute
@@ -306,6 +314,7 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/onboarding': typeof AppOnboardingRoute
   '/_app/quotes': typeof AppQuotesRoute
+  '/_app/quotes copy': typeof AppQuotescopyRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/search': typeof AppSearchRoute
   '/_app/teams': typeof AppTeamsRoute
@@ -342,6 +351,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/quotes'
+    | '/quotes copy'
     | '/reports'
     | '/search'
     | '/teams'
@@ -376,6 +386,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/quotes'
+    | '/quotes copy'
     | '/reports'
     | '/search'
     | '/teams'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/onboarding'
     | '/_app/quotes'
+    | '/_app/quotes copy'
     | '/_app/reports'
     | '/_app/search'
     | '/_app/teams'
@@ -626,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppQuotesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/quotes copy': {
+      id: '/_app/quotes copy'
+      path: '/quotes copy'
+      fullPath: '/quotes copy'
+      preLoaderRoute: typeof AppQuotescopyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/reports': {
       id: '/_app/reports'
       path: '/reports'
@@ -698,6 +717,7 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppOnboardingRoute: typeof AppOnboardingRoute
   AppQuotesRoute: typeof AppQuotesRoute
+  AppQuotescopyRoute: typeof AppQuotescopyRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSearchRoute: typeof AppSearchRoute
   AppTeamsRoute: typeof AppTeamsRoute
@@ -726,6 +746,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppOnboardingRoute: AppOnboardingRoute,
   AppQuotesRoute: AppQuotesRoute,
+  AppQuotescopyRoute: AppQuotescopyRoute,
   AppReportsRoute: AppReportsRoute,
   AppSearchRoute: AppSearchRoute,
   AppTeamsRoute: AppTeamsRoute,
