@@ -418,7 +418,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Below card */}
-          <div className="mt-6 space-y-4 text-center">
+          {/* <div className="mt-6 space-y-4 text-center">
             <p className="text-xs text-muted-foreground">
               Locked out of your account?{" "}
               <a
@@ -429,7 +429,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
               </a>
             </p>
             <CompanyLink className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden" />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
