@@ -29,6 +29,7 @@ import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
 import { Route as AppFollowupsRouteImport } from './routes/_app.followups'
 import { Route as AppInvoicesRouteImport } from './routes/_app.invoices'
 import { Route as AppLeadsRouteImport } from './routes/_app.leads'
+import { Route as AppLeadscopyRouteImport } from './routes/_app.leads copy'
 import { Route as AppLoadsRouteImport } from './routes/_app.loads'
 import { Route as AppLoadscopyRouteImport } from './routes/_app.loads copy'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
@@ -139,6 +140,11 @@ const AppLeadsRoute = AppLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLeadscopyRoute = AppLeadscopyRouteImport.update({
+  id: '/leads copy',
+  path: '/leads copy',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLoadsRoute = AppLoadsRouteImport.update({
   id: '/loads',
   path: '/loads',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/followups': typeof AppFollowupsRoute
   '/invoices': typeof AppInvoicesRoute
   '/leads': typeof AppLeadsRoute
+  '/leads copy': typeof AppLeadscopyRoute
   '/loads': typeof AppLoadsRoute
   '/loads copy': typeof AppLoadscopyRoute
   '/notifications': typeof AppNotificationsRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/followups': typeof AppFollowupsRoute
   '/invoices': typeof AppInvoicesRoute
   '/leads': typeof AppLeadsRoute
+  '/leads copy': typeof AppLeadscopyRoute
   '/loads': typeof AppLoadsRoute
   '/loads copy': typeof AppLoadscopyRoute
   '/notifications': typeof AppNotificationsRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/_app/followups': typeof AppFollowupsRoute
   '/_app/invoices': typeof AppInvoicesRoute
   '/_app/leads': typeof AppLeadsRoute
+  '/_app/leads copy': typeof AppLeadscopyRoute
   '/_app/loads': typeof AppLoadsRoute
   '/_app/loads copy': typeof AppLoadscopyRoute
   '/_app/notifications': typeof AppNotificationsRoute
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/followups'
     | '/invoices'
     | '/leads'
+    | '/leads copy'
     | '/loads'
     | '/loads copy'
     | '/notifications'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/followups'
     | '/invoices'
     | '/leads'
+    | '/leads copy'
     | '/loads'
     | '/loads copy'
     | '/notifications'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/_app/followups'
     | '/_app/invoices'
     | '/_app/leads'
+    | '/_app/leads copy'
     | '/_app/loads'
     | '/_app/loads copy'
     | '/_app/notifications'
@@ -534,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLeadsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/leads copy': {
+      id: '/_app/leads copy'
+      path: '/leads copy'
+      fullPath: '/leads copy'
+      preLoaderRoute: typeof AppLeadscopyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/loads': {
       id: '/_app/loads'
       path: '/loads'
@@ -633,6 +652,7 @@ interface AppRouteChildren {
   AppFollowupsRoute: typeof AppFollowupsRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
   AppLeadsRoute: typeof AppLeadsRoute
+  AppLeadscopyRoute: typeof AppLeadscopyRoute
   AppLoadsRoute: typeof AppLoadsRoute
   AppLoadscopyRoute: typeof AppLoadscopyRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
@@ -658,6 +678,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFollowupsRoute: AppFollowupsRoute,
   AppInvoicesRoute: AppInvoicesRoute,
   AppLeadsRoute: AppLeadsRoute,
+  AppLeadscopyRoute: AppLeadscopyRoute,
   AppLoadsRoute: AppLoadsRoute,
   AppLoadscopyRoute: AppLoadscopyRoute,
   AppNotificationsRoute: AppNotificationsRoute,
