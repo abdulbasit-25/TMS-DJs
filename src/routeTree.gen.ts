@@ -24,6 +24,7 @@ import { Route as AppCarriersRouteImport } from './routes/_app.carriers'
 import { Route as AppCarrierscopyRouteImport } from './routes/_app.carriers copy'
 import { Route as AppCommissionsRouteImport } from './routes/_app.commissions'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
+import { Route as AppCustomerscopyRouteImport } from './routes/_app.customers copy'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
 import { Route as AppFollowupsRouteImport } from './routes/_app.followups'
@@ -114,6 +115,11 @@ const AppCommissionsRoute = AppCommissionsRouteImport.update({
 const AppCustomersRoute = AppCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomerscopyRoute = AppCustomerscopyRouteImport.update({
+  id: '/customers copy',
+  path: '/customers copy',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/carriers copy': typeof AppCarrierscopyRoute
   '/commissions': typeof AppCommissionsRoute
   '/customers': typeof AppCustomersRoute
+  '/customers copy': typeof AppCustomerscopyRoute
   '/dashboard': typeof AppDashboardRoute
   '/documents': typeof AppDocumentsRoute
   '/followups': typeof AppFollowupsRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/carriers copy': typeof AppCarrierscopyRoute
   '/commissions': typeof AppCommissionsRoute
   '/customers': typeof AppCustomersRoute
+  '/customers copy': typeof AppCustomerscopyRoute
   '/dashboard': typeof AppDashboardRoute
   '/documents': typeof AppDocumentsRoute
   '/followups': typeof AppFollowupsRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/_app/carriers copy': typeof AppCarrierscopyRoute
   '/_app/commissions': typeof AppCommissionsRoute
   '/_app/customers': typeof AppCustomersRoute
+  '/_app/customers copy': typeof AppCustomerscopyRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/documents': typeof AppDocumentsRoute
   '/_app/followups': typeof AppFollowupsRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/carriers copy'
     | '/commissions'
     | '/customers'
+    | '/customers copy'
     | '/dashboard'
     | '/documents'
     | '/followups'
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/carriers copy'
     | '/commissions'
     | '/customers'
+    | '/customers copy'
     | '/dashboard'
     | '/documents'
     | '/followups'
@@ -387,6 +398,7 @@ export interface FileRouteTypes {
     | '/_app/carriers copy'
     | '/_app/commissions'
     | '/_app/customers'
+    | '/_app/customers copy'
     | '/_app/dashboard'
     | '/_app/documents'
     | '/_app/followups'
@@ -521,6 +533,13 @@ declare module '@tanstack/react-router' {
       path: '/customers'
       fullPath: '/customers'
       preLoaderRoute: typeof AppCustomersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/customers copy': {
+      id: '/_app/customers copy'
+      path: '/customers copy'
+      fullPath: '/customers copy'
+      preLoaderRoute: typeof AppCustomerscopyRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -666,6 +685,7 @@ interface AppRouteChildren {
   AppCarrierscopyRoute: typeof AppCarrierscopyRoute
   AppCommissionsRoute: typeof AppCommissionsRoute
   AppCustomersRoute: typeof AppCustomersRoute
+  AppCustomerscopyRoute: typeof AppCustomerscopyRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
   AppFollowupsRoute: typeof AppFollowupsRoute
@@ -693,6 +713,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCarrierscopyRoute: AppCarrierscopyRoute,
   AppCommissionsRoute: AppCommissionsRoute,
   AppCustomersRoute: AppCustomersRoute,
+  AppCustomerscopyRoute: AppCustomerscopyRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDocumentsRoute: AppDocumentsRoute,
   AppFollowupsRoute: AppFollowupsRoute,
