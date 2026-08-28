@@ -31,9 +31,7 @@ export async function portalSettingsHandler(request: Request) {
       .lean()
       .exec();
     const settings = (Array.isArray(settingsResult) ? settingsResult[0] : settingsResult) as
-      | PortalSettingsValues
-      | null
-      | undefined;
+      PortalSettingsValues | null | undefined;
     return jsonResponse({
       companyName: settings?.companyName ?? companyName,
       supportEmail: settings?.supportEmail ?? supportEmail,
@@ -43,9 +41,7 @@ export async function portalSettingsHandler(request: Request) {
   await connectDb();
   const settingsResult = await PortalSettings.findOne().lean().exec();
   const settings = (Array.isArray(settingsResult) ? settingsResult[0] : settingsResult) as
-    | PortalSettingsValues
-    | null
-    | undefined;
+    PortalSettingsValues | null | undefined;
   return jsonResponse({
     companyName: settings?.companyName ?? DEFAULTS.companyName,
     supportEmail: settings?.supportEmail ?? DEFAULTS.supportEmail,
