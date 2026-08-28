@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Check, X, FileDiff, Clock, User, Calendar, MessageSquare } from "lucide-react";
@@ -477,40 +478,16 @@ function ApprovalsPage() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <Dialog
-                      open={showDetailsDialog && selectedItemId === item.id}
-                      onOpenChange={(o) => {
-                        setShowDetailsDialog(o);
-                        if (!o) setSelectedItemId(null);
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedItemId(item.id);
+                        setShowDetailsDialog(true);
                       }}
                     >
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedItemId(item.id)}
-                        >
-                          View details
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Approval Request Details</DialogTitle>
-                          <DialogDescription>
-                            Review the changes before making a decision
-                          </DialogDescription>
-                        </DialogHeader>
-                        {selectedItem && (
-                          <ApprovalDetails
-                            approval={selectedItem}
-                            canAct={canAct}
-                            onDecide={handleDecide}
-                            onUpdate={handleUpdateRequest}
-                            onRefresh={loadData}
-                          />
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                      View details
+                    </Button>
 
                     {canAct && ["pending", "changes_requested"].includes(item.status) && (
                       <>
@@ -553,6 +530,34 @@ function ApprovalsPage() {
           ))}
         </div>
       )}
+
+      <Sheet
+        open={showDetailsDialog}
+        onOpenChange={(open) => {
+          setShowDetailsDialog(open);
+          if (!open) setSelectedItemId(null);
+        }}
+      >
+        <SheetContent className="flex w-full flex-col overflow-hidden p-0 sm:max-w-4xl">
+          <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 text-left backdrop-blur">
+            <SheetTitle>Approval Request Details</SheetTitle>
+            <p className="text-sm text-muted-foreground">
+              Review the changes before making a decision
+            </p>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {selectedItem && (
+              <ApprovalDetails
+                approval={selectedItem}
+                canAct={canAct}
+                onDecide={handleDecide}
+                onUpdate={handleUpdateRequest}
+                onRefresh={loadData}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
