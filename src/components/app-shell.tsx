@@ -60,6 +60,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { relative } from "@/lib/format";
+import { usePortalSettings } from "@/hooks/use-portal-settings";
 
 type NavItem = {
   to: string;
@@ -173,6 +174,7 @@ function applyTheme(theme: ThemeMode) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { session, setRole, signOut } = useAuth();
+  const { companyName } = usePortalSettings();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -270,6 +272,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <SidebarBrand
           collapsed={sidebarCollapsed}
+          companyName={companyName}
           onToggle={() => setSidebarCollapsed((current) => !current)}
         />
         <SidebarNav
@@ -289,7 +292,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {/* Mobile overlay always shows the full brand mark — the desktop
               collapse toggle doesn't apply here, so it's simply not rendered
               (previously this reused the desktop toggle with a no-op handler). */}
-          <SidebarBrand collapsed={false} showToggle={false} />
+          <SidebarBrand collapsed={false} companyName={companyName} showToggle={false} />
           <SidebarNav
             grouped={grouped}
             pathname={pathname}
@@ -490,10 +493,12 @@ function MobileMoreMenu({ theme, onToggleTheme }: { theme: ThemeMode; onToggleTh
 
 function SidebarBrand({
   collapsed,
+  companyName,
   onToggle,
   showToggle = true,
 }: {
   collapsed: boolean;
+  companyName: string;
   onToggle?: () => void;
   showToggle?: boolean;
 }) {
@@ -522,7 +527,7 @@ function SidebarBrand({
       <span className="font-mono text-xs font-bold">DJF</span>
     </div> */}
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold text-sidebar-foreground">DJ's Panel</div>
+            <div className="truncate text-sm font-semibold text-sidebar-foreground">{companyName}</div>
             <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
               Agent Portal - TMS
             </div>

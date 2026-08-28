@@ -28,6 +28,7 @@ import { invoicesHandler } from "./invoices";
 import { approvalsHandler } from "./approvals";
 import { followUpsListHandler } from "./followups/list";
 import { dashboardHandler } from "./dashboard";
+import { portalSettingsHandler } from "./admin/settings";
 
 interface ApiRoute {
   method: string;
@@ -78,6 +79,8 @@ const routes: ApiRoute[] = [
   { method: "POST", pattern: /^\/api\/quotes$/, handler: quotesListHandler },
   { method: "PATCH", pattern: /^\/api\/quotes$/, handler: quotesListHandler },
   { method: "POST", pattern: /^\/api\/admin\/reset-system$/, handler: resetSystemHandler },
+  { method: "GET", pattern: /^\/api\/admin\/settings$/, handler: portalSettingsHandler },
+  { method: "PATCH", pattern: /^\/api\/admin\/settings$/, handler: portalSettingsHandler },
   { method: "POST", pattern: /^\/api\/admin\/cleanup$/, handler: cleanupHandler },
   { method: "GET", pattern: /^\/api\/admin\/data-deletion$/, handler: dataDeletionHandler },
   { method: "POST", pattern: /^\/api\/admin\/data-deletion$/, handler: dataDeletionHandler },

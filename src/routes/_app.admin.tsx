@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,7 @@ import {
   Clock,
   Timer,
   Trash2,
+  Save,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -136,12 +137,10 @@ const TILES: Array<{
 
 /* ─── Settings data ───────────────────────────────────────────────── */
 
-const SETTINGS_ROWS = [
-  { icon: Building2, label: "Company name", value: "TMS Freight Portal" },
-  { icon: Mail, label: "Support email", value: "ops@djfreight.example" },
-  { icon: Clock, label: "Default time zone", value: "America/Chicago" },
-  { icon: Timer, label: "Session timeout", value: "30 minutes" },
-];
+const DEFAULT_SETTINGS = {
+  companyName: "TMS Freight Portal",
+  supportEmail: "ops@djfreight.example",
+};
 
 /* ─── Navigation tile ─────────────────────────────────────────────── */
 
@@ -179,10 +178,34 @@ function AdminPage() {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [savingSettings, setSavingSettings] = useState(false);
 
   const role = session?.role ?? "suspended";
   const visibleTiles = TILES.filter((t) => can(role, t.cap));
   const canReset = can(role, "admin");
+
+  useEffect(() => {
+    void apiFetch<typeof DEFAULT_SETTINGS>("/api/admin/settings")
+      .then((response) => setSettings(response.data))
+      .catch(() => undefined);
+  }, []);
+
+  async function saveSettings() {
+    setSavingSettings(true);
+    try {
+      const response = await apiFetch<typeof DEFAULT_SETTINGS>("/api/admin/settings", {
+        method: "PATCH",
+        body: JSON.stringify(settings),
+      });
+      setSettings(response.data);
+      toast.success("Portal settings saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save portal settings");
+    } finally {
+      setSavingSettings(false);
+    }
+  }
 
   // Sub-routes render their own layout
   if (pathname !== "/admin") return <Outlet />;
@@ -272,18 +295,61 @@ function AdminPage() {
         </div>
 
         <div className="divide-y divide-border/30">
-          {SETTINGS_ROWS.map((row) => (
-            <div
-              key={row.label}
-              className="flex items-center justify-between gap-4 px-5 py-3.5 transition-colors hover:bg-muted/20"
-            >
-              <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
-                <row.icon className="size-3.5 shrink-0 opacity-60" />
-                {row.label}
-              </div>
-              <span className="shrink-0 font-mono text-xs tabular-nums">{row.value}</span>
+          <div className="flex flex-col gap-2 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+            <Label htmlFor="portal-company-name" className="flex items-center gap-2.5 text-xs text-muted-foreground">
+              <Building2 className="size-3.5 shrink-0 opacity-60" />
+              Company name
+            </Label>
+            <Input
+              id="portal-company-name"
+              value={settings.companyName}
+              onChange={(event) => setSettings((current) => ({ ...current, companyName: event.target.value }))}
+              className="h-8 sm:max-w-sm"
+            />
+          </div>
+          <div className="flex flex-col gap-2 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+            <Label htmlFor="portal-support-email" className="flex items-center gap-2.5 text-xs text-muted-foreground">
+              <Mail className="size-3.5 shrink-0 opacity-60" />
+              Support email
+            </Label>
+            <div className="w-full space-y-1.5 sm:max-w-sm">
+              <Input
+                id="portal-support-email"
+                type="email"
+                value={settings.supportEmail}
+                onChange={(event) => setSettings((current) => ({ ...current, supportEmail: event.target.value }))}
+                className="h-8"
+              />
+              <a
+                href={`mailto:${settings.supportEmail}`}
+                className="block truncate text-right text-xs text-primary underline-offset-2 hover:underline"
+              >
+                Email support
+              </a>
             </div>
-          ))}
+          </div>
+          <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+            <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+              <Clock className="size-3.5 shrink-0 opacity-60" />
+              Default time zone
+            </div>
+            <span className="shrink-0 font-mono text-xs tabular-nums">America/Chicago</span>
+          </div>
+          <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+            <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+              <Timer className="size-3.5 shrink-0 opacity-60" />
+              Session timeout
+            </div>
+            <span className="shrink-0 font-mono text-xs tabular-nums">30 minutes</span>
+          </div>
+          {role === "admin" || role === "owner" ? (
+            <div className="flex justify-end px-5 py-3.5">
+              <Button size="sm" className="gap-1.5" onClick={() => void saveSettings()} disabled={savingSettings}>
+                <Save className="size-3.5" />
+                {savingSettings ? "Saving..." : "Save settings"}
+              </Button>
+            </div>
+          ) : null}
         </div>
       </section>
 

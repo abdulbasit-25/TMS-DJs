@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth, AuthProvider } from "@/lib/auth-context";
+import { usePortalSettings } from "@/hooks/use-portal-settings";
 import {
   AlertCircle,
   ArrowRight,
@@ -19,7 +20,6 @@ import {
 } from "lucide-react";
 
 const COMPANY_URL = "https://abdulbasit-archer.vercel.app/";
-const SUPPORT_MAILTO = "mailto:dispatch@djsfreightbroker.com?subject=Portal%20password%20reset";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const Route = createFileRoute("/login")({
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const { signIn, session } = useAuth();
+  const { supportEmail } = usePortalSettings();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -138,7 +139,7 @@ function LoginPage() {
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
             <a
-              href={SUPPORT_MAILTO}
+              href={`mailto:${supportEmail}?subject=Portal%20password%20reset`}
               className="text-xs font-medium text-[var(--color-link)] underline-offset-4 hover:underline"
             >
               Forgot password?
@@ -208,6 +209,8 @@ function LoginPage() {
    ========================================================================== */
 
 function BrandLogo({ glow = false }: { glow?: boolean }) {
+  const { companyName } = usePortalSettings();
+
   return (
     <div className="flex items-center gap-3">
       <div className="relative">
@@ -219,7 +222,7 @@ function BrandLogo({ glow = false }: { glow?: boolean }) {
         </div>
       </div>
       <div>
-        <div className="text-sm font-semibold tracking-tight">TMS Freight Portal</div>
+        <div className="text-sm font-semibold tracking-tight">{companyName}</div>
         <div className="text-[10px] uppercase tracking-[0.18em] opacity-60">
           Secure Agent Portal · TMS
         </div>
@@ -326,6 +329,8 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 function BrandPanel() {
+  const { companyName } = usePortalSettings();
+
   return (
     <div className="relative hidden overflow-hidden bg-[var(--navy-950)] p-10 text-[#f4efe6] lg:flex lg:flex-col lg:justify-between xl:p-14">
       {/* ── Ambient background ── */}
@@ -392,7 +397,7 @@ function BrandPanel() {
       <div className="relative flex items-center justify-between">
         <CompanyLink className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/60 transition-colors hover:text-white" />
         <span className="text-xs text-white/35">
-          © {new Date().getFullYear()} TMS Freight Portal
+          © {new Date().getFullYear()} {companyName}
         </span>
       </div>
     </div>
