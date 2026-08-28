@@ -43,6 +43,7 @@ import { Route as AppQuotescopyRouteImport } from './routes/_app.quotes copy'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppTeamsRouteImport } from './routes/_app.teams'
+import { Route as AppTeamscopyRouteImport } from './routes/_app.teams copy'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
 import { Route as AppUserscopyRouteImport } from './routes/_app.users copy'
 import { Route as AppAdminDataDeletionRouteImport } from './routes/_app.admin.data-deletion'
@@ -216,6 +217,11 @@ const AppTeamsRoute = AppTeamsRouteImport.update({
   path: '/teams',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTeamscopyRoute = AppTeamscopyRouteImport.update({
+  id: '/teams copy',
+  path: '/teams copy',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUsersRoute = AppUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
   '/teams': typeof AppTeamsRoute
+  '/teams copy': typeof AppTeamscopyRoute
   '/users': typeof AppUsersRoute
   '/users copy': typeof AppUserscopyRoute
   '/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
   '/teams': typeof AppTeamsRoute
+  '/teams copy': typeof AppTeamscopyRoute
   '/users': typeof AppUsersRoute
   '/users copy': typeof AppUserscopyRoute
   '/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/_app/reports': typeof AppReportsRoute
   '/_app/search': typeof AppSearchRoute
   '/_app/teams': typeof AppTeamsRoute
+  '/_app/teams copy': typeof AppTeamscopyRoute
   '/_app/users': typeof AppUsersRoute
   '/_app/users copy': typeof AppUserscopyRoute
   '/_app/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/search'
     | '/teams'
+    | '/teams copy'
     | '/users'
     | '/users copy'
     | '/admin/data-deletion'
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/search'
     | '/teams'
+    | '/teams copy'
     | '/users'
     | '/users copy'
     | '/admin/data-deletion'
@@ -461,6 +472,7 @@ export interface FileRouteTypes {
     | '/_app/reports'
     | '/_app/search'
     | '/_app/teams'
+    | '/_app/teams copy'
     | '/_app/users'
     | '/_app/users copy'
     | '/_app/admin/data-deletion'
@@ -716,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/teams copy': {
+      id: '/_app/teams copy'
+      path: '/teams copy'
+      fullPath: '/teams copy'
+      preLoaderRoute: typeof AppTeamscopyRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/users': {
       id: '/_app/users'
       path: '/users'
@@ -780,6 +799,7 @@ interface AppRouteChildren {
   AppReportsRoute: typeof AppReportsRoute
   AppSearchRoute: typeof AppSearchRoute
   AppTeamsRoute: typeof AppTeamsRoute
+  AppTeamscopyRoute: typeof AppTeamscopyRoute
   AppUsersRoute: typeof AppUsersRoute
   AppUserscopyRoute: typeof AppUserscopyRoute
 }
@@ -812,6 +832,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppReportsRoute: AppReportsRoute,
   AppSearchRoute: AppSearchRoute,
   AppTeamsRoute: AppTeamsRoute,
+  AppTeamscopyRoute: AppTeamscopyRoute,
   AppUsersRoute: AppUsersRoute,
   AppUserscopyRoute: AppUserscopyRoute,
 }
