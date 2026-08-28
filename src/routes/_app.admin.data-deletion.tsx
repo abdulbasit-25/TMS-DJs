@@ -11,6 +11,12 @@ import {
   Loader2,
   ShieldCheck,
   RefreshCw,
+  Zap,
+  HardDrive,
+  Activity,
+  Users,
+  FileText,
+  CircleDot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,28 +65,29 @@ type PendingAction =
 /* ─── Data ───────────────────────────────────────────────────────── */
 
 const COUNT_ITEMS = [
-  { key: "notifications", label: "Notifications" },
-  { key: "leads", label: "Leads" },
-  { key: "customers", label: "Customers" },
-  { key: "followups", label: "Follow-ups" },
-  { key: "loads", label: "Loads" },
-  { key: "quotes", label: "Quotes" },
-  { key: "invoices", label: "Invoices" },
-  { key: "teams", label: "Teams" },
-  { key: "carriers", label: "Carriers" },
-  { key: "commissions", label: "Commissions" },
-  { key: "approvals", label: "Approvals" },
-  { key: "activityLogs", label: "Activity logs" },
-  { key: "auditLogs", label: "Audit logs" },
-  { key: "loginHistory", label: "Login history" },
-  { key: "users", label: "Users" },
-  { key: "adminUsers", label: "Admins" },
+  { key: "notifications", label: "Notifications", icon: CircleDot },
+  { key: "leads", label: "Leads", icon: Zap },
+  { key: "customers", label: "Customers", icon: Users },
+  { key: "followups", label: "Follow-ups", icon: Activity },
+  { key: "loads", label: "Loads", icon: HardDrive },
+  { key: "quotes", label: "Quotes", icon: FileText },
+  { key: "invoices", label: "Invoices", icon: FileText },
+  { key: "teams", label: "Teams", icon: Users },
+  { key: "carriers", label: "Carriers", icon: HardDrive },
+  { key: "commissions", label: "Commissions", icon: FileText },
+  { key: "approvals", label: "Approvals", icon: ShieldCheck },
+  { key: "activityLogs", label: "Activity logs", icon: Activity },
+  { key: "auditLogs", label: "Audit logs", icon: Activity },
+  { key: "loginHistory", label: "Login history", icon: Activity },
+  { key: "users", label: "Users", icon: Users },
+  { key: "adminUsers", label: "Admins", icon: Shield },
 ];
 
 const RESOURCE_GROUPS: Array<{
   title: string;
   icon: React.ElementType;
-  color: string;
+  gradient: string;
+  bgGlow: string;
   resources: Array<{
     resource: Resource;
     label: string;
@@ -88,142 +95,195 @@ const RESOURCE_GROUPS: Array<{
   }>;
 }> = [
   {
-    title: "Business data",
+    title: "Business Data",
     icon: FolderOpen,
-    color: "blue",
+    gradient: "from-blue-500/20 to-cyan-500/20",
+    bgGlow: "shadow-blue-500/[0.03]",
     resources: [
       {
         resource: "leads",
         label: "Leads",
-        description: "Permanently delete all lead records and associated data.",
+        description: "Permanently remove all lead records and associated metadata.",
       },
       {
         resource: "customers",
         label: "Customers",
-        description: "Permanently delete all customer records and associated data.",
+        description: "Permanently remove all customer profiles and related data.",
       },
       {
         resource: "followups",
         label: "Follow-ups",
-        description: "Permanently delete all follow-up records.",
+        description: "Permanently remove all scheduled and completed follow-ups.",
       },
       {
         resource: "loads",
         label: "Loads",
-        description: "Permanently delete all load records and associated data.",
+        description: "Permanently remove all load records and shipment data.",
       },
       {
         resource: "quotes",
         label: "Quotes",
-        description: "Permanently delete all quote requests.",
+        description: "Permanently remove all quote requests and responses.",
       },
       {
         resource: "invoices",
         label: "Invoices",
-        description: "Permanently delete all invoices and line items.",
+        description: "Permanently remove all invoices, line items, and payment records.",
       },
     ],
   },
   {
     title: "Organization",
     icon: Building2,
-    color: "violet",
+    gradient: "from-violet-500/20 to-purple-500/20",
+    bgGlow: "shadow-violet-500/[0.03]",
     resources: [
       {
         resource: "teams",
         label: "Teams",
-        description: "Permanently delete all teams and remove member assignments.",
+        description: "Permanently remove all teams and dissolve member assignments.",
       },
       {
         resource: "carriers",
         label: "Carriers",
-        description: "Soft-delete all active carriers using deletedAt flag.",
+        description: "Soft-delete all active carriers using the deletedAt flag.",
       },
       {
         resource: "commissions",
         label: "Commissions",
-        description: "Permanently delete all commission records and calculations.",
+        description: "Permanently remove all commission calculations and records.",
       },
     ],
   },
   {
-    title: "System data",
+    title: "System & Logs",
     icon: Shield,
-    color: "slate",
+    gradient: "from-slate-400/15 to-zinc-400/15",
+    bgGlow: "shadow-slate-500/[0.02]",
     resources: [
       {
         resource: "approvals",
         label: "Approvals",
-        description: "Permanently delete all approval requests and history.",
+        description: "Permanently remove all approval workflows and history.",
       },
       {
         resource: "activityLogs",
-        label: "Activity logs",
-        description: "Permanently delete all daily activity log entries.",
+        label: "Activity Logs",
+        description: "Permanently remove all daily activity log entries.",
       },
       {
         resource: "auditLogs",
-        label: "Audit logs",
-        description: "Permanently delete all audit trail records.",
+        label: "Audit Logs",
+        description: "Permanently remove the entire audit trail.",
       },
       {
         resource: "loginHistory",
-        label: "Login history",
-        description: "Permanently delete all login and session history.",
+        label: "Login History",
+        description: "Permanently remove all session and login records.",
       },
     ],
   },
 ];
 
-/* ─── Color helpers ───────────────────────────────────────────────── */
+/* ─── Animated counter ────────────────────────────────────────────── */
 
-const GROUP_ICON_COLORS: Record<string, string> = {
-  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-  slate: "bg-slate-500/10 text-slate-500 dark:text-slate-400",
-};
+function AnimatedNumber({ value, loading }: { value: number; loading: boolean }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (loading) {
+      setDisplay(0);
+      return;
+    }
+    const start = display;
+    const diff = value - start;
+    if (diff === 0) return;
+    const duration = Math.min(600, Math.max(200, Math.abs(diff) * 2));
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(start + diff * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, loading]);
+
+  return <span className="tabular-nums">{loading ? "–" : display.toLocaleString()}</span>;
+}
 
 /* ─── Count cell ──────────────────────────────────────────────────── */
 
 function CountCell({
-  label,
+  item,
   value,
   loading,
   muted,
 }: {
-  label: string;
+  item: (typeof COUNT_ITEMS)[number];
   value: number;
   loading: boolean;
   muted?: boolean;
 }) {
+  const Icon = item.icon;
   const isEmpty = !loading && value === 0;
+
   return (
     <div
-      className={`rounded-lg border px-3 py-2.5 transition-colors ${
+      className={`group relative overflow-hidden rounded-xl border p-3.5 transition-all duration-300 ${
         muted
-          ? "border-amber-500/15 bg-amber-500/[0.03]"
+          ? "border-amber-500/20 bg-gradient-to-br from-amber-50/80 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/20"
           : isEmpty
-            ? "border-border/30 bg-muted/20"
-            : "border-border/50 bg-background"
+            ? "border-border/40 bg-muted/30"
+            : "border-border/60 bg-card hover:border-border hover:shadow-sm"
       }`}
     >
-      <div
-        className={`text-lg font-bold tabular-nums leading-none ${
-          loading
-            ? "animate-pulse text-muted-foreground/40"
-            : isEmpty
-              ? "text-muted-foreground/30"
-              : ""
-        }`}
-      >
-        {loading ? "–" : value.toLocaleString()}
+      {/* Subtle corner glow for non-empty */}
+      {!isEmpty && !muted && (
+        <div className="pointer-events-none absolute -right-4 -top-4 size-16 rounded-full bg-gradient-to-br from-primary/5 to-transparent blur-2xl transition-opacity duration-300 group-hover:opacity-150" />
+      )}
+
+      <div className="relative flex items-center justify-between">
+        <div
+          className={`flex size-7 items-center justify-center rounded-lg transition-colors ${
+            muted
+              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              : isEmpty
+                ? "bg-muted/60 text-muted-foreground/40"
+                : "bg-primary/8 text-primary/70"
+          }`}
+        >
+          <Icon className="size-3.5" />
+        </div>
+        {value > 0 && !muted && (
+          <span className="flex size-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50">
+            <span className="absolute inline-flex size-2 animate-ping rounded-full bg-emerald-400 opacity-40" />
+          </span>
+        )}
       </div>
-      <div
-        className={`mt-1.5 text-[10px] font-medium leading-none ${
-          muted ? "text-amber-600/70 dark:text-amber-400/60" : "text-muted-foreground"
-        }`}
-      >
-        {label}
+
+      <div className="relative mt-3">
+        <div
+          className={`text-xl font-bold leading-none tracking-tight ${
+            loading
+              ? "animate-pulse text-muted-foreground/30"
+              : isEmpty
+                ? "text-muted-foreground/25"
+                : "text-foreground"
+          }`}
+        >
+          <AnimatedNumber value={value} loading={loading} />
+        </div>
+        <div
+          className={`mt-1.5 text-[10px] font-semibold uppercase tracking-wider ${
+            muted ? "text-amber-600/60 dark:text-amber-400/50" : "text-muted-foreground/60"
+          }`}
+        >
+          {item.label}
+        </div>
       </div>
     </div>
   );
@@ -245,84 +305,178 @@ function DeletionCard({
   onDelete: () => void;
 }) {
   const isEmpty = !loading && (count ?? 0) === 0;
+  const [hovered, setHovered] = useState(false);
 
   return (
     <div
-      className={`relative flex items-start justify-between gap-4 rounded-xl border p-4 transition-all duration-200 ${
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`group relative overflow-hidden rounded-xl border transition-all duration-300 ${
         isEmpty
-          ? "border-border/30 bg-card/50 opacity-50"
-          : "border-red-500/10 bg-card hover:border-red-500/25 hover:shadow-sm hover:shadow-red-500/[0.03]"
+          ? "border-border/30 bg-muted/20 opacity-40"
+          : hovered
+            ? "border-red-500/30 bg-gradient-to-br from-red-50/50 via-card to-card dark:from-red-950/20 dark:to-card shadow-lg shadow-red-500/[0.04]"
+            : "border-border/50 bg-card hover:border-red-500/15 hover:shadow-md hover:shadow-red-500/[0.02]"
       }`}
     >
-      {/* Armed indicator bar */}
+      {/* Left accent bar */}
       {!isEmpty && (
-        <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-red-500/40 transition-colors group-hover:bg-red-500/60" />
+        <div
+          className={`absolute left-0 top-0 bottom-0 w-[3px] transition-all duration-300 ${
+            hovered ? "bg-red-500 shadow-sm shadow-red-500/50" : "bg-red-500/30"
+          }`}
+        />
       )}
 
-      <div className="min-w-0 pl-3">
-        <div className="flex items-center gap-2">
-          <h3 className={`text-sm font-semibold ${isEmpty ? "text-muted-foreground" : ""}`}>
-            {label}
-          </h3>
-          {!isEmpty && <span className="inline-flex size-1.5 rounded-full bg-red-500" />}
+      <div className="flex items-start justify-between gap-4 p-4 pl-5">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2.5">
+            <h3
+              className={`text-sm font-semibold tracking-tight transition-colors ${
+                isEmpty
+                  ? "text-muted-foreground/50"
+                  : hovered
+                    ? "text-red-600 dark:text-red-400"
+                    : ""
+              }`}
+            >
+              {label}
+            </h3>
+            {!isEmpty && (
+              <span
+                className={`inline-flex size-1.5 rounded-full transition-colors duration-300 ${
+                  hovered ? "bg-red-500 shadow-sm shadow-red-500/50" : "bg-red-400/60"
+                }`}
+              />
+            )}
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground/80">
+            {description}
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <span
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold tabular-nums transition-colors ${
+                isEmpty
+                  ? "bg-muted/50 text-muted-foreground/30"
+                  : hovered
+                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                    : "bg-muted/60 text-muted-foreground"
+              }`}
+            >
+              <AnimatedNumber value={count ?? 0} loading={loading} />
+              <span className="font-medium opacity-60">records</span>
+            </span>
+          </div>
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-        <div className="mt-2.5 flex items-center gap-1.5">
-          <span
-            className={`text-xs tabular-nums ${isEmpty ? "text-muted-foreground/50" : "font-medium text-muted-foreground"}`}
-          >
-            {loading ? "…" : (count ?? 0).toLocaleString()}
-          </span>
-          <span className="text-[10px] text-muted-foreground/60">records</span>
-        </div>
-      </div>
 
-      <Button
-        variant={isEmpty ? "ghost" : "outline"}
-        size="sm"
-        className={`mt-0.5 shrink-0 transition-colors ${
-          isEmpty
-            ? "cursor-not-allowed text-muted-foreground/40"
-            : "text-destructive hover:bg-destructive hover:text-destructive-foreground"
-        }`}
-        onClick={onDelete}
-        disabled={loading || isEmpty}
-      >
-        {isEmpty ? (
-          "Empty"
-        ) : (
-          <>
-            <Trash2 className="size-3.5" />
-            Delete all
-          </>
-        )}
-      </Button>
+        <Button
+          variant={isEmpty ? "ghost" : "outline"}
+          size="sm"
+          className={`mt-0.5 shrink-0 transition-all duration-200 ${
+            isEmpty
+              ? "cursor-not-allowed text-muted-foreground/30"
+              : hovered
+                ? "border-red-500/40 bg-red-500 text-white shadow-md shadow-red-500/25 hover:bg-red-600 hover:text-white"
+                : "text-destructive/80 hover:border-red-500/30 hover:bg-red-500/10 hover:text-destructive"
+          }`}
+          onClick={onDelete}
+          disabled={loading || isEmpty}
+        >
+          {isEmpty ? (
+            "Empty"
+          ) : (
+            <>
+              <Trash2 className="size-3.5" />
+              <span className="hidden sm:inline">Delete all</span>
+              <span className="sm:hidden">Delete</span>
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
 
-/* ─── Group section header ────────────────────────────────────────── */
+/* ─── Group section ───────────────────────────────────────────────── */
 
-function GroupHeader({
+function GroupSection({
   icon: Icon,
   title,
-  color,
+  gradient,
+  bgGlow,
+  resources,
+  counts,
+  loading,
+  onAction,
 }: {
   icon: React.ElementType;
   title: string;
-  color: string;
+  gradient: string;
+  bgGlow: string;
+  resources: Array<{ resource: Resource; label: string; description: string }>;
+  counts: Counts;
+  loading: boolean;
+  onAction: (r: Resource) => void;
 }) {
+  const groupCount = resources.reduce((sum, r) => sum + (counts[r.resource] ?? 0), 0);
+
   return (
-    <div className="flex items-center gap-2">
-      <div
-        className={`flex size-6 items-center justify-center rounded-md ${GROUP_ICON_COLORS[color] ?? "bg-muted text-muted-foreground"}`}
-      >
-        <Icon className="size-3.5" />
+    <section className={`rounded-2xl border border-border/50 bg-card shadow-sm ${bgGlow}`}>
+      {/* Group header */}
+      <div className="relative overflow-hidden border-b border-border/40 px-5 py-4">
+        <div
+          className={`pointer-events-none absolute inset-0 bg-gradient-to-r ${gradient} opacity-60`}
+        />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/40 shadow-sm">
+              <Icon className="size-4 text-foreground/80" />
+            </div>
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground/80">
+                {title}
+              </h2>
+              <p className="mt-0.5 text-[10px] text-muted-foreground/60">
+                <span className="font-semibold text-foreground/60">
+                  {loading ? "…" : groupCount.toLocaleString()}
+                </span>{" "}
+                total records
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {resources.map((r) => (
+              <span
+                key={r.resource}
+                className={`block size-1.5 rounded-full transition-colors ${
+                  (counts[r.resource] ?? 0) > 0
+                    ? "bg-emerald-500 shadow-sm shadow-emerald-500/40"
+                    : "bg-muted-foreground/15"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
-      <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-        {title}
-      </h2>
-    </div>
+
+      {/* Cards */}
+      <div className="grid gap-px bg-border/20 p-px md:grid-cols-2">
+        {resources.map((item, idx) => (
+          <div
+            key={item.resource}
+            className={idx % 2 === 1 ? "md:border-l md:border-border/20" : ""}
+          >
+            <DeletionCard
+              label={item.label}
+              description={item.description}
+              count={counts[item.resource]}
+              loading={loading}
+              onDelete={() => onAction(item.resource)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -372,84 +526,123 @@ function ConfirmationDialog({
 
   return (
     <AlertDialog open={!!pending} onOpenChange={(open) => !open && !processing && onCancel()}>
-      <AlertDialogContent className="sm:max-w-md">
-        <AlertDialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-950/50">
-              <AlertTriangle className="size-5 text-red-600 dark:text-red-400" />
-            </div>
-            <AlertDialogTitle className="text-left">Delete {label}?</AlertDialogTitle>
-          </div>
-        </AlertDialogHeader>
+      <AlertDialogContent className="overflow-hidden rounded-2xl border-0 p-0 sm:max-w-md">
+        {/* Red gradient top bar */}
+        <div className="h-1 w-full bg-gradient-to-r from-red-500 via-red-600 to-orange-500" />
 
-        {/* Warning box */}
-        <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-          <p className="text-xs leading-relaxed text-red-700 dark:text-red-400">
-            This operation will permanently remove data from the database. There is no undo and no
-            recovery mechanism.
-          </p>
+        <div className="px-6 pt-6 pb-2">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-4">
+              <div className="relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/15 to-orange-500/15 ring-1 ring-red-500/20">
+                <AlertTriangle className="size-6 text-red-500" />
+                <span className="absolute -right-0.5 -top-0.5 flex size-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+                </span>
+              </div>
+              <AlertDialogTitle className="text-left text-base font-bold tracking-tight">
+                Delete {label}?
+              </AlertDialogTitle>
+            </div>
+          </AlertDialogHeader>
         </div>
 
-        {/* Record count */}
-        {count !== undefined && (
-          <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-3.5 py-2.5">
-            <span className="text-xs text-muted-foreground">Records affected</span>
-            <span className="text-sm font-bold tabular-nums">{count.toLocaleString()}</span>
+        <div className="space-y-4 px-6 pb-6">
+          {/* Warning box */}
+          <div className="relative overflow-hidden rounded-xl border border-red-500/20 bg-gradient-to-br from-red-50/80 to-orange-50/50 p-4 dark:from-red-950/40 dark:to-orange-950/30">
+            <div className="pointer-events-none absolute -right-6 -top-6 size-24 rounded-full bg-red-500/5 blur-2xl" />
+            <p className="relative text-xs leading-relaxed font-medium text-red-700 dark:text-red-400">
+              This operation will permanently remove data from the database. There is no undo and no
+              recovery mechanism.
+            </p>
           </div>
-        )}
 
-        {/* Admin protection notice */}
-        {pending?.kind === "resource" && pending.resource === "users" && (
-          <p className="text-[11px] text-muted-foreground">
-            Protected admin accounts:{" "}
-            <span className="font-medium">{(counts.adminUsers ?? 0).toLocaleString()}</span>
-          </p>
-        )}
+          {/* Record count */}
+          {count !== undefined && (
+            <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+              <span className="text-xs font-medium text-muted-foreground">Records affected</span>
+              <span className="text-lg font-bold tabular-nums tracking-tight">
+                {count.toLocaleString()}
+              </span>
+            </div>
+          )}
 
-        {/* Password field (reset only) */}
-        {needsPassword && (
-          <div className="space-y-1.5">
-            <Label htmlFor="deletion-password" className="text-xs font-medium">
-              Admin password
+          {/* Admin protection notice */}
+          {pending?.kind === "resource" && pending.resource === "users" && (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-50/80 px-3 py-2 dark:bg-amber-950/30">
+              <ShieldCheck className="size-3.5 text-amber-600 dark:text-amber-400" />
+              <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                Protected admin accounts:{" "}
+                <span className="font-bold">{(counts.adminUsers ?? 0).toLocaleString()}</span>
+              </p>
+            </div>
+          )}
+
+          {/* Password field (reset only) */}
+          {needsPassword && (
+            <div className="space-y-2">
+              <Label
+                htmlFor="deletion-password"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Admin password
+              </Label>
+              <Input
+                id="deletion-password"
+                type="password"
+                value={password}
+                onChange={(e) => onPasswordChange(e.target.value)}
+                autoComplete="current-password"
+                className="h-10 rounded-lg border-border/60 bg-muted/30 transition-colors focus:border-red-500/50 focus:ring-red-500/20"
+              />
+            </div>
+          )}
+
+          {/* Confirmation input */}
+          <div className="space-y-2">
+            <Label
+              htmlFor="deletion-confirm"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Type{" "}
+              <code className="rounded-md bg-red-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-red-600 dark:text-red-400 ring-1 ring-red-500/20">
+                {expected}
+              </code>{" "}
+              to confirm
             </Label>
             <Input
-              id="deletion-password"
-              type="password"
-              value={password}
-              onChange={(e) => onPasswordChange(e.target.value)}
-              autoComplete="current-password"
-              className="h-9"
+              id="deletion-confirm"
+              value={confirmation}
+              onChange={(e) => onConfirmationChange(e.target.value)}
+              placeholder={expected}
+              autoComplete="off"
+              className={`h-10 rounded-lg border-border/60 bg-muted/30 font-mono text-sm transition-all duration-200 focus:ring-2 ${
+                isConfirmed
+                  ? "border-red-500/50 text-red-600 shadow-sm shadow-red-500/10 focus:border-red-500/60 focus:ring-red-500/20 dark:text-red-400"
+                  : "focus:border-border focus:ring-primary/10"
+              }`}
             />
+            {confirmation && !isConfirmed && (
+              <p className="text-[10px] font-medium text-red-500/80">Text does not match</p>
+            )}
           </div>
-        )}
-
-        {/* Confirmation input */}
-        <div className="space-y-1.5">
-          <Label htmlFor="deletion-confirm" className="text-xs font-medium">
-            Type{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-bold">
-              {expected}
-            </code>{" "}
-            to confirm
-          </Label>
-          <Input
-            id="deletion-confirm"
-            value={confirmation}
-            onChange={(e) => onConfirmationChange(e.target.value)}
-            placeholder={expected}
-            autoComplete="off"
-            className={`h-9 font-mono transition-colors ${isConfirmed ? "border-red-500/50 text-red-600 dark:text-red-400" : ""}`}
-          />
         </div>
 
-        <AlertDialogFooter className="flex-col-reverse gap-2 pt-1 sm:flex-row">
-          <AlertDialogCancel disabled={processing} className="w-full sm:w-auto">
+        <AlertDialogFooter className="flex-col-reverse gap-2 border-t border-border/40 bg-muted/20 px-6 py-4 sm:flex-row">
+          <AlertDialogCancel
+            disabled={processing}
+            className="w-full rounded-lg border-border/60 sm:w-auto"
+          >
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={processing || !isConfirmed || (needsPassword && !password)}
             onClick={onConfirm}
-            className="w-full bg-red-600 text-white hover:bg-red-700 sm:w-auto"
+            className={`w-full rounded-lg shadow-lg sm:w-auto ${
+              isConfirmed
+                ? "bg-gradient-to-r from-red-600 to-red-500 text-white shadow-red-500/25 hover:from-red-700 hover:to-red-600"
+                : "bg-muted text-muted-foreground"
+            }`}
           >
             {processing ? (
               <>
@@ -457,7 +650,10 @@ function ConfirmationDialog({
                 Deleting…
               </>
             ) : (
-              "Delete permanently"
+              <>
+                <Trash2 className="size-3.5" />
+                Delete permanently
+              </>
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -584,56 +780,80 @@ function DataDeletionPage() {
   /* ═══════════════════════════════════════════════════════════════════ */
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8 pb-16">
       {/* ── Back link ── */}
       <Link
         to="/admin"
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        className="group inline-flex items-center gap-2 text-xs font-medium text-muted-foreground/70 transition-all hover:text-foreground"
       >
-        <ArrowLeft className="size-3.5" />
+        <ArrowLeft className="size-3.5 transition-transform group-hover:-translate-x-0.5" />
         Back to Admin Panel
       </Link>
 
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl border border-red-500/15 bg-card">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-red-500/[0.04] via-transparent to-orange-500/[0.03]" />
+      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+        {/* Background effects */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-20 -top-20 size-60 rounded-full bg-red-500/[0.04] blur-3xl" />
+          <div className="absolute -bottom-20 -right-20 size-80 rounded-full bg-orange-500/[0.03] blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,rgba(0,0,0,0.01)_49%,rgba(0,0,0,0.01)_51%,transparent_52%)] bg-[length:20px_20px]" />
+        </div>
 
-        <div className="relative z-10 flex flex-col gap-3 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-red-500/10">
-                <Database className="size-4.5 text-red-500" />
+        <div className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3.5">
+              <div className="relative flex size-11 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/15 to-orange-500/15 ring-1 ring-red-500/15">
+                <Database className="size-5 text-red-500" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Data Deletion</h1>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Data Deletion</h1>
+                <p className="text-xs font-medium text-muted-foreground/60">Administrative tool</p>
+              </div>
             </div>
-            <p className="max-w-lg text-sm text-muted-foreground sm:ml-[46px]">
-              Bulk deletion of portal data. These operations are destructive and cannot be undone.
+            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground sm:ml-[58px]">
+              Bulk deletion of portal data. These operations are{" "}
+              <span className="font-semibold text-red-500/80">destructive and irreversible</span>.
+              Exercise extreme caution.
             </p>
+          </div>
+
+          {/* Quick stats */}
+          <div className="flex gap-3 sm:ml-auto">
+            <div className="rounded-xl border border-border/50 bg-background/80 px-4 py-3 text-center backdrop-blur-sm">
+              <div className="text-xl font-bold tabular-nums tracking-tight">
+                <AnimatedNumber value={totalRecords} loading={loadingCounts} />
+              </div>
+              <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Total
+              </div>
+            </div>
+            <div className="rounded-xl border border-border/50 bg-background/80 px-4 py-3 text-center backdrop-blur-sm">
+              <div className="text-xl font-bold tabular-nums tracking-tight">
+                <AnimatedNumber value={nonEmptyCount} loading={loadingCounts} />
+              </div>
+              <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Active
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── Record counts ── */}
-      <section className="rounded-xl border border-border/60 bg-card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border/40 px-5 py-3.5">
+      {/* ── Record counts grid ── */}
+      <section className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border/40 px-5 py-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Record counts
+            <div className="flex size-7 items-center justify-center rounded-lg bg-muted/50">
+              <Activity className="size-3.5 text-muted-foreground/60" />
+            </div>
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.15em] text-muted-foreground/70">
+              Record Counts
             </h2>
-            {!loadingCounts && (
-              <span className="text-[11px] tabular-nums text-muted-foreground/70">
-                <span className="font-semibold text-foreground">
-                  {totalRecords.toLocaleString()}
-                </span>{" "}
-                total across <span className="font-semibold text-foreground">{nonEmptyCount}</span>{" "}
-                {nonEmptyCount === 1 ? "table" : "tables"} with data
-              </span>
-            )}
           </div>
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 text-xs text-muted-foreground"
+            className="h-7 gap-1.5 rounded-lg px-3 text-[11px] font-medium text-muted-foreground/70 transition-colors hover:text-foreground hover:bg-muted/50"
             onClick={() => void refreshCounts()}
             disabled={loadingCounts}
           >
@@ -642,11 +862,11 @@ function DataDeletionPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-px bg-border/30 sm:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2.5 p-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
           {COUNT_ITEMS.map((item) => (
             <CountCell
               key={item.key}
-              label={item.label}
+              item={item}
               value={counts[item.key] ?? 0}
               loading={loadingCounts}
               muted={item.key === "adminUsers"}
@@ -666,49 +886,48 @@ function DataDeletionPage() {
 
       {/* ── Resource groups ── */}
       {RESOURCE_GROUPS.map((group) => (
-        <section key={group.title} className="space-y-3">
-          <GroupHeader icon={group.icon} title={group.title} color={group.color} />
-          <div className="grid gap-3 md:grid-cols-2">
-            {group.resources.map((item) => (
-              <DeletionCard
-                key={item.resource}
-                label={item.label}
-                description={item.description}
-                count={counts[item.resource]}
-                loading={loadingCounts}
-                onDelete={() => openAction({ kind: "resource", resource: item.resource })}
-              />
-            ))}
-          </div>
-        </section>
+        <GroupSection
+          key={group.title}
+          icon={group.icon}
+          title={group.title}
+          gradient={group.gradient}
+          bgGlow={group.bgGlow}
+          resources={group.resources}
+          counts={counts}
+          loading={loadingCounts}
+          onAction={(resource) => openAction({ kind: "resource", resource })}
+        />
       ))}
 
       {/* ── Delete all users ── */}
-      <section className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/[0.03] dark:bg-amber-950/10">
-        <div className="pointer-events-none absolute inset-0 shadow-[inset_0_1px_30px_-15px_rgba(245,158,11,0.06)]" />
+      <section className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-card shadow-sm shadow-amber-500/[0.02]">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-16 top-0 size-48 rounded-full bg-amber-500/[0.04] blur-3xl" />
+          <div className="absolute -right-16 -bottom-16 size-48 rounded-full bg-orange-500/[0.03] blur-3xl" />
+        </div>
 
-        <div className="relative z-10 flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
-          <div className="flex items-start gap-3.5">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+        <div className="relative z-10 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 ring-1 ring-amber-500/20">
               <ShieldCheck className="size-5 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+              <h2 className="text-sm font-bold tracking-tight text-amber-700 dark:text-amber-400">
                 Delete All Users Except Admins
               </h2>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 Removes{" "}
-                <span className="font-semibold tabular-nums text-foreground">
-                  {loadingCounts ? "…" : (counts.deletableUsers ?? 0).toLocaleString()}
+                <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 font-bold tabular-nums text-amber-700 dark:text-amber-400">
+                  <AnimatedNumber value={counts.deletableUsers ?? 0} loading={loadingCounts} />
                 </span>{" "}
-                normal user accounts while preserving all admin accounts, including yours.
+                normal user accounts while preserving all admin accounts.
               </p>
             </div>
           </div>
           <Button
-            variant="destructive"
+            variant="outline"
             size="sm"
-            className="shrink-0 gap-1.5 shadow-sm"
+            className="shrink-0 gap-1.5 rounded-lg border-amber-500/30 bg-amber-500/5 text-amber-700 shadow-sm transition-all hover:border-amber-500/50 hover:bg-amber-500/10 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300"
             onClick={() => openAction({ kind: "resource", resource: "users" })}
             disabled={loadingCounts || (counts.deletableUsers ?? 0) === 0}
           >
@@ -719,46 +938,61 @@ function DataDeletionPage() {
       </section>
 
       {/* ── Danger zone ── */}
-      <section className="relative overflow-hidden rounded-xl border border-red-500/25 bg-zinc-950/[0.03] dark:bg-zinc-900/30">
-        {/* Inner glow */}
-        <div className="pointer-events-none absolute inset-0 shadow-[inset_0_1px_50px_-20px_rgba(239,68,68,0.08)]" />
+      <section className="relative overflow-hidden rounded-2xl border border-red-500/20 bg-gradient-to-b from-zinc-950/[0.04] via-card to-card shadow-lg shadow-red-500/[0.03] dark:from-zinc-900/40">
+        {/* Background effects */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-32 top-1/2 size-64 -translate-y-1/2 rounded-full bg-red-500/[0.06] blur-3xl" />
+          <div className="absolute -right-32 -bottom-32 size-64 rounded-full bg-red-600/[0.04] blur-3xl" />
+          {/* Subtle grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(239,68,68,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(239,68,68,0.02)_1px,transparent_1px)] bg-[size:32px_32px]" />
+        </div>
 
-        <div className="relative z-10 p-5 sm:p-6">
-          <div className="flex items-start gap-3.5">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-500/10">
-              <div className="relative">
-                <AlertTriangle className="size-5 text-red-500" />
-                <span className="absolute -right-0.5 -top-0.5 flex size-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+        {/* Top accent */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-red-500/40 to-transparent" />
+
+        <div className="relative z-10 p-6 sm:p-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-500/20 to-red-600/10 ring-1 ring-red-500/20">
+                <AlertTriangle className="size-6 text-red-500" />
+                <span className="absolute -right-0.5 -top-0.5 flex size-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
                 </span>
               </div>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-bold text-red-600 dark:text-red-400">Danger Zone</h2>
-              <p className="mt-1.5 max-w-lg text-xs leading-relaxed text-muted-foreground">
-                These operations permanently remove large amounts of system data. Verify you are on
-                the correct environment before proceeding.
-              </p>
-
-              <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-                <Button
-                  variant="destructive"
-                  className="gap-1.5 shadow-sm"
-                  onClick={() => openAction({ kind: "everything" })}
-                >
-                  <Trash2 className="size-3.5" />
-                  Delete everything except admins
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-1.5 border-border/60"
-                  onClick={() => openAction({ kind: "reset" })}
-                >
-                  <RefreshCw className="size-3.5" />
-                  Full reset except users
-                </Button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold uppercase tracking-[0.1em] text-red-600 dark:text-red-400">
+                    Danger Zone
+                  </h2>
+                  <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-red-500 ring-1 ring-red-500/20">
+                    Critical
+                  </span>
+                </div>
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">
+                  These operations permanently remove large amounts of system data. Verify you are
+                  on the correct environment before proceeding.
+                </p>
               </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 sm:items-end">
+              <Button
+                variant="destructive"
+                className="w-full gap-2 rounded-xl shadow-lg shadow-red-500/20 transition-all hover:shadow-xl hover:shadow-red-500/30 sm:w-auto"
+                onClick={() => openAction({ kind: "everything" })}
+              >
+                <Trash2 className="size-4" />
+                Delete everything except admins
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full gap-2 rounded-xl border-border/50 text-muted-foreground transition-all hover:border-border hover:text-foreground hover:bg-muted/50 sm:w-auto"
+                onClick={() => openAction({ kind: "reset" })}
+              >
+                <RefreshCw className="size-3.5" />
+                Full reset except users
+              </Button>
             </div>
           </div>
         </div>
