@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,12 +45,17 @@ function LoginPage() {
   const { signIn, session } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState(readRememberedEmail);
+  // Read storage ONCE; drives prefill, checkbox, and autofocus target.
+  const rememberedEmail = useMemo(() => readRememberedEmail(), []);
+  const passwordGetsAutofocus = rememberedEmail !== "";
+
+  const [email, setEmail] = useState(rememberedEmail);
   const [password, setPassword] = useState("");
-  const [rememberEmail, setRememberEmail] = useState(() => readRememberedEmail() !== "");
+  const [rememberEmail, setRememberEmail] = useState(passwordGetsAutofocus);
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorNonce, setErrorNonce] = useState(0); // increments on every failure
   const [submitting, setSubmitting] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
 
@@ -61,13 +66,19 @@ function LoginPage() {
     if (session) navigate({ to: "/dashboard", replace: true });
   }, [session, navigate]);
 
-  // Focus the alert AFTER React commits it. (A rAF called from the catch
-  // block can fire before the re-render, so the ref would still be null.)
+  // FIX: keyed on the nonce (not the message), so a REPEATED failure still
+  // moves focus. The alert wrapper below uses key={errorNonce}, which also
+  // remounts it — replaying the shake animation on every failure.
   useEffect(() => {
-    if (error) errorRef.current?.focus();
-  }, [error]);
+    if (errorNonce > 0) errorRef.current?.focus();
+  }, [errorNonce]);
 
   if (session) return null;
+
+  function fail(message: string) {
+    setError(message);
+    setErrorNonce((n) => n + 1);
+  }
 
   function validateEmail(value: string): string | null {
     if (!value) return "Email is required.";
@@ -77,18 +88,21 @@ function LoginPage() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting) return;
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Inline field error first (focus the field itself).
+    // Email problems → inline under the field, focus the field.
     const emailErr = validateEmail(normalizedEmail);
     if (emailErr) {
       setEmailError(emailErr);
       emailRef.current?.focus();
       return;
     }
+
+    // FIX: correct message when only the password is missing.
     if (!password) {
-      setError("Enter your email and password.");
+      fail("Enter your password.");
       return;
     }
 
@@ -110,7 +124,7 @@ function LoginPage() {
       navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       // Generic message — don't reveal whether an account exists.
-      setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
+      fail(err instanceof Error ? err.message : "Sign in failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -138,7 +152,14 @@ function LoginPage() {
       {/* Form */}
       <form onSubmit={onSubmit} className="space-y-5" noValidate>
         {error && (
-          <div ref={errorRef} tabIndex={-1} role="alert" className="dj-shake outline-none">
+          /* key forces remount on every failure → shake + SR announcement replay */
+          <div
+            key={errorNonce}
+            ref={errorRef}
+            tabIndex={-1}
+            role="alert"
+            className="dj-shake outline-none"
+          >
             <Alert variant="destructive">
               <AlertCircle className="size-4" />
               <AlertDescription>{error}</AlertDescription>
@@ -157,7 +178,7 @@ function LoginPage() {
               type="email"
               inputMode="email"
               autoComplete="username"
-              autoFocus
+              autoFocus={!passwordGetsAutofocus}
               required
               value={email}
               onChange={(e) => {
@@ -166,7 +187,8 @@ function LoginPage() {
                 if (error) setError(null);
               }}
               onBlur={() => {
-                if (email.trim()) setEmailError(validateEmail(email.trim().toLowerCase()));
+                const value = email.trim().toLowerCase();
+                if (value) setEmailError(validateEmail(value));
               }}
               disabled={submitting}
               aria-invalid={Boolean(emailError)}
@@ -194,14 +216,15 @@ function LoginPage() {
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
+              autoFocus={passwordGetsAutofocus}
               required
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
                 if (error) setError(null);
               }}
-              onKeyDown={(e) => setCapsLock(e.getModifierState?.("CapsLock") ?? false)}
-              onKeyUp={(e) => setCapsLock(e.getModifierState?.("CapsLock") ?? false)}
+              onKeyDown={(e) => setCapsLock(e.getModifierState("CapsLock"))}
+              onKeyUp={(e) => setCapsLock(e.getModifierState("CapsLock"))}
               onBlur={() => setCapsLock(false)}
               disabled={submitting}
               aria-invalid={Boolean(error)}
@@ -343,7 +366,7 @@ function LoadCard() {
               strokeWidth="2"
               strokeLinecap="round"
             />
-            {/* 6 8 dash period matches the dj-route-dash keyframes (-14) so the loop is seamless */}
+            {/* 6 8 dash period matches the dj-route-dash keyframes (-14) */}
             <line
               x1="1"
               y1="6"
@@ -370,7 +393,6 @@ function LoadCard() {
         </div>
       </div>
 
-      {/* Floating notification chip */}
       <div className="animate-float absolute -right-4 -top-5 rounded-xl border border-white/10 bg-[var(--ink-900)]/90 px-3 py-2 shadow-xl backdrop-blur">
         <span className="flex items-center gap-1.5 text-xs font-medium text-white/80">
           <BadgeCheck className="size-3.5 text-[var(--moss-400)]" />
@@ -393,13 +415,11 @@ function Stat({ value, label }: { value: string; label: string }) {
 function BrandPanel() {
   return (
     <div className="relative hidden overflow-hidden bg-[var(--navy-950)] p-10 text-[#f4efe6] lg:flex lg:flex-col lg:justify-between xl:p-14">
-      {/* ── Ambient background ── */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -right-32 -top-40 size-[34rem] rounded-full bg-[var(--plum-500)] opacity-25 blur-[120px]" />
         <div className="absolute -bottom-48 -left-32 size-[30rem] rounded-full bg-[var(--navy-500)] opacity-30 blur-[110px]" />
         <div className="theme-grid-pattern absolute inset-0 text-white opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
         <div className="dj-noise absolute inset-0 opacity-[0.05] mix-blend-overlay" />
-        {/* Decorative long-haul route */}
         <svg
           viewBox="0 0 800 900"
           preserveAspectRatio="xMidYMid slice"
@@ -422,12 +442,10 @@ function BrandPanel() {
         </svg>
       </div>
 
-      {/* ── Top: logo ── */}
       <div className="relative">
         <BrandLogo glow />
       </div>
 
-      {/* ── Middle: headline + showcase ── */}
       <div className="relative max-w-md">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--plum-300)]">
           Nationwide agent network
@@ -454,7 +472,6 @@ function BrandPanel() {
         </div>
       </div>
 
-      {/* ── Bottom: link + copyright ── */}
       <div className="relative flex items-center justify-between">
         <CompanyLink className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/60 transition-colors hover:text-white" />
         <span className="text-xs text-white/35">
@@ -474,7 +491,6 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       <BrandPanel />
 
-      {/* Form side */}
       <div className="relative flex items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6">
         <div
           aria-hidden="true"
@@ -482,12 +498,10 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         />
 
         <div className="relative w-full max-w-md">
-          {/* Mobile brand header */}
           <div className="mb-8 flex justify-center lg:hidden">
             <BrandLogo glow />
           </div>
 
-          {/* Card with gradient accent strip */}
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-black/[0.07]">
             <div
               aria-hidden="true"
@@ -498,7 +512,6 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Below card */}
           <div className="mt-6 space-y-4 text-center">
             <p className="text-xs text-muted-foreground">
               Locked out of your account?{" "}
