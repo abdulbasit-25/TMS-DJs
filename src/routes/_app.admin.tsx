@@ -32,6 +32,7 @@ import {
   Mail,
   Clock,
   Timer,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -43,6 +44,7 @@ const TILES: Array<{
   label: string;
   desc: string;
   cap: Capability;
+  adminOnly?: boolean;
 }> = [
   {
     to: "/users",
@@ -86,6 +88,14 @@ const TILES: Array<{
     desc: "System-wide event log.",
     cap: "audit",
   },
+  {
+    to: "/admin/data-deletion",
+    icon: Trash2,
+    label: "Data Deletion",
+    desc: "Bulk cleanup and destructive data management.",
+    cap: "admin",
+    adminOnly: true,
+  },
 ];
 
 const SETTINGS_ROWS = [
@@ -102,7 +112,9 @@ function AdminPage() {
   const [confirmation, setConfirmation] = useState("");
   const [processing, setProcessing] = useState(false);
   const role = session?.role ?? "suspended";
-  const visibleTiles = TILES.filter((tile) => can(role, tile.cap));
+  const visibleTiles = TILES.filter(
+    (tile) => can(role, tile.cap) && (!tile.adminOnly || role === "admin"),
+  );
   const canReset = can(role, "admin");
 
   async function handleResetSystem() {
