@@ -15,6 +15,7 @@ const dbName = process.env.MONGO_DB_NAME || "freight-agent-portal";
 const userSchema = new mongoose.Schema(
   {
     name: String,
+    username: { type: String, unique: true, lowercase: true, trim: true },
     email: { type: String, unique: true, lowercase: true, trim: true },
     password: String,
     role: String,
@@ -320,6 +321,7 @@ async function seed() {
       const passwordHash = await bcrypt.hash(password, 12);
       return User.create({
         name,
+        username: email.split("@")[0],
         email,
         password: passwordHash,
         role,
