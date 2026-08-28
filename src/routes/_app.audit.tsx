@@ -131,7 +131,7 @@ function ActionBadge({ action }: { action: string }) {
     return (
       <Badge
         variant="secondary"
-        className="gap-1 border-slate-200/60 bg-slate-50 text-slate-600 dark:border-slate-500/20 dark:bg-slate-800/40 dark:text-slate-400"
+        className="gap-1 border-red-200/60 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-950/30 dark:text-red-400"
       >
         <ArrowDownRight className="size-3" aria-hidden="true" />
         Logout
