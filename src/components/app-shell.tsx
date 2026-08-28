@@ -1,531 +1,894 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth, AuthProvider } from "@/lib/auth-context";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  AlertCircle,
+  LayoutDashboard,
+  Users,
+  Building2,
+  FileText,
+  Truck,
+  Package,
+  DollarSign,
+  ClipboardCheck,
+  BarChart3,
+  Bell,
+  Shield,
+  FolderOpen,
+  CalendarClock,
+  UserCheck,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  ChevronDown,
+  CircleUser,
+  Search,
+  Check,
   AlertTriangle,
-  ArrowRight,
-  ArrowUpRight,
-  BadgeCheck,
-  Eye,
-  EyeOff,
-  Loader2,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
+  Inbox,
+  MoonStar,
+  Sun,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Clock3,
+  MoreVertical,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
+import { can, ROLE_LABELS, type Role } from "@/lib/roles";
+import { useNotifications, type NotificationItem } from "@/hooks/use-notifications";
+import { recordUrl } from "@/lib/notification-ui";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { relative } from "@/lib/format";
 
-const COMPANY_URL = "https://djsfreightbroker.com/";
-const SUPPORT_MAILTO = "mailto:dispatch@djsfreightbroker.com?subject=Portal%20password%20reset";
-const REMEMBERED_EMAIL_KEY = "djfb.remembered-email";
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  cap: Parameters<typeof can>[1];
+  section: "Operate" | "Records" | "Admin";
+  adminOnly?: boolean;
+};
 
-/** SSR/private-mode safe localStorage read. */
-function readRememberedEmail(): string {
-  try {
-    return localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "";
-  } catch {
-    return "";
+const NAV: NavItem[] = [
+  {
+    to: "/dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    cap: "dashboard",
+    section: "Operate",
+  },
+  {
+    to: "/approvals",
+    label: "Approvals",
+    icon: ClipboardCheck,
+    cap: "approvals",
+    section: "Operate",
+  },
+  {
+    to: "/activity",
+    label: "Daily Activity",
+    icon: CalendarClock,
+    cap: "activity",
+    section: "Operate",
+  },
+  {
+    to: "/notifications",
+    label: "Notifications",
+    icon: Bell,
+    cap: "notifications",
+    section: "Operate",
+  },
+
+  { to: "/leads", label: "Leads", icon: UserCheck, cap: "leads", section: "Records" },
+  {
+    to: "/followups",
+    label: "Follow-ups",
+    icon: ClipboardCheck,
+    cap: "followups",
+    section: "Records",
+  },
+  { to: "/customers", label: "Customers", icon: Building2, cap: "customers", section: "Records" },
+  { to: "/quotes", label: "Quotes", icon: FileText, cap: "quotes", section: "Records" },
+  { to: "/carriers", label: "Carriers", icon: Truck, cap: "carriers", section: "Records" },
+  { to: "/loads", label: "Loads", icon: Package, cap: "loads", section: "Records" },
+  {
+    to: "/commissions",
+    label: "Commissions",
+    icon: DollarSign,
+    cap: "commissions",
+    section: "Records",
+  },
+  { to: "/invoices", label: "Invoices", icon: FileText, cap: "invoices", section: "Records" },
+  // { to: "/documents", label: "Documents", icon: FolderOpen, cap: "documents", section: "Records" },
+  // { to: "/onboarding", label: "Onboarding", icon: Check, cap: "onboarding", section: "Records" },
+  // { to: "/reports", label: "Reports(Working on it)", icon: BarChart3, cap: "reports", section: "Records" },
+
+  { to: "/users", label: "Users", icon: Users, cap: "users", section: "Admin" },
+  { to: "/teams", label: "Teams", icon: Users, cap: "teams", section: "Admin" },
+  { to: "/audit", label: "Session Log", icon: Shield, cap: "audit", section: "Admin" },
+  { to: "/admin", label: "Admin Panel", icon: Settings, cap: "admin", section: "Admin" },
+  {
+    to: "/admin/data-deletion",
+    label: "Data Deletion",
+    icon: AlertTriangle,
+    cap: "admin",
+    section: "Admin",
+    adminOnly: true,
+  },
+];
+
+const ROLE_OPTIONS: Role[] = [
+  "owner",
+  "admin",
+  "ops_manager",
+  "team_manager",
+  "leadagent",
+  "agent",
+  "trainee",
+  "accounting",
+  "suspended",
+];
+type ThemeMode = "dark" | "light";
+
+function getStoredTheme(): ThemeMode {
+  if (typeof window === "undefined") return "dark";
+
+  const stored = window.localStorage.getItem("theme");
+  if (stored === "dark" || stored === "light") {
+    return stored;
   }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export const Route = createFileRoute("/login")({
-  component: () => (
-    <AuthProvider>
-      <LoginPage />
-    </AuthProvider>
-  ),
-});
+function applyTheme(theme: ThemeMode) {
+  if (typeof document === "undefined") return;
 
-function LoginPage() {
-  const { signIn, session } = useAuth();
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  document.documentElement.style.colorScheme = theme;
+  window.localStorage.setItem("theme", theme);
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const { session, setRole, signOut } = useAuth();
   const navigate = useNavigate();
-
-  // Read storage ONCE; drives prefill, checkbox, and autofocus target.
-  const rememberedEmail = useMemo(() => readRememberedEmail(), []);
-  const passwordGetsAutofocus = rememberedEmail !== "";
-
-  const [email, setEmail] = useState(rememberedEmail);
-  const [password, setPassword] = useState("");
-  const [rememberEmail, setRememberEmail] = useState(passwordGetsAutofocus);
-  const [showPassword, setShowPassword] = useState(false);
-  const [emailError, setEmailError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [errorNonce, setErrorNonce] = useState(0); // increments on every failure
-  const [submitting, setSubmitting] = useState(false);
-  const [capsLock, setCapsLock] = useState(false);
-
-  const errorRef = useRef<HTMLDivElement>(null);
-  const emailRef = useRef<HTMLInputElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [globalSearchValue, setGlobalSearchValue] = useState("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("sidebar-collapsed") === "true";
+  });
+  // Lifted here (rather than living inside ThemeToggle) so the desktop toggle
+  // and the mobile "more" menu's theme item always agree on current state.
+  const [theme, setTheme] = useState<ThemeMode>(() => getStoredTheme());
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard", replace: true });
-  }, [session, navigate]);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sidebar-collapsed", String(sidebarCollapsed));
+    }
+  }, [sidebarCollapsed]);
 
-  // FIX: keyed on the nonce (not the message), so a REPEATED failure still
-  // moves focus. The alert wrapper below uses key={errorNonce}, which also
-  // remounts it — replaying the shake animation on every failure.
   useEffect(() => {
-    if (errorNonce > 0) errorRef.current?.focus();
-  }, [errorNonce]);
+    applyTheme(theme);
+  }, [theme]);
 
-  if (session) return null;
+  const role = session?.role ?? "agent";
 
-  function fail(message: string) {
-    setError(message);
-    setErrorNonce((n) => n + 1);
+  const { notifications: notifItems, unreadCount, markRead, markAllRead } = useNotifications();
+
+  function handleGlobalSearch(term: string) {
+    const trimmed = term.trim();
+    if (!trimmed) return;
+
+    setMobileSearchOpen(false);
+    setGlobalSearchValue(trimmed);
+
+    if (typeof window !== "undefined") {
+      const nextUrl = new URL("/search", window.location.origin);
+      nextUrl.searchParams.set("q", trimmed);
+      window.location.assign(nextUrl.toString());
+    }
   }
 
-  function validateEmail(value: string): string | null {
-    if (!value) return "Email is required.";
-    if (!EMAIL_PATTERN.test(value)) return "Enter a valid email address.";
+  async function handleSignOut(force = false) {
+    try {
+      await signOut(force);
+      navigate({ to: "/login" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to sign out.");
+    }
+  }
+  const visibleNav = useMemo(
+    () => NAV.filter((n) => can(role, n.cap) && (!n.adminOnly || role === "admin")),
+    [role],
+  );
+
+  if (role === "suspended") {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="max-w-md rounded-lg border border-destructive/40 bg-card p-8 text-center">
+          <AlertTriangle className="mx-auto size-10 text-destructive" />
+          <h1 className="mt-4 text-xl font-semibold">Account suspended</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This account has no access to the portal. Historical records may still exist but are
+            unreachable from this role. Contact an administrator.
+          </p>
+          <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
+            <RoleSwitcher inline />
+            <Button
+              variant="outline"
+              onClick={() => {
+                void handleSignOut(true);
+              }}
+            >
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const grouped = {
+    Operate: visibleNav.filter((n) => n.section === "Operate"),
+    Records: visibleNav.filter((n) => n.section === "Records"),
+    Admin: visibleNav.filter((n) => n.section === "Admin"),
+  };
+
+  return (
+    <div className="flex min-h-screen w-full bg-background">
+      {/* Sidebar — desktop */}
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
+          sidebarCollapsed ? "w-16" : "w-60",
+        )}
+      >
+        <SidebarBrand
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((current) => !current)}
+        />
+        <SidebarNav
+          grouped={grouped}
+          pathname={pathname}
+          unreadCount={unreadCount}
+          collapsed={sidebarCollapsed}
+        />
+      </aside>
+
+      {/* Sidebar — mobile */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-64 border-sidebar-border bg-sidebar p-0">
+          {/* Mobile overlay always shows the full brand mark — the desktop
+              collapse toggle doesn't apply here, so it's simply not rendered
+              (previously this reused the desktop toggle with a no-op handler). */}
+          <SidebarBrand collapsed={false} showToggle={false} />
+          <SidebarNav
+            grouped={grouped}
+            pathname={pathname}
+            unreadCount={unreadCount}
+            onNavigate={() => setMobileOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+
+      {/* Main */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-background/95 px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="size-5" />
+            </Button>
+          </div>
+          <div className="min-w-0">
+            <div className="relative hidden max-w-md md:block">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={globalSearchValue}
+                onChange={(event) => setGlobalSearchValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleGlobalSearch(globalSearchValue);
+                  }
+                }}
+                placeholder="Search loads, customers, carriers, agents…"
+                className="h-9 pl-8"
+              />
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            {/* Mobile-only search trigger — the search bar itself is desktop-only
+                (md:block above), so this gives mobile users an equivalent entry
+                point. It's the same non-wired placeholder input as desktop. */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              aria-label="Search"
+              onClick={() => setMobileSearchOpen(true)}
+            >
+              <Search className="size-5" />
+            </Button>
+
+            {/* Desktop: theme, session status, and role switcher inline */}
+            <div className="hidden items-center gap-1.5 md:flex">
+              <ThemeToggle
+                theme={theme}
+                onToggle={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+              />
+              <SessionMonitor />
+              <RoleSwitcher />
+            </div>
+
+            {/* Mobile: same three controls collapsed into one menu */}
+            <MobileMoreMenu
+              theme={theme}
+              onToggleTheme={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
+            />
+
+            <NotificationsBell
+              notifications={notifItems}
+              unreadCount={unreadCount}
+              onMarkRead={(id) => void markRead(id)}
+              onMarkAllRead={() => void markAllRead()}
+            />
+            <UserMenu />
+          </div>
+        </header>
+
+        <main className="min-w-0 flex-1">
+          <div className="mx-auto w-full max-w-[1600px] p-4 md:p-6">{children}</div>
+        </main>
+      </div>
+
+      {/* Mobile search dialog — mirrors the desktop search box */}
+      <Dialog open={mobileSearchOpen} onOpenChange={setMobileSearchOpen}>
+        <DialogContent className="top-[10%] translate-y-0 sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">Search</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              autoFocus
+              type="search"
+              value={globalSearchValue}
+              onChange={(event) => setGlobalSearchValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleGlobalSearch(globalSearchValue);
+                }
+              }}
+              placeholder="Search loads, customers, carriers, agents…"
+              className="h-10 pl-8"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function ThemeToggle({ theme, onToggle }: { theme: ThemeMode; onToggle: () => void }) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="gap-2 px-2.5"
+      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      onClick={onToggle}
+    >
+      {theme === "dark" ? <Sun className="size-4" /> : <MoonStar className="size-4" />}
+      <span className="hidden text-xs lg:inline">{theme === "dark" ? "Dark" : "Light"}</span>
+    </Button>
+  );
+}
+
+/**
+ * Consolidates Theme toggle + Session status + Role switcher into a single
+ * menu on narrow screens, where the header otherwise doesn't have room for
+ * all three as separate controls. A small status dot on the trigger keeps
+ * session state visible at a glance without needing the full pill.
+ */
+function MobileMoreMenu({ theme, onToggleTheme }: { theme: ThemeMode; onToggleTheme: () => void }) {
+  const { session, setRole, sessionStatus, loading } = useAuth();
+  const role = session?.role ?? "agent";
+  const canSwitchRole = (["admin", "owner"] as Role[]).includes(role);
+
+  const dotClass = {
+    active: "bg-success",
+    paused: "bg-warning",
+    expired: "bg-destructive",
+  }[sessionStatus ?? "active"];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative md:hidden"
+          aria-label="More options"
+        >
+          <MoreVertical className="size-5" />
+          {!loading && session && (
+            <span className={cn("absolute right-1 top-1 size-2 rounded-full", dotClass)} />
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuItem onClick={onToggleTheme}>
+          {theme === "dark" ? (
+            <Sun className="mr-2 size-4" />
+          ) : (
+            <MoonStar className="mr-2 size-4" />
+          )}
+          Switch to {theme === "dark" ? "light" : "dark"} mode
+        </DropdownMenuItem>
+        {!loading && session && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
+              <span className={cn("size-2 rounded-full", dotClass)} />
+              Session: {sessionStatus}
+            </DropdownMenuLabel>
+          </>
+        )}
+        {canSwitchRole && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Preview as role</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
+              {ROLE_OPTIONS.map((r) => (
+                <DropdownMenuRadioItem key={r} value={r}>
+                  {ROLE_LABELS[r]}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function SidebarBrand({
+  collapsed,
+  onToggle,
+  showToggle = true,
+}: {
+  collapsed: boolean;
+  onToggle?: () => void;
+  showToggle?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex h-14 items-center border-b border-sidebar-border",
+        collapsed ? "justify-center px-2" : "gap-2.5 px-4",
+      )}
+    >
+      {showToggle && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("shrink-0", collapsed ? "size-8" : "size-9")}
+          onClick={onToggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </Button>
+      )}
+      {!collapsed && (
+        <div className="flex min-w-0 items-center gap-2.5">
+          {/* <div className="grid size-8 shrink-0 place-items-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+      <span className="font-mono text-xs font-bold">DJF</span>
+    </div> */}
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-sidebar-foreground">DJ's Panel</div>
+            <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
+              Agent Portal - TMS
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SidebarNav({
+  grouped,
+  pathname,
+  unreadCount = 0,
+  onNavigate,
+  collapsed = false,
+}: {
+  grouped: Record<string, NavItem[]>;
+  pathname: string;
+  unreadCount?: number;
+  onNavigate?: () => void;
+  collapsed?: boolean;
+}) {
+  return (
+    <nav className="scrollbar-thin flex-1 overflow-y-auto p-2">
+      {Object.entries(grouped).map(([section, items]) =>
+        items.length === 0 ? null : (
+          <div key={section} className="mb-4">
+            {!collapsed && (
+              <div className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {section}
+              </div>
+            )}
+            <ul className="space-y-0.5">
+              {items.map((item) => {
+                const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                return (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      onClick={onNavigate}
+                      title={collapsed ? item.label : undefined}
+                      className={cn(
+                        "group relative flex items-center rounded-md py-1.5 text-sm transition-colors",
+                        collapsed ? "justify-center px-2" : "gap-2.5 px-2.5",
+                        active
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          "size-4 shrink-0",
+                          active ? "text-primary" : "text-muted-foreground",
+                        )}
+                      />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                      {item.to === "/notifications" && unreadCount > 0 && (
+                        <span
+                          className={cn(
+                            "grid shrink-0 place-items-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground",
+                            collapsed ? "absolute right-0 top-0 size-4" : "ml-auto size-4",
+                          )}
+                        >
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ),
+      )}
+    </nav>
+  );
+}
+
+function SessionMonitor() {
+  const { session, loading, sessionStatus } = useAuth();
+
+  if (loading || !session) {
     return null;
   }
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (submitting) return;
+  const statusConfig = {
+    active: {
+      label: "Active",
+      dotClass: "bg-success",
+      borderClass: "border-success/20 bg-success/10",
+      textClass: "text-success",
+    },
+    paused: {
+      label: "Paused",
+      dotClass: "bg-warning",
+      borderClass: "border-warning/20 bg-warning/10",
+      textClass: "text-warning",
+    },
+    expired: {
+      label: "Expired",
+      dotClass: "bg-destructive",
+      borderClass: "border-destructive/20 bg-destructive/10",
+      textClass: "text-destructive",
+    },
+  }[sessionStatus];
 
-    const normalizedEmail = email.trim().toLowerCase();
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-2.5 py-1.5 shadow-sm",
+        statusConfig.borderClass,
+      )}
+    >
+      <div className="flex size-7 items-center justify-center rounded-full bg-background/80">
+        <Clock3 className={cn("size-3.5", statusConfig.textClass)} />
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className={cn("size-2 rounded-full", statusConfig.dotClass)} />
+        <span className={cn("text-sm font-semibold", statusConfig.textClass)}>
+          {statusConfig.label}
+        </span>
+      </div>
+    </div>
+  );
+}
 
-    // Email problems → inline under the field, focus the field.
-    const emailErr = validateEmail(normalizedEmail);
-    if (emailErr) {
-      setEmailError(emailErr);
-      emailRef.current?.focus();
-      return;
+function RoleSwitcher({ inline }: { inline?: boolean } = {}) {
+  const { session, setRole } = useAuth();
+  const role = session?.role ?? "agent";
+
+  if (!(["admin", "owner"] as Role[]).includes(role)) {
+    return null;
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn("gap-1.5 font-normal", inline && "w-full sm:w-auto")}
+        >
+          <CircleUser className="size-4 text-primary" />
+          <span className="hidden text-xs lg:inline">Viewing as</span>
+          <span className="text-xs font-medium">{ROLE_LABELS[role]}</span>
+          <ChevronDown className="size-3.5 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>Preview as role</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup value={role} onValueChange={(v) => setRole(v as Role)}>
+          {ROLE_OPTIONS.map((r) => (
+            <DropdownMenuRadioItem key={r} value={r}>
+              {ROLE_LABELS[r]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function NotificationsBell({
+  notifications,
+  unreadCount,
+  onMarkRead,
+  onMarkAllRead,
+}: {
+  notifications: NotificationItem[];
+  unreadCount: number;
+  onMarkRead: (id?: string) => void;
+  onMarkAllRead: () => void;
+}) {
+  const navigate = useNavigate();
+  const top5 = notifications.slice(0, 5);
+
+  function handleClick(n: NotificationItem) {
+    if (!n.isRead) {
+      onMarkRead(n.id);
     }
-
-    // FIX: correct message when only the password is missing.
-    if (!password) {
-      fail("Enter your password.");
-      return;
-    }
-
-    setEmailError(null);
-    setError(null);
-
-    setSubmitting(true);
-    try {
-      await signIn(normalizedEmail, password);
-      try {
-        if (rememberEmail) {
-          localStorage.setItem(REMEMBERED_EMAIL_KEY, normalizedEmail);
-        } else {
-          localStorage.removeItem(REMEMBERED_EMAIL_KEY);
-        }
-      } catch {
-        /* storage unavailable (private mode) — non-fatal */
-      }
-      navigate({ to: "/dashboard", replace: true });
-    } catch (err) {
-      // Generic message — don't reveal whether an account exists.
-      fail(err instanceof Error ? err.message : "Sign in failed. Please try again.");
-    } finally {
-      setSubmitting(false);
+    const url = n.actionUrl ?? recordUrl(n.recordType, n.recordId);
+    if (url) {
+      navigate({ to: url });
     }
   }
 
-  const fieldStagger = "animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-backwards";
-
   return (
-    <AuthLayout>
-      {/* Header */}
-      <div className={`mb-7 ${fieldStagger}`}>
-        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--plum-500)]/30 bg-[var(--plum-500)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-cta-bg)]">
-          <span className="relative flex size-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60" />
-            <span className="relative inline-flex size-1.5 rounded-full bg-current" />
-          </span>
-          Agent access
-        </span>
-        <h1 className="mt-3.5 text-2xl font-bold tracking-tight text-foreground">Welcome back</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          Sign in to manage loads, lanes, and carriers.
-        </p>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={onSubmit} className="space-y-5" noValidate>
-        {error && (
-          /* key forces remount on every failure → shake + SR announcement replay */
-          <div
-            key={errorNonce}
-            ref={errorRef}
-            tabIndex={-1}
-            role="alert"
-            className="dj-shake outline-none"
-          >
-            <Alert variant="destructive">
-              <AlertCircle className="size-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </div>
-        )}
-
-        <div className={`space-y-2 ${fieldStagger} [animation-delay:70ms]`}>
-          <Label htmlFor="email">Work email</Label>
-          <div className="relative">
-            <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              ref={emailRef}
-              id="email"
-              name="email"
-              type="email"
-              inputMode="email"
-              autoComplete="username"
-              autoFocus={!passwordGetsAutofocus}
-              required
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (emailError) setEmailError(null);
-                if (error) setError(null);
-              }}
-              onBlur={() => {
-                const value = email.trim().toLowerCase();
-                if (value) setEmailError(validateEmail(value));
-              }}
-              disabled={submitting}
-              aria-invalid={Boolean(emailError)}
-              aria-describedby={emailError ? "login-email-error" : undefined}
-              spellCheck={false}
-              autoCapitalize="none"
-              autoCorrect="off"
-              className="h-11 pl-10"
-              placeholder="you@djsfreightbroker.com"
-            />
-          </div>
-          {emailError && (
-            <p id="login-email-error" className="text-xs text-destructive">
-              {emailError}
-            </p>
-          )}
-        </div>
-
-        <div className={`space-y-2 ${fieldStagger} [animation-delay:140ms]`}>
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              autoFocus={passwordGetsAutofocus}
-              required
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (error) setError(null);
-              }}
-              onKeyDown={(e) => setCapsLock(e.getModifierState("CapsLock"))}
-              onKeyUp={(e) => setCapsLock(e.getModifierState("CapsLock"))}
-              onBlur={() => setCapsLock(false)}
-              disabled={submitting}
-              aria-invalid={Boolean(error)}
-              aria-describedby={capsLock ? "login-caps-hint" : undefined}
-              className="h-11 pl-10 pr-10"
-              placeholder="Enter your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
-
-          {capsLock && (
-            <p
-              id="login-caps-hint"
-              role="status"
-              className="flex items-center gap-1.5 text-xs font-medium text-[var(--color-warning)]"
-            >
-              <AlertTriangle className="size-3.5" />
-              Caps Lock is on
-            </p>
-          )}
-
-          <div className="flex items-center justify-between pt-0.5">
-            <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={rememberEmail}
-                onChange={(e) => setRememberEmail(e.target.checked)}
-                disabled={submitting}
-                className="size-3.5 accent-[var(--color-brand)]"
-              />
-              Remember email
-            </label>
-            <a
-              href={SUPPORT_MAILTO}
-              className="text-xs font-medium text-[var(--color-link)] underline-offset-4 hover:underline"
-            >
-              Forgot password?
-            </a>
-          </div>
-        </div>
-
-        <Button
-          type="submit"
-          disabled={submitting}
-          aria-busy={submitting}
-          className={`group h-11 w-full bg-gradient-to-r from-[var(--plum-600)] to-[var(--plum-400)] text-white shadow-[0_8px_24px_color-mix(in_oklab,var(--plum-500)_30%,transparent)] transition-all hover:shadow-[0_10px_32px_color-mix(in_oklab,var(--plum-500)_40%,transparent)] hover:brightness-110 active:scale-[0.99] ${fieldStagger} [animation-delay:210ms]`}
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Signing in…
-            </>
-          ) : (
-            <>
-              Sign in
-              <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+          <Bell className="size-5" />
+          {unreadCount > 0 && (
+            <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-primary text-[10px] font-semibold text-primary-foreground">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
           )}
         </Button>
-      </form>
-
-      {/* Security footnote */}
-      <div
-        className={`mt-6 flex items-start gap-2.5 rounded-lg border border-border/60 bg-[var(--color-bg-surface-2)]/60 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground ${fieldStagger} [animation-delay:280ms]`}
-      >
-        <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[var(--color-success)]" />
-        Internal use only. Unauthorized access is prohibited. All sign-in activity is monitored and
-        logged.
-      </div>
-    </AuthLayout>
-  );
-}
-
-/* ============================================================================
-   Brand panel — dark "mission control" scene
-   ========================================================================== */
-
-function BrandLogo({ glow = false }: { glow?: boolean }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative">
-        {glow && (
-          <div className="absolute inset-0 rounded-xl bg-[var(--plum-500)] opacity-40 blur-lg" />
-        )}
-        <div className="relative grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[var(--plum-400)] to-[var(--plum-600)] text-white shadow-lg">
-          <LockKeyhole className="size-[18px]" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[calc(100vw-1.5rem)] max-w-80 sm:w-80">
+        <div className="flex items-center justify-between px-2 py-1.5">
+          <DropdownMenuLabel className="p-0">Notifications</DropdownMenuLabel>
+          {unreadCount > 0 && (
+            <button
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={onMarkAllRead}
+            >
+              Mark all read
+            </button>
+          )}
         </div>
-      </div>
-      <div>
-        <div className="text-sm font-semibold tracking-tight">DJ's Freight Broker LLC</div>
-        <div className="text-[10px] uppercase tracking-[0.18em] opacity-60">
-          Secure Agent Portal · TMS
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CompanyLink({ className }: { className?: string }) {
-  return (
-    <a href={COMPANY_URL} target="_blank" rel="noopener noreferrer" className={className}>
-      Visit djsfreightbroker.com
-      <ArrowUpRight className="size-3.5" />
-    </a>
-  );
-}
-
-function LoadCard() {
-  return (
-    <div className="relative mt-10 max-w-sm">
-      <div className="animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards [animation-delay:400ms] duration-700 rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/40 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-xs tracking-widest text-white/60">DJFB-2481</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--moss-400)]/15 px-2 py-0.5 text-[11px] font-semibold text-[var(--moss-400)]">
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-current" />
-            </span>
-            In transit
-          </span>
-        </div>
-
-        <div className="mt-4 flex items-center gap-2.5 text-sm font-medium text-white/90">
-          <span>Chicago, IL</span>
-          <svg viewBox="0 0 64 12" className="h-3 flex-1" aria-hidden="true">
-            <line
-              x1="1"
-              y1="6"
-              x2="63"
-              y2="6"
-              stroke="rgba(255,255,255,0.18)"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            {/* 6 8 dash period matches the dj-route-dash keyframes (-14) */}
-            <line
-              x1="1"
-              y1="6"
-              x2="63"
-              y2="6"
-              stroke="var(--plum-400)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray="6 8"
-              className="dj-route-line"
-            />
-          </svg>
-          <span>Dallas, TX</span>
-        </div>
-
-        <div className="mt-4">
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className="dj-load-progress h-full w-[68%] rounded-full bg-gradient-to-r from-[var(--navy-400)] to-[var(--plum-400)]" />
-          </div>
-          <div className="mt-2 flex justify-between text-[11px] text-white/50">
-            <span>68% of route</span>
-            <span>ETA tomorrow · 9:40 AM</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="animate-float absolute -right-4 -top-5 rounded-xl border border-white/10 bg-[var(--ink-900)]/90 px-3 py-2 shadow-xl backdrop-blur">
-        <span className="flex items-center gap-1.5 text-xs font-medium text-white/80">
-          <BadgeCheck className="size-3.5 text-[var(--moss-400)]" />
-          Rate confirmed · $2,340
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <div className="text-lg font-bold tracking-tight text-white">{value}</div>
-      <div className="text-[11px] uppercase tracking-wider text-white/45">{label}</div>
-    </div>
-  );
-}
-
-function BrandPanel() {
-  return (
-    <div className="relative hidden overflow-hidden bg-[var(--navy-950)] p-10 text-[#f4efe6] lg:flex lg:flex-col lg:justify-between xl:p-14">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-32 -top-40 size-[34rem] rounded-full bg-[var(--plum-500)] opacity-25 blur-[120px]" />
-        <div className="absolute -bottom-48 -left-32 size-[30rem] rounded-full bg-[var(--navy-500)] opacity-30 blur-[110px]" />
-        <div className="theme-grid-pattern absolute inset-0 text-white opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
-        <div className="dj-noise absolute inset-0 opacity-[0.05] mix-blend-overlay" />
-        <svg
-          viewBox="0 0 800 900"
-          preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 h-full w-full"
-          fill="none"
-        >
-          <path
-            d="M-60 700 C 150 640, 260 520, 380 470 S 640 330, 860 160"
-            stroke="white"
-            strokeOpacity="0.09"
-            strokeWidth="1.5"
-            strokeDasharray="2 8"
-            strokeLinecap="round"
-          />
-          <circle cx="180" cy="655" r="4" fill="white" fillOpacity="0.2" />
-          <circle cx="380" cy="470" r="4" fill="var(--plum-400)" fillOpacity="0.6" />
-          <circle cx="620" cy="330" r="4" fill="white" fillOpacity="0.2" />
-          <circle cx="760" cy="205" r="7" stroke="white" strokeOpacity="0.25" strokeWidth="1.5" />
-          <circle cx="760" cy="205" r="2.5" fill="var(--plum-400)" />
-        </svg>
-      </div>
-
-      <div className="relative">
-        <BrandLogo glow />
-      </div>
-
-      <div className="relative max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--plum-300)]">
-          Nationwide agent network
-        </p>
-        <h2 className="mt-4 text-4xl font-bold leading-[1.1] tracking-tight xl:text-[2.75rem]">
-          Every lane, every load, tracked{" "}
-          <span className="bg-gradient-to-r from-[var(--plum-300)] to-[var(--plum-400)] bg-clip-text text-transparent">
-            door to door.
-          </span>
-        </h2>
-        <p className="mt-4 text-[15px] leading-relaxed text-[var(--ink-300)]">
-          The dispatch desk for agents moving freight across the network — live rates, status pings,
-          and paperwork in one view.
-        </p>
-
-        <LoadCard />
-
-        <div className="mt-9 flex items-center gap-8">
-          <Stat value="1.2k+" label="loads moved" />
-          <div className="h-8 w-px bg-white/10" />
-          <Stat value="38" label="states covered" />
-          <div className="h-8 w-px bg-white/10" />
-          <Stat value="99.2%" label="on-time" />
-        </div>
-      </div>
-
-      <div className="relative flex items-center justify-between">
-        <CompanyLink className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/60 transition-colors hover:text-white" />
-        <span className="text-xs text-white/35">
-          © {new Date().getFullYear()} DJ's Freight Broker LLC
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================================
-   Layout
-   ========================================================================== */
-
-export function AuthLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
-      <BrandPanel />
-
-      <div className="relative flex items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_0%,var(--color-bg-surface-2),transparent)]"
-        />
-
-        <div className="relative w-full max-w-md">
-          <div className="mb-8 flex justify-center lg:hidden">
-            <BrandLogo glow />
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-black/[0.07]">
-            <div
-              aria-hidden="true"
-              className="h-1 w-full bg-gradient-to-r from-[var(--navy-400)] via-[var(--plum-500)] to-[var(--navy-400)]"
-            />
-            <div className="animate-in fade-in slide-in-from-bottom-3 p-6 duration-500 sm:p-8">
-              {children}
+        <DropdownMenuSeparator />
+        <div className="max-h-80 overflow-y-auto">
+          {top5.length === 0 ? (
+            <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+              <Inbox className="mx-auto mb-2 size-5" />
+              You're all caught up.
             </div>
+          ) : (
+            top5.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => handleClick(n)}
+                className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
+              >
+                <span
+                  className={cn(
+                    "mt-1.5 size-1.5 shrink-0 rounded-full",
+                    n.isRead ? "bg-transparent" : "bg-primary",
+                  )}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-medium">{n.title}</div>
+                  <div className="truncate text-xs text-muted-foreground">{n.message}</div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground">
+                    {relative(n.createdAt)}
+                  </div>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/notifications" className="w-full text-center text-xs">
+            View all
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function UserMenu() {
+  const { session, signOut, clockedIn } = useAuth();
+  const navigate = useNavigate();
+  const [showClockOutRequiredDialog, setShowClockOutRequiredDialog] = useState(false);
+  const initials = (session?.name ?? "AG")
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  async function handleSignOut() {
+    if (clockedIn) {
+      setShowClockOutRequiredDialog(true);
+      return;
+    }
+
+    try {
+      await signOut();
+      navigate({ to: "/login" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to sign out.");
+    }
+  }
+
+  function handleGoToActivity() {
+    setShowClockOutRequiredDialog(false);
+    navigate({ to: "/activity" });
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="rounded-full" aria-label="User menu">
+            <div className="grid size-7 place-items-center rounded-full bg-secondary text-xs font-semibold">
+              {initials}
+            </div>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="font-normal">
+            <div className="truncate text-sm font-medium">{session?.name}</div>
+            <div className="truncate text-xs text-muted-foreground">{session?.email}</div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <a href="/profile">
+              <CircleUser className="mr-2 size-4" />
+              My profile
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/admin">
+              <Settings className="mr-2 size-4" />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {/* <DropdownMenuItem
+            onClick={() => {
+              void handleSignOut();
+            }}
+            className="text-destructive focus:text-destructive"
+          >
+            <LogOut className="mr-2 size-4" />
+            Sign out
+          </DropdownMenuItem> */}
+          <DropdownMenuItem
+            onClick={() => {
+              void handleSignOut();
+            }}
+            className="text-destructive hover:text-black focus:text-black"
+          >
+            <LogOut className="mr-2 size-4" />
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={showClockOutRequiredDialog} onOpenChange={setShowClockOutRequiredDialog}>
+        <DialogContent className="sm:max-w-md border-border/70 bg-background/95 shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-warning/10 text-warning">
+              <AlertTriangle className="size-6" />
+            </div>
+            <DialogTitle className="text-xl font-semibold">Clock out first</DialogTitle>
+            <DialogDescription className="text-sm leading-6 text-muted-foreground">
+              You&apos;re still checked in. Please end your session from Daily Activity before
+              sign-out so your activity is recorded correctly.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-xl border border-border/70 bg-card/70 p-4">
+            <div className="text-sm font-medium text-foreground">Why this matters</div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Finishing your session before you leave keeps your daily log accurate and prevents
+              gaps in your activity history.
+            </p>
           </div>
 
-          <div className="mt-6 space-y-4 text-center">
-            <p className="text-xs text-muted-foreground">
-              Locked out of your account?{" "}
-              <a
-                href={SUPPORT_MAILTO}
-                className="font-medium text-[var(--color-link)] underline-offset-4 hover:underline"
-              >
-                Contact dispatch
-              </a>
-            </p>
-            <CompanyLink className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden" />
-          </div>
-        </div>
-      </div>
-    </div>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:gap-2">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setShowClockOutRequiredDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button className="w-full sm:w-auto" onClick={handleGoToActivity}>
+              Go to Daily Activity
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
