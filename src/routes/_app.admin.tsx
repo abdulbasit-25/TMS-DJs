@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,7 @@ const SETTINGS_ROWS = [
 
 function AdminPage() {
   const { session } = useAuth();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -116,6 +117,10 @@ function AdminPage() {
     (tile) => can(role, tile.cap) && (!tile.adminOnly || role === "admin"),
   );
   const canReset = can(role, "admin");
+
+  if (pathname !== "/admin") {
+    return <Outlet />;
+  }
 
   async function handleResetSystem() {
     if (!password || confirmation !== "RESET") return;
