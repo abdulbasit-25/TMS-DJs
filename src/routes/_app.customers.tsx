@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { DataTable } from "@/components/data-table";
@@ -20,7 +20,26 @@ import { usd, fmtDate } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api-client";
 import { can } from "@/lib/roles";
-import { Building2, Check, Download, Edit, Plus, Search, Trash2, X } from "lucide-react";
+import {
+  Building2,
+  Check,
+  Download,
+  Edit,
+  Plus,
+  Search,
+  Trash2,
+  X,
+  User,
+  Mail,
+  Phone,
+  DollarSign,
+  StickyNote,
+  MessageSquare,
+  ClipboardList,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -70,6 +89,152 @@ type CustomerApiResponse = {
 };
 
 const STEPS = ["submitted", "review", "approved"] as const;
+
+/* ------------------------------------------------------------------------ */
+/* Shared approval badge — same visual language as leads/loads/carriers.    */
+/* ------------------------------------------------------------------------ */
+
+function ApprovalStatusBadge({ status }: { status?: string }) {
+  if (!status) return null;
+  if (status === "rejected") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+        Rejected
+      </span>
+    );
+  }
+  if (status === "changes_requested") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+        Changes Requested
+      </span>
+    );
+  }
+  if (status === "approved") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
+        Approved
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+      Pending Approval
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Credit status labeling — colored chip, same pattern as margin/priority   */
+/* labeling on the loads and follow-ups pages.                              */
+/* ------------------------------------------------------------------------ */
+
+function creditTone(status: CustomerItem["creditStatus"]) {
+  if (status === "approved") {
+    return { color: "text-emerald-600", bg: "bg-emerald-500/10", Icon: CheckCircle2 };
+  }
+  if (status === "rejected") {
+    return { color: "text-red-500", bg: "bg-red-500/10", Icon: XCircle };
+  }
+  return { color: "text-amber-600", bg: "bg-amber-500/10", Icon: Clock };
+}
+
+function CreditStatusChip({ status }: { status: CustomerItem["creditStatus"] }) {
+  const tone = creditTone(status);
+  const Icon = tone.Icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone.bg} ${tone.color}`}
+    >
+      <Icon className="size-3" /> {status}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Read-only detail primitives — mirrors the leads/carriers/loads pages so  */
+/* every detail sheet in the app feels the same.                            */
+/* ------------------------------------------------------------------------ */
+
+function DetailSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function DetailRow({
+  label,
+  value,
+  mono,
+  span2,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  mono?: boolean;
+  span2?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className={span2 ? "sm:col-span-2" : undefined}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-0.5 flex items-start gap-1.5 ${mono ? "font-mono text-xs" : "text-sm"}`}>
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <span>{value || "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Onboarding-workflow stepper, same look as the pipeline stepper on the leads page. */
+function OnboardingStepper({ status }: { status: CustomerItem["status"] }) {
+  return (
+    <div className="flex items-center">
+      {STEPS.map((s, i) => {
+        const reached = status === "rejected" ? i === 0 : STEPS.indexOf(status as any) >= i;
+        return (
+          <div key={s} className="flex flex-1 items-center">
+            <div
+              className={`grid size-7 shrink-0 place-items-center rounded-full border text-xs ${
+                reached
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border text-muted-foreground"
+              }`}
+            >
+              {i + 1}
+            </div>
+            <div className="ml-2 flex-1">
+              <div className="text-xs font-medium capitalize">{s}</div>
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className={`mx-1 h-px flex-1 ${reached ? "bg-primary/50" : "bg-border"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function CustomersPage() {
   const { session } = useAuth();
@@ -516,96 +681,75 @@ function CustomersPage() {
             className="pl-8"
           />
         </div>
+        <span className="ml-auto text-xs text-muted-foreground">
+          {filtered.length} {filtered.length === 1 ? "customer" : "customers"}
+        </span>
       </div>
 
-      <DataTable
-        empty={
-          <EmptyState
-            icon={<Building2 className="size-6" />}
-            title="No customers found"
-            description="Try creating a customer or adjust your search."
-          />
-        }
-        rows={filtered}
-        onRowClick={(c) => setOpenId(c.id)}
-        columns={[
-          {
-            head: "Company",
-            cell: (c) => (
-              <div>
-                <span className="font-medium">{c.company}</span>
-                {c.pendingApproval && (
-                  <span
-                    className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      c.approvalStatus === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : c.approvalStatus === "changes_requested"
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {c.approvalStatus === "changes_requested"
-                      ? "Changes Requested"
-                      : c.approvalStatus === "rejected"
-                        ? "Rejected"
-                        : "Pending Approval"}
-                  </span>
-                )}
-              </div>
-            ),
-          },
-          {
-            head: "Contact",
-            cell: (c) => (
-              <div>
-                <div className="text-sm">{c.contact}</div>
-                <div className="text-xs text-muted-foreground">{c.email}</div>
-              </div>
-            ),
-          },
-          {
-            head: "Credit limit",
-            cell: (c) => <span className="font-mono text-sm">{usd(c.creditLimit)}</span>,
-          },
-          { head: "Credit", cell: (c) => <StatusBadge value={c.creditStatus} /> },
-          { head: "Onboarding", cell: (c) => <StatusBadge value={c.status} /> },
-          { head: "Agent", cell: (c) => <span className="text-sm">{c.agentName}</span> },
-          {
-            head: "Created",
-            cell: (c) => (
-              <span className="text-xs text-muted-foreground">{fmtDate(c.createdAt)}</span>
-            ),
-          },
-        ]}
-      />
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <DataTable
+          empty={
+            <EmptyState
+              icon={<Building2 className="size-6" />}
+              title="No customers found"
+              description="Try creating a customer or adjust your search."
+            />
+          }
+          rows={filtered}
+          onRowClick={(c) => setOpenId(c.id)}
+          columns={[
+            {
+              head: "Company",
+              cell: (c) => (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{c.company}</span>
+                  {c.pendingApproval && <ApprovalStatusBadge status={c.approvalStatus} />}
+                </div>
+              ),
+            },
+            {
+              head: "Contact",
+              cell: (c) => (
+                <div>
+                  <div className="text-sm">{c.contact}</div>
+                  <div className="text-xs text-muted-foreground">{c.email}</div>
+                </div>
+              ),
+            },
+            {
+              head: "Credit limit",
+              cell: (c) => <span className="font-mono text-sm">{usd(c.creditLimit)}</span>,
+            },
+            { head: "Credit", cell: (c) => <CreditStatusChip status={c.creditStatus} /> },
+            { head: "Onboarding", cell: (c) => <StatusBadge value={c.status} /> },
+            { head: "Agent", cell: (c) => <span className="text-sm">{c.agentName}</span> },
+            {
+              head: "Created",
+              cell: (c) => (
+                <span className="text-xs text-muted-foreground">{fmtDate(c.createdAt)}</span>
+              ),
+            },
+          ]}
+        />
+      </div>
 
       <Sheet open={!!open} onOpenChange={(v) => !v && setOpenId(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-xl">
           {open && (
             <>
-              <SheetHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <SheetTitle>{editing ? "Edit customer" : open.company}</SheetTitle>
-                    {open.pendingApproval && (
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                          open.approvalStatus === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : open.approvalStatus === "changes_requested"
-                              ? "bg-orange-100 text-orange-800"
-                              : open.approvalStatus === "rejected"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {open.approvalStatus === "changes_requested"
-                          ? "Changes Requested"
-                          : open.approvalStatus
-                            ? open.approvalStatus.charAt(0).toUpperCase() +
-                              open.approvalStatus.slice(1)
-                            : "Pending Approval"}
-                      </span>
+              <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SheetTitle>{editing ? "Edit customer" : open.company}</SheetTitle>
+                      {open.pendingApproval && <ApprovalStatusBadge status={open.approvalStatus} />}
+                    </div>
+                    {!editing && (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span>{open.contact}</span>
+                        <span>·</span>
+                        <span>Agent {open.agentName}</span>
+                      </div>
                     )}
                   </div>
                   {!editing && (
@@ -644,137 +788,199 @@ function CustomersPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Quick-glance summary strip — key facts visible without scrolling */}
+                {!editing && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Credit status
+                      </div>
+                      <div className="mt-0.5">
+                        <CreditStatusChip status={open.creditStatus} />
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Onboarding
+                      </div>
+                      <div className="mt-0.5">
+                        <StatusBadge value={open.status} />
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Credit limit
+                      </div>
+                      <div className="mt-0.5 font-mono text-sm">{usd(open.creditLimit)}</div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Created
+                      </div>
+                      <div className="mt-0.5 text-sm">{fmtDate(open.createdAt)}</div>
+                    </div>
+                  </div>
+                )}
               </SheetHeader>
-              <div className="space-y-5 px-4 pb-6">
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">
                 {editing ? (
-                  <form className="space-y-3" onSubmit={updateCustomer}>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-company">Company</Label>
-                      <Input
-                        id="edit-customer-company"
-                        value={editForm.company}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, company: e.target.value }))
-                        }
-                        placeholder="Company name"
-                        required
-                      />
+                  <form className="space-y-4" onSubmit={updateCustomer}>
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <Building2 className="size-4 text-muted-foreground" /> Company & contact
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <Label htmlFor="edit-customer-company">Company</Label>
+                          <Input
+                            id="edit-customer-company"
+                            value={editForm.company}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, company: e.target.value }))
+                            }
+                            placeholder="Company name"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-contact">Contact</Label>
+                          <Input
+                            id="edit-customer-contact"
+                            value={editForm.contact}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, contact: e.target.value }))
+                            }
+                            placeholder="Contact name"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-email">Email</Label>
+                          <Input
+                            id="edit-customer-email"
+                            type="email"
+                            value={editForm.email}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, email: e.target.value }))
+                            }
+                            placeholder="name@email.com"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-phone">Phone</Label>
+                          <Input
+                            id="edit-customer-phone"
+                            value={editForm.phone}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, phone: e.target.value }))
+                            }
+                            placeholder="(555) 000-0000"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-contact">Contact</Label>
-                      <Input
-                        id="edit-customer-contact"
-                        value={editForm.contact}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, contact: e.target.value }))
-                        }
-                        placeholder="Contact name"
-                        required
-                      />
+
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <DollarSign className="size-4 text-muted-foreground" /> Credit & onboarding
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-credit-limit">Credit limit</Label>
+                          <Input
+                            id="edit-customer-credit-limit"
+                            type="number"
+                            value={editForm.creditLimit}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, creditLimit: e.target.value }))
+                            }
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-credit-status">Credit status</Label>
+                          <Select
+                            value={editForm.creditStatus}
+                            onValueChange={(value) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                creditStatus: value as CustomerItem["creditStatus"],
+                              }))
+                            }
+                          >
+                            <SelectTrigger id="edit-customer-credit-status">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">pending</SelectItem>
+                              <SelectItem value="approved">approved</SelectItem>
+                              <SelectItem value="rejected">rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <Label htmlFor="edit-customer-status">Onboarding status</Label>
+                          <Select
+                            value={editForm.status}
+                            onValueChange={(value) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                status: value as CustomerItem["status"],
+                              }))
+                            }
+                          >
+                            <SelectTrigger id="edit-customer-status">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="submitted">submitted</SelectItem>
+                              <SelectItem value="review">review</SelectItem>
+                              <SelectItem value="approved">approved</SelectItem>
+                              <SelectItem value="rejected">rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-email">Email</Label>
-                      <Input
-                        id="edit-customer-email"
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, email: e.target.value }))
-                        }
-                        placeholder="name@email.com"
-                      />
+
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <StickyNote className="size-4 text-muted-foreground" /> Notes
+                      </div>
+                      <div className="grid gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-notes">Notes</Label>
+                          <Textarea
+                            id="edit-customer-notes"
+                            value={editForm.notes}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, notes: e.target.value }))
+                            }
+                            rows={3}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-customer-shipping-notes">Shipping notes</Label>
+                          <Textarea
+                            id="edit-customer-shipping-notes"
+                            value={editForm.shippingNotes}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, shippingNotes: e.target.value }))
+                            }
+                            rows={2}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-phone">Phone</Label>
-                      <Input
-                        id="edit-customer-phone"
-                        value={editForm.phone}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, phone: e.target.value }))
-                        }
-                        placeholder="(555) 000-0000"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-credit-limit">Credit limit</Label>
-                      <Input
-                        id="edit-customer-credit-limit"
-                        type="number"
-                        value={editForm.creditLimit}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, creditLimit: e.target.value }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-credit-status">Credit status</Label>
-                      <Select
-                        value={editForm.creditStatus}
-                        onValueChange={(value) =>
-                          setEditForm((prev) => ({
-                            ...prev,
-                            creditStatus: value as CustomerItem["creditStatus"],
-                          }))
-                        }
-                      >
-                        <SelectTrigger id="edit-customer-credit-status">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">pending</SelectItem>
-                          <SelectItem value="approved">approved</SelectItem>
-                          <SelectItem value="rejected">rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-status">Onboarding status</Label>
-                      <Select
-                        value={editForm.status}
-                        onValueChange={(value) =>
-                          setEditForm((prev) => ({
-                            ...prev,
-                            status: value as CustomerItem["status"],
-                          }))
-                        }
-                      >
-                        <SelectTrigger id="edit-customer-status">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="submitted">submitted</SelectItem>
-                          <SelectItem value="review">review</SelectItem>
-                          <SelectItem value="approved">approved</SelectItem>
-                          <SelectItem value="rejected">rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-notes">Notes</Label>
-                      <Textarea
-                        id="edit-customer-notes"
-                        value={editForm.notes}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, notes: e.target.value }))
-                        }
-                        rows={2}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-customer-shipping-notes">Shipping notes</Label>
-                      <Textarea
-                        id="edit-customer-shipping-notes"
-                        value={editForm.shippingNotes}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, shippingNotes: e.target.value }))
-                        }
-                        rows={2}
-                      />
-                    </div>
-                    <div className="flex justify-between gap-2">
+
+                    <div className="sticky bottom-0 -mx-6 flex flex-wrap items-center gap-2 border-t border-border bg-background/95 px-6 py-4 backdrop-blur">
+                      <Button type="submit" disabled={updating}>
+                        {updating ? "Saving…" : "Save changes"}
+                      </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => {
                           setEditing(false);
                           setEditingApprovalRequestId(null);
@@ -782,96 +988,111 @@ function CustomersPage() {
                       >
                         Cancel
                       </Button>
-                      <Button type="submit" disabled={updating}>
-                        {updating ? "Saving…" : "Save changes"}
-                      </Button>
                     </div>
                   </form>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-3 pt-2 text-sm">
-                      <Field label="Contact" value={open.contact} />
-                      <Field label="Email" value={open.email} />
-                      <Field label="Phone" value={open.phone} mono />
-                      <Field label="Credit limit" value={usd(open.creditLimit)} mono />
-                      <Field
-                        label="Credit status"
-                        value={<StatusBadge value={open.creditStatus} />}
-                      />
-                      <Field label="Agent" value={open.agentName} />
-                    </div>
+                    <DetailSection icon={<User className="size-4" />} title="Contact">
+                      <DetailGrid>
+                        <DetailRow label="Contact" value={open.contact} />
+                        <DetailRow label="Agent" value={open.agentName} />
+                        <DetailRow
+                          label="Email"
+                          value={open.email}
+                          icon={<Mail className="size-3.5" />}
+                          mono
+                        />
+                        <DetailRow
+                          label="Phone"
+                          value={open.phone}
+                          icon={<Phone className="size-3.5" />}
+                          mono
+                        />
+                      </DetailGrid>
+                    </DetailSection>
 
-                    <div>
-                      <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Onboarding workflow
-                      </div>
-                      <div className="flex items-center">
-                        {STEPS.map((s, i) => {
-                          const reached =
-                            open.status === "rejected"
-                              ? i === 0
-                              : STEPS.indexOf(open.status as any) >= i;
-                          return (
-                            <div key={s} className="flex flex-1 items-center">
-                              <div
-                                className={`grid size-7 place-items-center rounded-full border text-xs ${reached ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground"}`}
-                              >
-                                {i + 1}
-                              </div>
-                              <div className="ml-2 flex-1">
-                                <div className="text-xs font-medium capitalize">{s}</div>
-                              </div>
-                              {i < STEPS.length - 1 && (
-                                <div
-                                  className={`mx-1 h-px flex-1 ${reached ? "bg-primary/50" : "bg-border"}`}
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <DetailSection icon={<DollarSign className="size-4" />} title="Credit">
+                      <DetailGrid>
+                        <DetailRow label="Credit limit" value={usd(open.creditLimit)} mono />
+                        <DetailRow
+                          label="Credit status"
+                          value={<CreditStatusChip status={open.creditStatus} />}
+                        />
+                      </DetailGrid>
+                    </DetailSection>
+
+                    <DetailSection
+                      icon={<ClipboardList className="size-4" />}
+                      title="Onboarding workflow"
+                    >
+                      <OnboardingStepper status={open.status} />
                       {open.status === "rejected" && (
                         <p className="mt-2 text-xs text-destructive">
                           Customer rejected. Available for re-submission.
                         </p>
                       )}
-                    </div>
+                    </DetailSection>
 
                     {(open.notes || open.shippingNotes) && (
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          Notes
+                      <DetailSection icon={<StickyNote className="size-4" />} title="Notes">
+                        <div className="space-y-3">
+                          {open.notes && (
+                            <div>
+                              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Notes
+                              </div>
+                              <p className="mt-0.5 whitespace-pre-wrap text-sm">{open.notes}</p>
+                            </div>
+                          )}
+                          {open.shippingNotes && (
+                            <div>
+                              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Shipping notes
+                              </div>
+                              <p className="mt-0.5 whitespace-pre-wrap text-sm">
+                                {open.shippingNotes}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        {open.notes && <p className="mt-1 text-sm">{open.notes}</p>}
-                        {open.shippingNotes && (
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Shipping: {open.shippingNotes}
-                          </p>
-                        )}
-                      </div>
+                      </DetailSection>
                     )}
 
                     {open.pendingApproval &&
                       open.approvalComments &&
                       open.approvalComments.length > 0 && (
-                        <div>
-                          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                            Conversation
+                        <DetailSection
+                          icon={<MessageSquare className="size-4" />}
+                          title="Conversation"
+                        >
+                          <div className="overflow-x-auto rounded-md border border-border">
+                            <table className="w-full min-w-[420px] text-sm">
+                              <thead>
+                                <tr className="border-b border-border bg-muted/50 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  <th className="px-3 py-2">Date</th>
+                                  <th className="px-3 py-2">By</th>
+                                  <th className="px-3 py-2">Comment</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {open.approvalComments.map((comment: any, index: number) => (
+                                  <tr
+                                    key={comment.id ?? index}
+                                    className={`border-b border-border last:border-b-0 align-top ${
+                                      index % 2 === 0 ? "bg-background" : "bg-card/60"
+                                    }`}
+                                  >
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                                      {fmtDate(comment.createdAt)}
+                                    </td>
+                                    <td className="px-3 py-2 font-medium">{comment.userName}</td>
+                                    <td className="px-3 py-2">{comment.text}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
-                          <div className="mt-2 space-y-2">
-                            {open.approvalComments.map((comment: any) => (
-                              <div key={comment.id} className="border border-border rounded-md p-3">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-semibold">{comment.userName}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {fmtDate(comment.createdAt)}
-                                  </span>
-                                </div>
-                                <p className="mt-1 text-sm">{comment.text}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        </DetailSection>
                       )}
 
                     {canApprove &&
@@ -897,17 +1118,6 @@ function CustomersPage() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
-  );
-}
-
-function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={`mt-0.5 ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
     </div>
   );
 }
