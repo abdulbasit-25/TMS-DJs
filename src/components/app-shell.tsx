@@ -260,11 +260,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex h-screen min-h-0 w-full overflow-hidden bg-background">
       {/* Sidebar — desktop */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
+          "hidden h-full min-h-0 shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out lg:flex",
           sidebarCollapsed ? "w-16" : "w-60",
         )}
       >
@@ -282,7 +282,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Sidebar — mobile */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-64 border-sidebar-border bg-sidebar p-0">
+        <SheetContent
+          side="left"
+          className="flex h-full w-64 min-h-0 flex-col border-sidebar-border bg-sidebar p-0"
+        >
           {/* Mobile overlay always shows the full brand mark — the desktop
               collapse toggle doesn't apply here, so it's simply not rendered
               (previously this reused the desktop toggle with a no-op handler). */}
@@ -297,7 +300,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Sheet>
 
       {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border bg-background/95 px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-4 sm:py-3">
           <div className="flex items-center gap-2">
             <Button
@@ -368,7 +371,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
           <div className="mx-auto w-full max-w-[1600px] p-4 md:p-6">{children}</div>
         </main>
       </div>
@@ -544,7 +547,7 @@ function SidebarNav({
   collapsed?: boolean;
 }) {
   return (
-    <nav className="scrollbar-thin flex-1 overflow-y-auto p-2">
+    <nav className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-2">
       {Object.entries(grouped).map(([section, items]) =>
         items.length === 0 ? null : (
           <div key={section} className="mb-4">
