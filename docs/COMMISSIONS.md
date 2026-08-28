@@ -17,12 +17,12 @@ example, a gross margin of `$2,500` at `10%` produces a commission of `$250`.
 
 The create and edit forms provide these tier choices:
 
-| Tier | Rate |
-| --- | ---: |
-| Standard | 10% |
-| Senior | 12% |
-| Top Performer | 15% |
-| Custom | Enter a rate manually |
+| Tier          |                  Rate |
+| ------------- | --------------------: |
+| Standard      |                   10% |
+| Senior        |                   12% |
+| Top Performer |                   15% |
+| Custom        | Enter a rate manually |
 
 Selecting a named tier fills in its rate. The rate field can then be adjusted
 before saving. The preview in the form shows the calculation using the current
@@ -53,11 +53,11 @@ rate, valid month, and year 2000 or later. A commission is normally created in
 
 Payout status describes where the commission is in the payment process:
 
-| Status | Meaning |
-| --- | --- |
-| Pending | Commission has been created but payment has not started. |
-| Processing | Payment is being prepared or sent. |
-| Paid | Payment is complete. |
+| Status     | Meaning                                                  |
+| ---------- | -------------------------------------------------------- |
+| Pending    | Commission has been created but payment has not started. |
+| Processing | Payment is being prepared or sent.                       |
+| Paid       | Payment is complete.                                     |
 
 Marking a commission as **Paid** automatically sets today's payout date when a
 date has not already been supplied. Changing status sends notifications to the
