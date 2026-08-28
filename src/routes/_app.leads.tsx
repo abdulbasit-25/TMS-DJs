@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/empty-state";
 import { DataTable } from "@/components/data-table";
-import { relative } from "@/lib/format";
+import { relative, fmtDateTime } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api-client";
 import {
@@ -25,11 +25,17 @@ import {
   Plus,
   Search,
   Phone,
+  Mail,
   FileText,
   Bell,
   ClipboardList,
   Edit,
   Trash2,
+  Building2,
+  User,
+  MessageSquare,
+  Clock,
+  StickyNote,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -87,6 +93,147 @@ type LeadApiResponse = {
 };
 
 const PIPELINE: LeadStatus[] = ["new", "contacted", "qualified", "prospect", "customer", "lost"];
+
+const ACTIVITY_ICON: Record<string, typeof Phone> = {
+  call: Phone,
+  note: FileText,
+  followup: Bell,
+  task: ClipboardList,
+  edit: Edit,
+};
+
+/* ------------------------------------------------------------------------ */
+/* Shared approval badge — same visual language as the carriers/loads pages */
+/* ------------------------------------------------------------------------ */
+
+function ApprovalStatusBadge({ status }: { status?: string }) {
+  if (!status) return null;
+  if (status === "rejected") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+        Rejected
+      </span>
+    );
+  }
+  if (status === "changes_requested") {
+    return (
+      <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+        Changes Requested
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+      Pending Approval
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------------ */
+/* Read-only detail primitives — mirrors the carriers/loads pages so every  */
+/* detail sheet in the app feels the same: bordered cards with icon         */
+/* headers, key/value grids, and pills for list-like values.                */
+/* ------------------------------------------------------------------------ */
+
+function DetailSection({
+  icon,
+  title,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {icon}
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function DetailGrid({ children }: { children: ReactNode }) {
+  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
+}
+
+function DetailRow({
+  label,
+  value,
+  mono,
+  span2,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  mono?: boolean;
+  span2?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <div className={span2 ? "sm:col-span-2" : undefined}>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-0.5 flex items-start gap-1.5 ${mono ? "font-mono text-xs" : "text-sm"}`}>
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <span>{value || "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Compact pipeline progress bar for the leads table row — quick visual read of stage. */
+function PipelineProgress({ status }: { status: LeadStatus }) {
+  const idx = PIPELINE.indexOf(status);
+  const isLost = status === "lost";
+  return (
+    <div className="flex w-28 items-center gap-1.5">
+      <div className="flex h-1.5 flex-1 gap-0.5">
+        {PIPELINE.filter((s) => s !== "lost").map((s, i) => (
+          <span
+            key={s}
+            className={`h-full flex-1 rounded-full ${
+              isLost ? "bg-destructive/40" : i <= idx ? "bg-primary" : "bg-muted"
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-[10px] text-muted-foreground">
+        {isLost ? "Lost" : `${idx + 1}/${PIPELINE.length - 1}`}
+      </span>
+    </div>
+  );
+}
+
+/** Full pipeline stepper used inside the detail sheet. */
+function PipelineStepper({ status }: { status: LeadStatus }) {
+  const idx = PIPELINE.indexOf(status);
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {PIPELINE.map((s) => {
+        const reached = status !== "lost" && PIPELINE.indexOf(s) <= idx && s !== "lost";
+        const isCurrent = s === status;
+        return (
+          <span
+            key={s}
+            className={`rounded-md border px-2 py-1 text-xs capitalize ${
+              isCurrent && s === "lost"
+                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                : reached
+                  ? "border-primary/40 bg-primary/10 text-foreground"
+                  : "border-border text-muted-foreground"
+            } ${isCurrent ? "font-semibold" : ""}`}
+          >
+            {s}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 function LeadsPage() {
   const { session } = useAuth();
@@ -502,89 +649,72 @@ function LeadsPage() {
             </SelectContent>
           </Select>
         )}
+        <span className="ml-auto text-xs text-muted-foreground">
+          {filtered.length} {filtered.length === 1 ? "lead" : "leads"}
+        </span>
       </div>
 
-      <DataTable
-        empty={
-          <EmptyState
-            icon={<ClipboardList className="size-6" />}
-            title="No leads match your filters"
-            description="Try clearing filters or create a new lead."
-          />
-        }
-        rows={filtered}
-        columns={[
-          {
-            head: "Company",
-            cell: (l) => (
-              <div>
-                <span className="font-medium">{l.company}</span>
-                {l.pendingApproval && (
-                  <span
-                    className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                      l.approvalStatus === "rejected"
-                        ? "bg-red-100 text-red-800"
-                        : l.approvalStatus === "changes_requested"
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {l.approvalStatus === "changes_requested"
-                      ? "Changes Requested"
-                      : l.approvalStatus === "rejected"
-                        ? "Rejected"
-                        : "Pending Approval"}
-                  </span>
-                )}
-              </div>
-            ),
-          },
-          {
-            head: "Contact",
-            cell: (l) => (
-              <div>
-                <div className="text-sm">{l.contact}</div>
-                <div className="text-xs text-muted-foreground">{l.email}</div>
-              </div>
-            ),
-          },
-          { head: "Phone", cell: (l) => <span className="font-mono text-xs">{l.phone}</span> },
-          { head: "Status", cell: (l) => <StatusBadge value={l.status} /> },
-          { head: "Agent", cell: (l) => <span className="text-sm">{l.agentName}</span> },
-          {
-            head: "Last activity",
-            cell: (l) => (
-              <span className="text-xs text-muted-foreground">{relative(l.lastActivity)}</span>
-            ),
-          },
-        ]}
-        onRowClick={(l) => setOpenId(l.id)}
-      />
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <DataTable
+          empty={
+            <EmptyState
+              icon={<ClipboardList className="size-6" />}
+              title="No leads match your filters"
+              description="Try clearing filters or create a new lead."
+            />
+          }
+          rows={filtered}
+          columns={[
+            {
+              head: "Company",
+              cell: (l) => (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{l.company}</span>
+                  {l.pendingApproval && <ApprovalStatusBadge status={l.approvalStatus} />}
+                </div>
+              ),
+            },
+            {
+              head: "Contact",
+              cell: (l) => (
+                <div>
+                  <div className="text-sm">{l.contact}</div>
+                  <div className="text-xs text-muted-foreground">{l.email}</div>
+                </div>
+              ),
+            },
+            { head: "Phone", cell: (l) => <span className="font-mono text-xs">{l.phone}</span> },
+            { head: "Status", cell: (l) => <StatusBadge value={l.status} /> },
+            { head: "Pipeline", cell: (l) => <PipelineProgress status={l.status} /> },
+            { head: "Agent", cell: (l) => <span className="text-sm">{l.agentName}</span> },
+            {
+              head: "Last activity",
+              cell: (l) => (
+                <span className="text-xs text-muted-foreground">{relative(l.lastActivity)}</span>
+              ),
+            },
+          ]}
+          onRowClick={(l) => setOpenId(l.id)}
+        />
+      </div>
 
       <Sheet open={!!open} onOpenChange={(v) => !v && setOpenId(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+        <SheetContent className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-xl">
           {open && (
             <>
-              <SheetHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <SheetTitle>{editing ? "Edit lead" : open.company}</SheetTitle>
-                    {open.pendingApproval && (
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                          open.approvalStatus === "rejected"
-                            ? "bg-red-100 text-red-800"
-                            : open.approvalStatus === "changes_requested"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {open.approvalStatus === "changes_requested"
-                          ? "Changes Requested"
-                          : open.approvalStatus === "rejected"
-                            ? "Rejected"
-                            : "Pending Approval"}
-                      </span>
+              <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SheetTitle>{editing ? "Edit lead" : open.company}</SheetTitle>
+                      {open.pendingApproval && <ApprovalStatusBadge status={open.approvalStatus} />}
+                    </div>
+                    {!editing && (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span>{open.contact}</span>
+                        <span>·</span>
+                        <span>Agent {open.agentName}</span>
+                      </div>
                     )}
                   </div>
                   {!editing && !open.pendingApproval && (
@@ -618,209 +748,309 @@ function LeadsPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Quick-glance summary strip — key facts visible without opening a tab */}
+                {!editing && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Status
+                      </div>
+                      <div className="mt-0.5">
+                        <StatusBadge value={open.status} />
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Pipeline
+                      </div>
+                      <div className="mt-0.5 text-sm font-medium">
+                        {open.status === "lost"
+                          ? "Lost"
+                          : `${PIPELINE.indexOf(open.status) + 1} / ${PIPELINE.length - 1}`}
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Activities
+                      </div>
+                      <div className="mt-0.5 text-sm font-medium">{open.activities.length}</div>
+                    </div>
+                    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Last activity
+                      </div>
+                      <div className="mt-0.5 text-sm font-medium">
+                        {relative(open.lastActivity)}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </SheetHeader>
-              <div className="mt-4 space-y-4 px-4 pb-6">
+
+              <div className="flex-1 overflow-y-auto px-6 py-5">
                 {editing ? (
-                  <form className="space-y-3" onSubmit={updateLead}>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-company">Company</Label>
-                      <Input
-                        id="edit-company"
-                        value={editForm.company}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, company: e.target.value }))
-                        }
-                        placeholder="Company name"
-                        required
-                      />
+                  <form className="space-y-4" onSubmit={updateLead}>
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <Building2 className="size-4 text-muted-foreground" /> Company & contact
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <Label htmlFor="edit-company">Company</Label>
+                          <Input
+                            id="edit-company"
+                            value={editForm.company}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, company: e.target.value }))
+                            }
+                            placeholder="Company name"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-contact">Contact</Label>
+                          <Input
+                            id="edit-contact"
+                            value={editForm.contact}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, contact: e.target.value }))
+                            }
+                            placeholder="Contact name"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-status">Status</Label>
+                          <Select
+                            value={editForm.status}
+                            onValueChange={(value) =>
+                              setEditForm((prev) => ({ ...prev, status: value as LeadStatus }))
+                            }
+                          >
+                            <SelectTrigger id="edit-status">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PIPELINE.map((status) => (
+                                <SelectItem key={status} value={status}>
+                                  {status}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-email">Email</Label>
+                          <Input
+                            id="edit-email"
+                            type="email"
+                            value={editForm.email}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, email: e.target.value }))
+                            }
+                            placeholder="name@email.com"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-phone">Phone</Label>
+                          <Input
+                            id="edit-phone"
+                            value={editForm.phone}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, phone: e.target.value }))
+                            }
+                            placeholder="(555) 000-0000"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-contact">Contact</Label>
-                      <Input
-                        id="edit-contact"
-                        value={editForm.contact}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, contact: e.target.value }))
-                        }
-                        placeholder="Contact name"
-                        required
-                      />
+
+                    <div className="rounded-xl border border-border/70 bg-card/60 p-4 shadow-sm">
+                      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+                        <StickyNote className="size-4 text-muted-foreground" /> Notes
+                      </div>
+                      <div className="grid gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-notes">Notes</Label>
+                          <Textarea
+                            id="edit-notes"
+                            value={editForm.notes}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, notes: e.target.value }))
+                            }
+                            placeholder="What else should the team know?"
+                            rows={3}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-shippingNotes">Shipping notes</Label>
+                          <Textarea
+                            id="edit-shippingNotes"
+                            value={editForm.shippingNotes}
+                            onChange={(e) =>
+                              setEditForm((prev) => ({ ...prev, shippingNotes: e.target.value }))
+                            }
+                            placeholder="Lane, equipment, or urgency details"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-email">Email</Label>
-                      <Input
-                        id="edit-email"
-                        type="email"
-                        value={editForm.email}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, email: e.target.value }))
-                        }
-                        placeholder="name@email.com"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-phone">Phone</Label>
-                      <Input
-                        id="edit-phone"
-                        value={editForm.phone}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, phone: e.target.value }))
-                        }
-                        placeholder="(555) 000-0000"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-status">Status</Label>
-                      <Select
-                        value={editForm.status}
-                        onValueChange={(value) =>
-                          setEditForm((prev) => ({ ...prev, status: value as LeadStatus }))
-                        }
-                      >
-                        <SelectTrigger id="edit-status">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PIPELINE.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-notes">Notes</Label>
-                      <Textarea
-                        id="edit-notes"
-                        value={editForm.notes}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, notes: e.target.value }))
-                        }
-                        placeholder="What else should the team know?"
-                        rows={2}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="edit-shippingNotes">Shipping notes</Label>
-                      <Textarea
-                        id="edit-shippingNotes"
-                        value={editForm.shippingNotes}
-                        onChange={(e) =>
-                          setEditForm((prev) => ({ ...prev, shippingNotes: e.target.value }))
-                        }
-                        placeholder="Lane, equipment, or urgency details"
-                        rows={2}
-                      />
-                    </div>
-                    <div className="flex justify-between gap-2">
-                      <Button type="button" variant="outline" onClick={() => setEditing(false)}>
-                        Cancel
-                      </Button>
+
+                    <div className="sticky bottom-0 -mx-6 flex flex-wrap items-center gap-2 border-t border-border bg-background/95 px-6 py-4 backdrop-blur">
                       <Button type="submit" disabled={updating}>
                         {updating ? "Saving…" : "Save changes"}
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setEditing(false)}>
+                        Cancel
                       </Button>
                     </div>
                   </form>
                 ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <Field label="Contact" value={open.contact} />
-                      <Field label="Email" value={open.email} mono />
-                      <Field label="Phone" value={open.phone} mono />
-                      <Field label="Status" value={<StatusBadge value={open.status} />} />
-                      <Field label="Assigned agent" value={open.agentName} />
-                      <Field label="Last activity" value={relative(open.lastActivity)} />
-                    </div>
+                  <Tabs defaultValue="overview">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="activity">Activity</TabsTrigger>
+                    </TabsList>
 
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Pipeline
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {PIPELINE.map((s) => (
-                          <span
-                            key={s}
-                            className={`rounded-md border px-2 py-1 text-xs ${
-                              PIPELINE.indexOf(open.status) >= PIPELINE.indexOf(s)
-                                ? "border-primary/40 bg-primary/10 text-foreground"
-                                : "border-border text-muted-foreground"
-                            }`}
-                          >
-                            {s}
+                    {/* ---------------------------------------------------------- */}
+                    {/* Overview — contact info, pipeline, notes, then approval     */}
+                    {/* comments, matching the carriers/loads sectioned layout.     */}
+                    {/* ---------------------------------------------------------- */}
+                    <TabsContent value="overview" className="space-y-4 pt-4">
+                      <DetailSection icon={<User className="size-4" />} title="Contact">
+                        <DetailGrid>
+                          <DetailRow label="Contact" value={open.contact} />
+                          <DetailRow label="Assigned agent" value={open.agentName} />
+                          <DetailRow
+                            label="Email"
+                            value={open.email}
+                            icon={<Mail className="size-3.5" />}
+                            mono
+                          />
+                          <DetailRow
+                            label="Phone"
+                            value={open.phone}
+                            icon={<Phone className="size-3.5" />}
+                            mono
+                          />
+                        </DetailGrid>
+                      </DetailSection>
+
+                      <DetailSection icon={<ClipboardList className="size-4" />} title="Pipeline">
+                        <div className="flex items-center justify-between gap-3">
+                          <PipelineStepper status={open.status} />
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            Last activity {relative(open.lastActivity)}
                           </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Notes
-                      </div>
-                      <p className="mt-1 text-sm">{open.notes}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Shipping: {open.shippingNotes}
-                      </p>
-                    </div>
-
-                    {open.pendingApproval && open.comments?.length > 0 && (
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                          Approval comments
                         </div>
-                        <ul className="mt-2 space-y-2">
-                          {open.comments.map((comment, index) => (
-                            <li
-                              key={index}
-                              className="rounded-md border border-border bg-card/50 p-3 text-sm"
-                            >
-                              <div className="text-xs text-muted-foreground">
-                                {comment.by} · {relative(comment.at)}
-                              </div>
-                              <div className="mt-1">{comment.body}</div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                      </DetailSection>
 
-                    <Tabs defaultValue="add">
-                      <TabsList className="grid grid-cols-2">
-                        <TabsTrigger value="add">Add activity</TabsTrigger>
-                        <TabsTrigger value="timeline">Timeline</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="add" className="space-y-3">
+                      <DetailSection icon={<StickyNote className="size-4" />} title="Notes">
+                        <div className="space-y-3">
+                          <div>
+                            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Notes
+                            </div>
+                            <p className="mt-0.5 whitespace-pre-wrap text-sm">
+                              {open.notes || "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              Shipping notes
+                            </div>
+                            <p className="mt-0.5 whitespace-pre-wrap text-sm">
+                              {open.shippingNotes || "—"}
+                            </p>
+                          </div>
+                        </div>
+                      </DetailSection>
+
+                      {open.pendingApproval && open.comments && open.comments.length > 0 && (
+                        <DetailSection
+                          icon={<MessageSquare className="size-4" />}
+                          title="Approval comments"
+                        >
+                          <div className="overflow-x-auto rounded-md border border-border">
+                            <table className="w-full min-w-[420px] text-sm">
+                              <thead>
+                                <tr className="border-b border-border bg-muted/50 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                  <th className="px-3 py-2">Date</th>
+                                  <th className="px-3 py-2">By</th>
+                                  <th className="px-3 py-2">Comment</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {open.comments.map((comment, index) => (
+                                  <tr
+                                    key={index}
+                                    className={`border-b border-border last:border-b-0 align-top ${
+                                      index % 2 === 0 ? "bg-background" : "bg-card/60"
+                                    }`}
+                                  >
+                                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                                      {relative(comment.at)}
+                                    </td>
+                                    <td className="px-3 py-2 font-medium">{comment.by}</td>
+                                    <td className="px-3 py-2">{comment.body}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </DetailSection>
+                      )}
+                    </TabsContent>
+
+                    {/* ---------------------------------------------------------- */}
+                    {/* Activity — add form + timeline, each in its own section     */}
+                    {/* ---------------------------------------------------------- */}
+                    <TabsContent value="activity" className="space-y-4 pt-4">
+                      <DetailSection icon={<Plus className="size-4" />} title="Log activity">
                         <AddActivityForm onAdd={addActivity} disabled={role === "trainee"} />
-                      </TabsContent>
-                      <TabsContent value="timeline">
-                        <ul className="space-y-3 pt-2">
-                          {open.activities.map((a) => (
-                            <li
-                              key={a.id}
-                              className="rounded-md border border-border bg-card/50 p-3"
-                            >
-                              <div className="flex items-center justify-between">
-                                <StatusBadge value={a.kind} tone="info" />
-                                <span className="text-[10px] text-muted-foreground">
-                                  {relative(a.at)}
-                                </span>
-                              </div>
-                              <p className="mt-1.5 text-sm">{a.body}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {a.kind === "edit" ? (
-                                  <>
-                                    by {a.by} (lead owner: {open.agentName})
-                                  </>
-                                ) : (
-                                  <>by {a.by}</>
-                                )}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </TabsContent>
-                    </Tabs>
-                  </>
+                      </DetailSection>
+
+                      <DetailSection icon={<Clock className="size-4" />} title="Timeline">
+                        {open.activities.length > 0 ? (
+                          <ul className="space-y-2.5">
+                            {open.activities.map((a) => {
+                              const Icon = ACTIVITY_ICON[a.kind] ?? FileText;
+                              return (
+                                <li
+                                  key={a.id}
+                                  className="rounded-md border border-border bg-card/50 p-3"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                      <Icon className="size-3" />
+                                      {a.kind}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">
+                                      {relative(a.at)}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1.5 whitespace-pre-wrap text-sm">{a.body}</p>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {a.kind === "edit" ? (
+                                      <>
+                                        by {a.by} (lead owner: {open.agentName})
+                                      </>
+                                    ) : (
+                                      <>by {a.by}</>
+                                    )}
+                                  </p>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">No activity logged yet.</p>
+                        )}
+                      </DetailSection>
+                    </TabsContent>
+                  </Tabs>
                 )}
               </div>
             </>
@@ -841,7 +1071,7 @@ function AddActivityForm({
   const [kind, setKind] = useState<"call" | "note" | "followup" | "task">("note");
   const [body, setBody] = useState("");
   return (
-    <div className="space-y-2 pt-2">
+    <div className="space-y-2">
       <div className="flex flex-wrap gap-1.5">
         {(["call", "note", "followup", "task"] as const).map((k) => (
           <Button
@@ -883,17 +1113,6 @@ function AddActivityForm({
         </Button>
       </div>
       {disabled && <p className="text-xs text-muted-foreground">Read-only — trainee role.</p>}
-    </div>
-  );
-}
-
-function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
-  return (
-    <div>
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={`mt-0.5 ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
     </div>
   );
 }
