@@ -17,7 +17,7 @@ Do not oversimplify logic. Maintain production-level quality, validation, and er
 
 PROJECT NAME
 
-DJ's Freight Broker LLC — Secure Agent Portal (Backend)
+TMS Freight Portal — Secure Agent Portal (Backend)
 
 ---
 

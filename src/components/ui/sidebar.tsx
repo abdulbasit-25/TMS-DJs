@@ -850,7 +850,7 @@ SidebarMenuSubButton.displayName = "SidebarMenuSubButton";
 const DELETION_ROUTE = "/admin/data-deletion";
 
 export function SidebarBrand({
-  name = "DJ's Freight Broker LLC",
+  name = "TMS Freight Portal",
   subtitle = "Secure Agent Portal · TMS",
   icon,
   href = "/dashboard",

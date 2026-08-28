@@ -99,7 +99,7 @@ const TILES: Array<{
 ];
 
 const SETTINGS_ROWS = [
-  { icon: Building2, label: "Company name", value: "DJ's Freight Broker LLC" },
+  { icon: Building2, label: "Company name", value: "TMS Freight Portal" },
   { icon: Mail, label: "Support email", value: "ops@djfreight.example" },
   { icon: Clock, label: "Default time zone", value: "America/Chicago" },
   { icon: Timer, label: "Session timeout", value: "30 minutes" },

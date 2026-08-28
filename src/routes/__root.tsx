@@ -77,19 +77,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DJ's Freight Broker LLC | Secure Agent Portal" },
+      { title: "TMS Freight Portal | Secure Agent Portal" },
       {
         name: "description",
-        content: "Secure internal portal for DJ's Freight Broker LLC agents and operations staff.",
+        content: "Secure internal portal for TMS Freight Portal agents and operations staff.",
       },
       {
         name: "keywords",
         content: "freight broker, logistics, dispatch, loads, carriers, trucking",
       },
-      { name: "author", content: "DJ's Freight Broker LLC" },
+      { name: "author", content: "TMS Freight Portal" },
       { name: "robots", content: "noindex,nofollow" },
       { name: "theme-color", content: "#0F172A" },
-      { property: "og:title", content: "DJ's Freight Broker LLC | Secure Agent Portal" },
+      { property: "og:title", content: "TMS Freight Portal | Secure Agent Portal" },
       {
         property: "og:description",
         content: "Internal operations portal for authorized personnel.",
@@ -99,11 +99,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: "https://djs-portal-tms.vercel.app/og-image.jpg" },
       {
         property: "og:image:alt",
-        content: "DJ's Freight Broker LLC secure employee portal preview",
+        content: "TMS Freight Portal secure employee portal preview",
       },
-      { property: "og:site_name", content: "DJ's Freight Broker LLC" },
+      { property: "og:site_name", content: "TMS Freight Portal" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "DJ's Freight Broker LLC | Secure Agent Portal" },
+      { name: "twitter:title", content: "TMS Freight Portal | Secure Agent Portal" },
       {
         name: "twitter:description",
         content: "Internal operations portal for authorized personnel.",
@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://djs-portal-tms.vercel.app/og-image.jpg" },
       {
         name: "twitter:image:alt",
-        content: "DJ's Freight Broker LLC secure employee portal preview",
+        content: "TMS Freight Portal secure employee portal preview",
       },
       { name: "application-name", content: "DJ's Freight Portal" },
     ],
