@@ -21,6 +21,7 @@ import { Route as AppAdminRouteImport } from './routes/_app.admin'
 import { Route as AppApprovalsRouteImport } from './routes/_app.approvals'
 import { Route as AppAuditRouteImport } from './routes/_app.audit'
 import { Route as AppCarriersRouteImport } from './routes/_app.carriers'
+import { Route as AppCarrierscopyRouteImport } from './routes/_app.carriers copy'
 import { Route as AppCommissionsRouteImport } from './routes/_app.commissions'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -95,6 +96,11 @@ const AppAuditRoute = AppAuditRouteImport.update({
 const AppCarriersRoute = AppCarriersRouteImport.update({
   id: '/carriers',
   path: '/carriers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCarrierscopyRoute = AppCarrierscopyRouteImport.update({
+  id: '/carriers copy',
+  path: '/carriers copy',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCommissionsRoute = AppCommissionsRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof AppApprovalsRoute
   '/audit': typeof AppAuditRoute
   '/carriers': typeof AppCarriersRoute
+  '/carriers copy': typeof AppCarrierscopyRoute
   '/commissions': typeof AppCommissionsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof AppApprovalsRoute
   '/audit': typeof AppAuditRoute
   '/carriers': typeof AppCarriersRoute
+  '/carriers copy': typeof AppCarrierscopyRoute
   '/commissions': typeof AppCommissionsRoute
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/_app/approvals': typeof AppApprovalsRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/carriers': typeof AppCarriersRoute
+  '/_app/carriers copy': typeof AppCarrierscopyRoute
   '/_app/commissions': typeof AppCommissionsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/audit'
     | '/carriers'
+    | '/carriers copy'
     | '/commissions'
     | '/customers'
     | '/dashboard'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/audit'
     | '/carriers'
+    | '/carriers copy'
     | '/commissions'
     | '/customers'
     | '/dashboard'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/_app/approvals'
     | '/_app/audit'
     | '/_app/carriers'
+    | '/_app/carriers copy'
     | '/_app/commissions'
     | '/_app/customers'
     | '/_app/dashboard'
@@ -452,6 +464,13 @@ declare module '@tanstack/react-router' {
       path: '/carriers'
       fullPath: '/carriers'
       preLoaderRoute: typeof AppCarriersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/carriers copy': {
+      id: '/_app/carriers copy'
+      path: '/carriers copy'
+      fullPath: '/carriers copy'
+      preLoaderRoute: typeof AppCarrierscopyRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/commissions': {
@@ -587,6 +606,7 @@ interface AppRouteChildren {
   AppApprovalsRoute: typeof AppApprovalsRoute
   AppAuditRoute: typeof AppAuditRoute
   AppCarriersRoute: typeof AppCarriersRoute
+  AppCarrierscopyRoute: typeof AppCarrierscopyRoute
   AppCommissionsRoute: typeof AppCommissionsRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -610,6 +630,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppApprovalsRoute: AppApprovalsRoute,
   AppAuditRoute: AppAuditRoute,
   AppCarriersRoute: AppCarriersRoute,
+  AppCarrierscopyRoute: AppCarrierscopyRoute,
   AppCommissionsRoute: AppCommissionsRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
