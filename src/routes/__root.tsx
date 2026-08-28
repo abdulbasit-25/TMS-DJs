@@ -1,4 +1,3 @@
-```tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -20,9 +19,7 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
 
-        <h2 className="mt-4 text-xl font-semibold text-foreground">
-          Page not found
-        </h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
 
         <p className="mt-2 text-sm text-muted-foreground">
           The page you're looking for doesn't exist or has been moved.
@@ -41,13 +38,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({
-  error,
-  reset,
-}: {
-  error: Error;
-  reset: () => void;
-}) {
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
 
   const router = useRouter();
@@ -66,8 +57,7 @@ function ErrorComponent({
         </h1>
 
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back
-          home.
+          Something went wrong on our end. You can try refreshing or head back home.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -103,184 +93,176 @@ function ErrorComponent({
  * settings request is loading or unavailable.
  */
 function DynamicDocumentTitle() {
-  const { data: settings } = usePortalSettings();
+  const { companyName } = usePortalSettings();
 
   useEffect(() => {
-    const companyName = settings?.companyName?.trim();
+    const trimmedCompanyName = companyName.trim();
 
-    if (companyName) {
-      document.title = `${companyName} | Secure Agent Portal`;
+    if (trimmedCompanyName) {
+      document.title = `${trimmedCompanyName} | Secure Agent Portal`;
     } else {
       document.title = "TMS Freight Portal | Secure Agent Portal";
     }
-  }, [settings?.companyName]);
+  }, [companyName]);
 
   return null;
 }
 
-export const Route =
-  createRootRouteWithContext<{ queryClient: QueryClient }>()({
-    head: () => ({
-      meta: [
-        {
-          charSet: "utf-8",
-        },
-        {
-          name: "viewport",
-          content: "width=device-width, initial-scale=1",
-        },
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  head: () => ({
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
+      },
 
-        /*
-         * Static fallback.
-         *
-         * DynamicDocumentTitle updates document.title after the persisted
-         * portal settings have loaded.
-         */
-        {
-          title: "TMS Freight Portal | Secure Agent Portal",
-        },
+      /*
+       * Static fallback.
+       *
+       * DynamicDocumentTitle updates document.title after the persisted
+       * portal settings have loaded.
+       */
+      {
+        title: "TMS Freight Portal | Secure Agent Portal",
+      },
 
-        {
-          name: "description",
-          content:
-            "Secure internal portal for freight agents and operations staff.",
-        },
+      {
+        name: "description",
+        content: "Secure internal portal for freight agents and operations staff.",
+      },
 
-        {
-          name: "keywords",
-          content:
-            "freight broker, logistics, dispatch, loads, carriers, trucking",
-        },
+      {
+        name: "keywords",
+        content: "freight broker, logistics, dispatch, loads, carriers, trucking",
+      },
 
-        {
-          name: "author",
-          content: "TMS Freight Portal",
-        },
+      {
+        name: "author",
+        content: "TMS Freight Portal",
+      },
 
-        {
-          name: "robots",
-          content: "noindex,nofollow",
-        },
+      {
+        name: "robots",
+        content: "noindex,nofollow",
+      },
 
-        {
-          name: "theme-color",
-          content: "#0F172A",
-        },
+      {
+        name: "theme-color",
+        content: "#0F172A",
+      },
 
-        {
-          property: "og:title",
-          content: "TMS Freight Portal | Secure Agent Portal",
-        },
+      {
+        property: "og:title",
+        content: "TMS Freight Portal | Secure Agent Portal",
+      },
 
-        {
-          property: "og:description",
-          content:
-            "Internal operations portal for authorized personnel.",
-        },
+      {
+        property: "og:description",
+        content: "Internal operations portal for authorized personnel.",
+      },
 
-        {
-          property: "og:type",
-          content: "website",
-        },
+      {
+        property: "og:type",
+        content: "website",
+      },
 
-        {
-          property: "og:url",
-          content: "https://djs-portal.vercel.app",
-        },
+      {
+        property: "og:url",
+        content: "https://djs-portal.vercel.app",
+      },
 
-        {
-          property: "og:image",
-          content: "https://djs-portal-tms.vercel.app/og-image.jpg",
-        },
+      {
+        property: "og:image",
+        content: "https://djs-portal-tms.vercel.app/og-image.jpg",
+      },
 
-        {
-          property: "og:image:alt",
-          content:
-            "TMS Freight Portal secure employee portal preview",
-        },
+      {
+        property: "og:image:alt",
+        content: "TMS Freight Portal secure employee portal preview",
+      },
 
-        {
-          property: "og:site_name",
-          content: "TMS Freight Portal",
-        },
+      {
+        property: "og:site_name",
+        content: "TMS Freight Portal",
+      },
 
-        {
-          name: "twitter:card",
-          content: "summary_large_image",
-        },
+      {
+        name: "twitter:card",
+        content: "summary_large_image",
+      },
 
-        {
-          name: "twitter:title",
-          content: "TMS Freight Portal | Secure Agent Portal",
-        },
+      {
+        name: "twitter:title",
+        content: "TMS Freight Portal | Secure Agent Portal",
+      },
 
-        {
-          name: "twitter:description",
-          content:
-            "Internal operations portal for authorized personnel.",
-        },
+      {
+        name: "twitter:description",
+        content: "Internal operations portal for authorized personnel.",
+      },
 
-        {
-          name: "twitter:image",
-          content:
-            "https://djs-portal-tms.vercel.app/og-image.jpg",
-        },
+      {
+        name: "twitter:image",
+        content: "https://djs-portal-tms.vercel.app/og-image.jpg",
+      },
 
-        {
-          name: "twitter:image:alt",
-          content:
-            "TMS Freight Portal secure employee portal preview",
-        },
+      {
+        name: "twitter:image:alt",
+        content: "TMS Freight Portal secure employee portal preview",
+      },
 
-        {
-          name: "application-name",
-          content: "DJ's Freight Portal",
-        },
-      ],
+      {
+        name: "application-name",
+        content: "DJ's Freight Portal",
+      },
+    ],
 
-      links: [
-        {
-          rel: "icon",
-          href: "/favicon_io/favicon.ico",
-          sizes: "any",
-        },
+    links: [
+      {
+        rel: "icon",
+        href: "/favicon_io/favicon.ico",
+        sizes: "any",
+      },
 
-        {
-          rel: "icon",
-          type: "image/png",
-          href: "/favicon_io/favicon-32x32.png",
-          sizes: "32x32",
-        },
+      {
+        rel: "icon",
+        type: "image/png",
+        href: "/favicon_io/favicon-32x32.png",
+        sizes: "32x32",
+      },
 
-        {
-          rel: "icon",
-          type: "image/png",
-          href: "/favicon_io/favicon-16x16.png",
-          sizes: "16x16",
-        },
+      {
+        rel: "icon",
+        type: "image/png",
+        href: "/favicon_io/favicon-16x16.png",
+        sizes: "16x16",
+      },
 
-        {
-          rel: "apple-touch-icon",
-          href: "/favicon_io/apple-touch-icon.png",
-        },
+      {
+        rel: "apple-touch-icon",
+        href: "/favicon_io/apple-touch-icon.png",
+      },
 
-        {
-          rel: "manifest",
-          href: "/favicon_io/site.webmanifest",
-        },
+      {
+        rel: "manifest",
+        href: "/favicon_io/site.webmanifest",
+      },
 
-        {
-          rel: "stylesheet",
-          href: appCss,
-        },
-      ],
-    }),
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+    ],
+  }),
 
-    shellComponent: RootShell,
-    component: RootComponent,
-    notFoundComponent: NotFoundComponent,
-    errorComponent: ErrorComponent,
-  });
+  shellComponent: RootShell,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent,
+});
 
 function RootShell({ children }: { children: ReactNode }) {
   const themeInit = `
@@ -334,4 +316,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-```
