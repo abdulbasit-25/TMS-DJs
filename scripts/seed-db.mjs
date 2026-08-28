@@ -294,6 +294,13 @@ async function seed() {
       password: "Welcome2026!A1",
     },
     {
+      name: "Agent Two",
+      email: "agent.two@djfreight.com",
+      role: "agent",
+      status: "active",
+      password: "Welcome2026!A1",
+    },
+    {
       name: "Trainee One",
       email: "trainee.one@djfreight.com",
       role: "trainee",
