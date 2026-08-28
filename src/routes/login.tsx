@@ -231,7 +231,7 @@ function BrandLogo({ glow = false }: { glow?: boolean }) {
 function CompanyLink({ className }: { className?: string }) {
   return (
     <a href={COMPANY_URL} target="_blank" rel="noopener noreferrer" className={className}>
-      Visit ARCHER
+      ARCHER
       <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
     </a>
   );
