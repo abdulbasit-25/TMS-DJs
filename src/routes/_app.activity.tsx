@@ -18,6 +18,10 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
+  Save,
+  Timer,
+  Minus,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -30,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/activity")({ component: ActivityPage });
 
@@ -59,6 +64,33 @@ type DailyLogRow = {
   sessions?: DailySessionRow[];
 };
 
+function sessionDuration(inAt?: string, outAt?: string): string {
+  if (!inAt) return "—";
+  const start = new Date(inAt).getTime();
+  const end = outAt ? new Date(outAt).getTime() : Date.now();
+  const mins = Math.floor((end - start) / 60_000);
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+function totalDayDuration(log: DailyLogRow): string {
+  const sessions = log.sessions?.length
+    ? log.sessions
+    : [{ checkedInAt: log.checkedInAt, checkedOutAt: log.checkedOutAt }];
+  let totalMin = 0;
+  for (const s of sessions) {
+    if (!s.checkedInAt) continue;
+    const end = s.checkedOutAt ? new Date(s.checkedOutAt).getTime() : Date.now();
+    totalMin += Math.floor((end - new Date(s.checkedInAt).getTime()) / 60_000);
+  }
+  if (totalMin < 60) return `${totalMin}m`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
 function ActivityPage() {
   const { session, clockedIn, setClockedIn } = useAuth();
   const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
@@ -71,480 +103,419 @@ function ActivityPage() {
   const [checkinModalOpen, setCheckinModalOpen] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
-  // Which history days are expanded to show full per-session detail. Collapsed
-  // by default so a long history doesn't dump every session for every day at once.
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
-  const hasHydratedFromServerRef = useRef(false);
-  const hasUserEditedRef = useRef(false);
+  const hasHydratedRef = useRef(false);
+  const hasEditedRef = useRef(false);
   const isCheckedIn = Boolean(checkedInAt) || clockedIn;
-  const canSeeTeammateNames = Boolean(
+  const canSeeNames = Boolean(
     session?.role && ["admin", "ops_manager", "team_manager"].includes(session.role),
   );
-  const parsedCalls = Number(callsInput) || 0;
-  const parsedFollowups = Number(followupsInput) || 0;
-  const hasMissingCheckoutInfo = parsedCalls <= 0 || parsedFollowups <= 0 || !notes.trim();
+  const calls = Number(callsInput) || 0;
+  const followups = Number(followupsInput) || 0;
 
   useEffect(() => {
     if (!isCheckedIn) {
       setElapsedSeconds(0);
       return;
     }
-
-    const startTime = checkedInAt ? new Date(checkedInAt).getTime() : Date.now();
-    const updateElapsed = () => {
-      const now = Date.now();
-      setElapsedSeconds(Math.max(0, Math.floor((now - startTime) / 1000)));
-    };
-
-    updateElapsed();
-    const intervalId = window.setInterval(updateElapsed, 1000);
-
-    return () => window.clearInterval(intervalId);
+    const t0 = checkedInAt ? new Date(checkedInAt).getTime() : Date.now();
+    const tick = () => setElapsedSeconds(Math.max(0, Math.floor((Date.now() - t0) / 1000)));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, [checkedInAt, isCheckedIn]);
 
   useEffect(() => {
-    let active = true;
-
-    async function loadHistory() {
+    let alive = true;
+    (async () => {
       try {
-        const payload = await apiFetch<{ logs: DailyLogRow[] }>("/api/activity/logs", {
-          method: "GET",
-        });
-        if (!active) return;
-
-        setHistory(payload.data.logs);
+        const { data } = await apiFetch<{ logs: DailyLogRow[] }>("/api/activity/logs");
+        if (!alive) return;
+        setHistory(data.logs);
         const today = new Date().toISOString().slice(0, 10);
-        const currentLog =
-          payload.data.logs.find((log) => log.date === today) ?? payload.data.logs[0];
-        const activeSession = currentLog?.sessions
+        const cur = data.logs.find((l) => l.date === today) ?? data.logs[0];
+        const active = cur?.sessions
           ?.slice()
           .reverse()
-          .find((session) => session.clockStatus === "checked_in");
-
-        if (!hasHydratedFromServerRef.current || !hasUserEditedRef.current) {
-          if (currentLog?.clockStatus === "checked_in") {
-            setCheckedInAt(currentLog.checkedInAt ?? null);
+          .find((s) => s.clockStatus === "checked_in");
+        if (!hasHydratedRef.current || !hasEditedRef.current) {
+          if (cur?.clockStatus === "checked_in") {
+            setCheckedInAt(cur.checkedInAt ?? null);
             setCheckedOutAt(null);
-            setCallsInput(String(activeSession?.calls ?? currentLog.calls ?? 0));
-            setFollowupsInput(String(activeSession?.followups ?? currentLog.followups ?? 0));
-            setNotes(activeSession?.notes ?? currentLog.notes ?? "");
+            setCallsInput(String(active?.calls ?? cur.calls ?? 0));
+            setFollowupsInput(String(active?.followups ?? cur.followups ?? 0));
+            setNotes(active?.notes ?? cur.notes ?? "");
             setClockedIn(true);
           } else {
             setCheckedInAt(null);
-            setCheckedOutAt(currentLog?.checkedOutAt ?? null);
-            setCallsInput(String(currentLog?.calls ?? 0));
-            setFollowupsInput(String(currentLog?.followups ?? 0));
-            setNotes(currentLog?.notes ?? "");
+            setCheckedOutAt(cur?.checkedOutAt ?? null);
+            setCallsInput(String(cur.calls ?? 0));
+            setFollowupsInput(String(cur.followups ?? 0));
+            setNotes(cur.notes ?? "");
             setClockedIn(false);
           }
         }
-
-        hasHydratedFromServerRef.current = true;
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to load activity history.");
+        hasHydratedRef.current = true;
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to load history.");
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (alive) setLoading(false);
       }
-    }
-
-    void loadHistory();
+    })();
     return () => {
-      active = false;
+      alive = false;
     };
   }, [session?.id]);
 
   async function saveLog() {
     try {
-      const payload = await apiFetch<{ log: DailyLogRow }>("/api/activity/log", {
+      const { data } = await apiFetch<{ log: DailyLogRow }>("/api/activity/log", {
         method: "POST",
         body: JSON.stringify({
           checkedInAt: checkedInAt ?? undefined,
           checkedOutAt: checkedOutAt ?? undefined,
-          calls: parsedCalls,
-          followups: parsedFollowups,
+          calls,
+          followups,
           notes,
           date: new Date().toISOString().slice(0, 10),
         }),
       });
-      hasUserEditedRef.current = true;
-      setHistory((prev) => [
-        payload.data.log,
-        ...prev.filter((item) => item.date !== payload.data.log.date),
-      ]);
-      toast.success("Daily log saved");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save daily log.");
+      hasEditedRef.current = true;
+      setHistory((p) => [data.log, ...p.filter((i) => i.date !== data.log.date)]);
+      toast.success("Saved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to save.");
     }
-  }
-
-  function handleClockIn() {
-    setCheckinModalOpen(true);
   }
 
   async function confirmCheckIn() {
     try {
-      const payload = await apiFetch<{ log: DailyLogRow; clockedIn: boolean }>(
+      const { data } = await apiFetch<{ log: DailyLogRow; clockedIn: boolean }>(
         "/api/activity/clock-in",
         { method: "POST" },
       );
-      setCheckedInAt(payload.data.log.checkedInAt ?? null);
+      setCheckedInAt(data.log.checkedInAt ?? null);
       setCheckedOutAt(null);
       setCallsInput("0");
       setFollowupsInput("0");
       setNotes("");
       setClockedIn(true);
-      hasHydratedFromServerRef.current = true;
-      hasUserEditedRef.current = false;
-      setHistory((prev) => [
-        payload.data.log,
-        ...prev.filter((item) => item.date !== payload.data.log.date),
-      ]);
+      hasHydratedRef.current = true;
+      hasEditedRef.current = false;
+      setHistory((p) => [data.log, ...p.filter((i) => i.date !== data.log.date)]);
       setCheckinModalOpen(false);
       toast.success("Checked in");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to check in.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to check in.");
     }
-  }
-
-  async function handleClockOut() {
-    setCheckoutModalOpen(true);
   }
 
   async function confirmCheckout() {
     try {
-      const payload = await apiFetch<{ log: DailyLogRow; clockedIn: boolean }>(
+      const { data } = await apiFetch<{ log: DailyLogRow; clockedIn: boolean }>(
         "/api/activity/clock-out",
         {
           method: "POST",
           body: JSON.stringify({
             reason: "manual",
-            calls: parsedCalls,
-            followups: parsedFollowups,
+            calls,
+            followups,
             notes,
             date: new Date().toISOString().slice(0, 10),
           }),
         },
       );
       setCheckedInAt(null);
-      setCheckedOutAt(payload.data.log.checkedOutAt ?? null);
+      setCheckedOutAt(data.log.checkedOutAt ?? null);
       setClockedIn(false);
-      hasHydratedFromServerRef.current = true;
-      hasUserEditedRef.current = false;
-      setHistory((prev) => [
-        payload.data.log,
-        ...prev.filter((item) => item.date !== payload.data.log.date),
-      ]);
+      hasHydratedRef.current = true;
+      hasEditedRef.current = false;
+      setHistory((p) => [data.log, ...p.filter((i) => i.date !== data.log.date)]);
       setCheckoutModalOpen(false);
       toast.success("Checked out");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to check out.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to check out.");
     }
   }
 
   function toggleDay(id: string) {
-    setExpandedDays((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+    setExpandedDays((p) => {
+      const n = new Set(p);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
     });
   }
 
-  function formatElapsedTime(totalSeconds: number) {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    return [hours, minutes, seconds].map((value) => String(value).padStart(2, "0")).join(":");
-  }
+  const hh = String(Math.floor(elapsedSeconds / 3600)).padStart(2, "0");
+  const mm = String(Math.floor((elapsedSeconds % 3600) / 60)).padStart(2, "0");
+  const ss = String(elapsedSeconds % 60).padStart(2, "0");
 
   return (
     <div className="space-y-6">
+      {/* Check-in dialog */}
       <Dialog open={checkinModalOpen} onOpenChange={setCheckinModalOpen}>
-        <DialogContent className="sm:max-w-md border-border/70 bg-background/95 shadow-2xl">
-          <DialogHeader className="space-y-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Clock className="size-6" />
-            </div>
-            <DialogTitle className="text-xl font-semibold">Start a fresh session?</DialogTitle>
-            <DialogDescription className="text-sm leading-6 text-muted-foreground">
-              You&apos;re about to begin a new check-in session with a clean slate for calls,
-              follow-ups, and notes.
+        <DialogContent className="sm:max-w-md rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Start a new session?</DialogTitle>
+            <DialogDescription>
+              Your previous session data will be closed. A fresh session starts from zero.
             </DialogDescription>
           </DialogHeader>
-
-          <div className="rounded-xl border border-border/70 bg-card/70 p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Today</span>
-              <span className="font-medium text-foreground">{fmtDate(new Date())}</span>
-            </div>
-            <div className="mt-2 text-sm text-muted-foreground">
-              Your previous session will be closed and a new one will start from zero.
-            </div>
+          <div className="flex items-center justify-between rounded-lg border p-3 text-sm">
+            <span className="text-muted-foreground">Today</span>
+            <span className="font-medium">{fmtDate(new Date())}</span>
           </div>
-
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setCheckinModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={() => {
-                void confirmCheckIn();
-              }}
-            >
-              Start session
-            </Button>
+            <Button onClick={() => void confirmCheckIn()}>Start session</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Checkout dialog */}
       <Dialog open={checkoutModalOpen} onOpenChange={setCheckoutModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
             <DialogTitle>End this session?</DialogTitle>
-            <DialogDescription>
-              You&apos;re about to end this session. Here&apos;s what you&apos;ve logged:
-            </DialogDescription>
+            <DialogDescription>Review what you've logged before checking out.</DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-3">
-            <div
-              className={`rounded-lg border p-3 ${parsedCalls <= 0 ? "border-warning/40 bg-warning/10" : "border-border"}`}
-            >
-              <div className="text-sm font-medium">Calls: {parsedCalls}</div>
-              {parsedCalls <= 0 ? (
-                <p className="mt-1 text-xs text-warning">You have not added any calls yet.</p>
-              ) : null}
-            </div>
-            <div
-              className={`rounded-lg border p-3 ${parsedFollowups <= 0 ? "border-warning/40 bg-warning/10" : "border-border"}`}
-            >
-              <div className="text-sm font-medium">Follow-ups: {parsedFollowups}</div>
-              {parsedFollowups <= 0 ? (
-                <p className="mt-1 text-xs text-warning">You have not added any follow-ups yet.</p>
-              ) : null}
-            </div>
-            <div
-              className={`rounded-lg border p-3 ${!notes.trim() ? "border-warning/40 bg-warning/10" : "border-border"}`}
-            >
-              <div className="text-sm font-medium">Notes</div>
-              <p className="mt-1 text-sm text-muted-foreground">{notes.trim() ? notes : "None"}</p>
-              {!notes.trim() ? (
-                <p className="mt-1 text-xs text-warning">You have not added any notes yet.</p>
-              ) : null}
-            </div>
-
-            <p className="text-sm text-muted-foreground">
-              Would you like to make any changes before ending this session?
-            </p>
+          <div className="space-y-2">
+            {[
+              { label: "Calls", value: calls, warn: calls <= 0 },
+              { label: "Follow-ups", value: followups, warn: followups <= 0 },
+              { label: "Notes", value: notes.trim() ? `"${notes}"` : "None", warn: !notes.trim() },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className={cn(
+                  "rounded-lg border p-3 text-sm",
+                  item.warn &&
+                    "border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-950/30",
+                )}
+              >
+                <span className="font-medium">
+                  {item.label}: {item.value}
+                </span>
+                {item.warn && (
+                  <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">Not yet added</p>
+                )}
+              </div>
+            ))}
           </div>
-
-          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setCheckoutModalOpen(false)}
-              className="w-full sm:w-auto"
-            >
-              Continue Editing
+          <DialogFooter className="sm:justify-between">
+            <Button variant="outline" onClick={() => setCheckoutModalOpen(false)}>
+              Continue editing
             </Button>
             <Button
               onClick={() => {
                 setCheckoutModalOpen(false);
                 void confirmCheckout();
               }}
-              className="w-full sm:w-auto"
             >
-              Check Out
+              Check out
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <PageHeader
-        title="Daily Activity"
-        description="Check in, log your calls and follow-ups, and review past days."
-      />
+      <PageHeader title="Daily Activity" description="Track your work day" />
 
-      {/* ---------- Check-in / Today's log ---------- */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Check-in card */}
-        <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-2">
+      {/* ── Today ── */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        {/* Timer card */}
+        <section className="lg:col-span-3 rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Clock className="size-4 text-muted-foreground" />
-              Check-in status
+              Session
             </div>
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                isCheckedIn ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-              }`}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold",
+                isCheckedIn
+                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
+                  : "bg-muted text-muted-foreground",
+              )}
             >
               <span
-                className={`size-1.5 rounded-full ${isCheckedIn ? "animate-pulse bg-success" : "bg-muted-foreground/50"}`}
+                className={cn(
+                  "size-1.5 rounded-full",
+                  isCheckedIn ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/40",
+                )}
               />
-              {isCheckedIn ? "Checked in" : "Checked out"}
+              {isCheckedIn ? "Active" : "Inactive"}
             </span>
           </div>
 
           {isCheckedIn ? (
             <div className="space-y-4">
-              <div className="rounded-lg bg-muted/50 p-3">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                  Session started
-                </div>
-                <div className="mt-0.5 text-sm font-medium">
-                  {checkedInAt ? fmtDateTime(checkedInAt) : "Active session"}
-                </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Started {checkedInAt ? fmtDateTime(checkedInAt) : "—"}.</span>
+                <span className="text-muted-foreground/30">·</span>
+                <span className="flex items-center gap-1">
+                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
               </div>
-              <div className="relative overflow-hidden rounded-2xl border bg-card p-5">
-                <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      Time Worked
+              <div className="flex items-center justify-center rounded-xl bg-muted/30 py-10">
+                <div className="text-center">
+                  <div className="text-6xl font-bold tabular-nums tracking-tight">
+                    <span className={elapsedSeconds >= 3600 ? "" : "text-muted-foreground/30"}>
+                      {hh}
                     </span>
-
-                    <div className="mt-3 text-4xl font-bold font-mono">
-                      {formatElapsedTime(elapsedSeconds)}
-                    </div>
-
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-600">
-                      <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                      Live Tracking
-                    </div>
+                    <span className="text-muted-foreground/20 mx-1">:</span>
+                    <span>{mm}</span>
+                    <span className="text-muted-foreground/20 mx-1">:</span>
+                    <span className="text-muted-foreground/50">{ss}</span>
                   </div>
-
-                  <div className="rounded-2xl bg-primary/10 p-4">
-                    <Clock className="h-8 w-8 text-primary" />
+                  <div className="mt-2 text-xs font-medium uppercase tracking-widest text-muted-foreground/40">
+                    Hours : Minutes : Seconds
                   </div>
                 </div>
               </div>
 
               <Button
                 variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => {
-                  void handleClockOut();
-                }}
+                className="w-full gap-2"
+                onClick={() => setCheckoutModalOpen(true)}
               >
-                <Square className="size-4" /> Check out
+                <Square className="size-3.5" />
+                Check out
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {checkedOutAt
-                  ? `You checked out at ${fmtDateTime(checkedOutAt)}. Check in when you're ready to start again.`
-                  : "You're not checked in yet. Start your session to begin tracking today."}
-              </p>
-              <Button
-                className="w-full sm:w-auto"
-                onClick={() => {
-                  void handleClockIn();
-                }}
-              >
-                <Play className="size-4" /> Check in
+              {checkedOutAt && (
+                <p className="text-sm text-muted-foreground">
+                  Last session ended at {fmtDateTime(checkedOutAt)}.
+                </p>
+              )}
+              <Button className="w-full gap-2" onClick={() => setCheckinModalOpen(true)}>
+                <Play className="size-3.5" />
+                Check in
               </Button>
             </div>
           )}
         </section>
 
-        {/* Today's log card */}
-        <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+        {/* Today's log */}
+        <section className="lg:col-span-2 rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center gap-2 text-sm font-semibold mb-4">
             <StickyNote className="size-4 text-muted-foreground" />
             Today's log
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
-                  <Phone className="size-3" /> Calls
-                </Label>
+          <div className="space-y-3">
+            {/* Calls */}
+            <div>
+              <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Phone className="size-3" /> Calls
+              </Label>
+              <div className="flex gap-1.5">
                 <Input
                   type="number"
                   min={0}
                   value={callsInput}
                   onChange={(e) => {
-                    hasUserEditedRef.current = true;
+                    hasEditedRef.current = true;
                     setCallsInput(e.target.value.replace(/\D/g, ""));
                   }}
                   inputMode="numeric"
+                  className="text-center tabular-nums"
                 />
                 <Button
-                  type="button"
                   variant="outline"
-                  size="sm"
-                  className="mt-2 w-full"
-                  onClick={() => setCallsInput(String(parsedCalls + 1))}
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setCallsInput(String(calls + 1))}
                 >
-                  <Plus className="mr-1 size-3" /> +1
+                  <Plus className="size-3.5" />
                 </Button>
+                {calls > 0 && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setCallsInput(String(Math.max(0, calls - 1)))}
+                  >
+                    <Minus className="size-3.5" />
+                  </Button>
+                )}
               </div>
-              <div>
-                <Label className="mb-1.5 flex items-center gap-1 text-xs text-muted-foreground">
-                  <MessageSquareText className="size-3" /> Follow-ups
-                </Label>
+            </div>
+
+            {/* Follow-ups */}
+            <div>
+              <Label className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <MessageSquareText className="size-3" /> Follow-ups
+              </Label>
+              <div className="flex gap-1.5">
                 <Input
                   type="number"
                   min={0}
                   value={followupsInput}
                   onChange={(e) => {
-                    hasUserEditedRef.current = true;
+                    hasEditedRef.current = true;
                     setFollowupsInput(e.target.value.replace(/\D/g, ""));
                   }}
                   inputMode="numeric"
+                  className="text-center tabular-nums"
                 />
                 <Button
-                  type="button"
                   variant="outline"
-                  size="sm"
-                  className="mt-2 w-full"
-                  onClick={() => setFollowupsInput(String(parsedFollowups + 1))}
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setFollowupsInput(String(followups + 1))}
                 >
-                  <Plus className="mr-1 size-3" /> +1
+                  <Plus className="size-3.5" />
                 </Button>
+                {followups > 0 && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setFollowupsInput(String(Math.max(0, followups - 1)))}
+                  >
+                    <Minus className="size-3.5" />
+                  </Button>
+                )}
               </div>
             </div>
 
+            {/* Notes */}
             <div>
               <Label className="mb-1.5 block text-xs text-muted-foreground">Notes</Label>
               <Textarea
                 value={notes}
                 onChange={(e) => {
-                  hasUserEditedRef.current = true;
+                  hasEditedRef.current = true;
                   setNotes(e.target.value);
                 }}
                 rows={3}
-                placeholder="Anything worth remembering about today…"
+                placeholder="Anything worth remembering…"
               />
             </div>
 
-            <Button
-              className="w-full sm:w-auto"
-              onClick={() => {
-                void saveLog();
-              }}
-            >
-              Save log
+            <Button className="w-full gap-2" onClick={() => void saveLog()}>
+              <Save className="size-3.5" />
+              Save
             </Button>
           </div>
         </section>
       </div>
 
-      {/* ---------- History ---------- */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
+      {/* ── History ── */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <HistoryIcon className="size-4 text-muted-foreground" />
             History
           </div>
           {!loading && history.length > 0 && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground/60">
               {history.length} {history.length === 1 ? "day" : "days"}
             </span>
           )}
@@ -555,137 +526,128 @@ function ActivityPage() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-16 animate-pulse rounded-lg border border-border bg-muted/40"
+                className="h-14 animate-pulse rounded-xl border border-border/50 bg-muted/30"
               />
             ))}
           </div>
-        ) : history.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-card p-8 text-center">
-            <CalendarClock className="size-6 text-muted-foreground" />
-            <div className="text-sm font-medium">No activity logs yet</div>
-            <p className="max-w-xs text-xs text-muted-foreground">
-              Check in and save a daily log to start building your activity history.
-            </p>
+        ) : !history.length ? (
+          <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border/60 py-16 text-muted-foreground/40">
+            <CalendarClock className="size-7" />
+            <p className="text-sm font-medium">No activity logs yet</p>
+            <p className="text-xs">Check in and save a log to start your history.</p>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {history.map((l) => {
-              const sessions =
-                l.sessions && l.sessions.length > 0
-                  ? l.sessions
-                  : [
-                      {
-                        checkedInAt: l.checkedInAt,
-                        checkedOutAt: l.checkedOutAt,
-                        clockStatus: l.clockStatus,
-                        calls: l.calls ?? 0,
-                        followups: l.followups ?? 0,
-                        notes: l.notes ?? "",
-                      },
-                    ];
-              const isExpanded = expandedDays.has(l.id);
+          <ul className="space-y-1.5">
+            {history.map((log) => {
+              const expanded = expandedDays.has(log.id);
+              const sessions = log.sessions?.length
+                ? log.sessions
+                : [
+                    {
+                      checkedInAt: log.checkedInAt,
+                      checkedOutAt: log.checkedOutAt,
+                      calls: log.calls,
+                      followups: log.followups,
+                      notes: log.notes,
+                    },
+                  ];
+              const dur = totalDayDuration(log);
 
               return (
-                <li key={l.id} className="rounded-xl border border-border bg-card shadow-sm">
-                  {/* Compact summary row — click to expand full session detail */}
+                <li
+                  key={log.id}
+                  className="rounded-xl border border-border/50 bg-card transition-colors hover:bg-muted/20"
+                >
                   <button
                     type="button"
-                    onClick={() => toggleDay(l.id)}
-                    className="flex w-full flex-col gap-2 p-4 text-left sm:flex-row sm:items-center sm:gap-4"
-                    aria-expanded={isExpanded}
+                    onClick={() => toggleDay(log.id)}
+                    className="flex w-full items-center gap-3 p-3.5 text-left sm:gap-4"
                   >
-                    {isExpanded ? (
-                      <ChevronDown className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
+                    {expanded ? (
+                      <ChevronDown className="size-4 shrink-0 text-muted-foreground/40" />
                     ) : (
-                      <ChevronRight className="hidden size-4 shrink-0 text-muted-foreground sm:block" />
+                      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40" />
                     )}
 
-                    <div className="flex min-w-[7rem] shrink-0 items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
-                      <span className="text-sm font-semibold">{fmtDate(l.date)}</span>
-                      {l.userName && canSeeTeammateNames ? (
-                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                          {l.userName}
-                        </span>
-                      ) : null}
+                    <div className="min-w-[6.5rem] shrink-0">
+                      <div className="text-sm font-semibold">{fmtDate(log.date)}</div>
+                      {log.userName && canSeeNames && (
+                        <div className="text-[11px] text-muted-foreground/60">{log.userName}</div>
+                      )}
                     </div>
 
-                    <div className="flex flex-1 flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
-                      <span>
-                        <span className="font-semibold text-foreground">{l.calls}</span> calls
+                    <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Timer className="size-3" />
+                        <span className="font-semibold text-foreground">{dur}</span>
                       </span>
                       <span>
-                        <span className="font-semibold text-foreground">{l.followups}</span>{" "}
+                        <span className="font-semibold text-foreground">{log.calls}</span> calls
+                      </span>
+                      <span>
+                        <span className="font-semibold text-foreground">{log.followups}</span>{" "}
                         follow-ups
                       </span>
                       <span>
-                        {sessions.length} {sessions.length === 1 ? "session" : "sessions"}
+                        {sessions.length} session{sessions.length !== 1 ? "s" : ""}
                       </span>
-                      {l.notes && <span className="hidden truncate sm:inline">"{l.notes}"</span>}
                     </div>
-
-                    <span className="text-xs font-medium text-muted-foreground sm:hidden">
-                      {isExpanded ? "Hide detail" : "Show detail"}
-                    </span>
                   </button>
 
-                  {/* Expanded detail */}
-                  {isExpanded && (
-                    <div className="border-t border-border p-4 pt-3">
-                      <div className="mb-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  {expanded && (
+                    <div className="border-t border-border/40 px-3.5 pb-3.5 pt-2.5">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-2">
                         Sessions
                       </div>
-                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                        {sessions.map((sessionItem, index) => (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {sessions.map((s, i) => (
                           <div
-                            key={`${l.id}-${index}`}
-                            className="rounded-lg border border-border/70 bg-background/60 p-2.5 text-xs"
+                            key={i}
+                            className="rounded-lg border border-border/40 bg-muted/20 p-3 text-xs space-y-1.5"
                           >
-                            <div className="mb-1 font-medium text-foreground">
-                              Session {index + 1}
-                            </div>
-                            <div className="flex items-center justify-between text-muted-foreground">
+                            <div className="font-semibold text-foreground">Session {i + 1}</div>
+                            <div className="flex justify-between text-muted-foreground/60">
                               <span>In</span>
-                              <span className="text-foreground">
-                                {sessionItem.checkedInAt
-                                  ? fmtDateTime(sessionItem.checkedInAt)
-                                  : "—"}
+                              <span className="font-medium text-foreground tabular-nums">
+                                {s.checkedInAt ? fmtDateTime(s.checkedInAt) : "—"}
                               </span>
                             </div>
-                            <div className="flex items-center justify-between text-muted-foreground">
+                            <div className="flex justify-between text-muted-foreground/60">
                               <span>Out</span>
-                              <span className="text-foreground">
-                                {sessionItem.checkedOutAt
-                                  ? fmtDateTime(sessionItem.checkedOutAt)
-                                  : "—"}
+                              <span className="font-medium text-foreground tabular-nums">
+                                {s.checkedOutAt ? fmtDateTime(s.checkedOutAt) : "—"}
                               </span>
                             </div>
-                            <div className="mt-2 space-y-1 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
-                              <div className="flex items-center justify-between">
-                                <span>Calls</span>
-                                <span className="text-foreground">{sessionItem.calls ?? 0}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span>Follow-ups</span>
-                                <span className="text-foreground">
-                                  {sessionItem.followups ?? 0}
-                                </span>
-                              </div>
-                              {sessionItem.notes ? (
-                                <div className="pt-1 text-[10px] text-muted-foreground">
-                                  {sessionItem.notes}
-                                </div>
-                              ) : null}
+                            <div className="flex justify-between text-muted-foreground/60">
+                              <span>Duration</span>
+                              <span className="font-medium text-foreground">
+                                {sessionDuration(s.checkedInAt, s.checkedOutAt)}
+                              </span>
                             </div>
+                            <div className="border-t border-border/30 pt-1.5 space-y-1">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground/60">Calls</span>
+                                <span className="font-medium">{s.calls ?? 0}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground/60">Follow-ups</span>
+                                <span className="font-medium">{s.followups ?? 0}</span>
+                              </div>
+                            </div>
+                            {s.notes && (
+                              <p className="border-t border-border/30 pt-1.5 text-muted-foreground/60">
+                                {s.notes}
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>
-
-                      {l.notes && (
-                        <div className="mt-3">
-                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      {log.notes && (
+                        <div className="mt-2.5">
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-1">
                             Day notes
                           </div>
-                          <p className="mt-1 text-xs text-muted-foreground">{l.notes}</p>
+                          <p className="text-xs text-muted-foreground/60">{log.notes}</p>
                         </div>
                       )}
                     </div>
