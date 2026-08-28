@@ -31,6 +31,44 @@ function parseStringArray(value: unknown) {
   return [] as string[];
 }
 
+function parseServiceAreas(value: unknown): Array<string | { region: string; states: string[] }> {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (item && typeof item === "object" && !Array.isArray(item)) {
+          const serviceArea = item as { region?: unknown; states?: unknown };
+          const region = typeof serviceArea.region === "string" ? serviceArea.region.trim() : "";
+          const states = parseStringArray(serviceArea.states).map((state) => state.toUpperCase());
+          return region && states.length ? { region, states } : null;
+        }
+        return typeof item === "string" && item.trim() ? item.trim() : null;
+      })
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const serviceAreas: Array<string | { region: string; states: string[] }> = [];
+    for (const line of value.split(/\r?\n/)) {
+      const [region, statesText] = line.split(/\s*:\s*/, 2);
+      if (statesText) {
+        const states = parseStringArray(statesText).map((state) => state.toUpperCase());
+        if (region.trim() && states.length) serviceAreas.push({ region: region.trim(), states });
+      } else {
+        serviceAreas.push(...parseStringArray(line));
+      }
+    }
+    return serviceAreas;
+  }
+  return [];
+}
+
+function parseVINs(value: unknown) {
+  const vins = parseStringArray(value).map((vin) => vin.toUpperCase());
+  const uniqueVINs = [...new Set(vins)];
+  const invalidVIN = uniqueVINs.find((vin) => !/^[A-HJ-NPR-Z0-9]{17}$/.test(vin));
+  if (invalidVIN) throw new Error(`Invalid VIN: ${invalidVIN}. VINs must be 17 characters.`);
+  return uniqueVINs;
+}
+
 function mapCarrier(carrier: any) {
   return {
     id: carrier._id?.toString() ?? carrier.id,
@@ -46,7 +84,10 @@ function mapCarrier(carrier: any) {
     taxId: carrier.taxId ?? "",
     equipmentTypes: carrier.equipmentTypes ?? [],
     serviceAreas: carrier.serviceAreas ?? [],
+    paymentTerms: carrier.paymentTerms ?? "",
+    insuredVehicleVINs: carrier.insuredVehicleVINs ?? [],
     insuranceCarrier: carrier.insuranceCarrier ?? "",
+    insuranceCertificateId: carrier.insuranceCertificateId ?? "",
     insurancePolicyNumber: carrier.insurancePolicyNumber ?? "",
     insuranceExpiresAt: carrier.insuranceExpiresAt
       ? new Date(carrier.insuranceExpiresAt).toISOString()
@@ -158,10 +199,17 @@ export async function carriersListHandler(request: Request) {
     const address = typeof payload.address === "string" ? payload.address.trim() : carrier.address;
     const taxId = typeof payload.taxId === "string" ? payload.taxId.trim() : carrier.taxId;
     const equipmentTypes = parseStringArray(
-      payload.equipmentTypes.length ? payload.equipmentTypes : carrier.equipmentTypes,
+      payload.equipmentTypes !== undefined ? payload.equipmentTypes : carrier.equipmentTypes,
     );
-    const serviceAreas = parseStringArray(
-      payload.serviceAreas.length ? payload.serviceAreas : carrier.serviceAreas,
+    const serviceAreas = parseServiceAreas(
+      payload.serviceAreas !== undefined ? payload.serviceAreas : carrier.serviceAreas,
+    );
+    const paymentTerms =
+      typeof payload.paymentTerms === "string" ? payload.paymentTerms.trim() : carrier.paymentTerms;
+    const insuredVehicleVINs = parseVINs(
+      payload.insuredVehicleVINs !== undefined
+        ? payload.insuredVehicleVINs
+        : carrier.insuredVehicleVINs,
     );
     const insuranceCarrier =
       typeof payload.insuranceCarrier === "string"
@@ -171,6 +219,10 @@ export async function carriersListHandler(request: Request) {
       typeof payload.insurancePolicyNumber === "string"
         ? payload.insurancePolicyNumber.trim()
         : carrier.insurancePolicyNumber;
+    const insuranceCertificateId =
+      typeof payload.insuranceCertificateId === "string"
+        ? payload.insuranceCertificateId.trim()
+        : carrier.insuranceCertificateId;
     const insuranceExpiresAt = payload.insuranceExpiresAt
       ? new Date(payload.insuranceExpiresAt)
       : carrier.insuranceExpiresAt;
@@ -203,8 +255,11 @@ export async function carriersListHandler(request: Request) {
     carrier.taxId = taxId;
     carrier.equipmentTypes = equipmentTypes;
     carrier.serviceAreas = serviceAreas;
+    carrier.paymentTerms = paymentTerms;
+    carrier.insuredVehicleVINs = insuredVehicleVINs;
     carrier.insuranceCarrier = insuranceCarrier;
     carrier.insurancePolicyNumber = insurancePolicyNumber;
+    carrier.insuranceCertificateId = insuranceCertificateId;
     carrier.insuranceExpiresAt = insuranceExpiresAt;
     carrier.notes = notes;
 
@@ -313,11 +368,18 @@ export async function carriersListHandler(request: Request) {
     const address = typeof payload.address === "string" ? payload.address.trim() : "";
     const taxId = typeof payload.taxId === "string" ? payload.taxId.trim() : "";
     const equipmentTypes = parseStringArray(payload.equipmentTypes);
-    const serviceAreas = parseStringArray(payload.serviceAreas);
+    const serviceAreas = parseServiceAreas(payload.serviceAreas);
+    const paymentTerms =
+      typeof payload.paymentTerms === "string" ? payload.paymentTerms.trim() : "";
+    const insuredVehicleVINs = parseVINs(payload.insuredVehicleVINs);
     const insuranceCarrier =
       typeof payload.insuranceCarrier === "string" ? payload.insuranceCarrier.trim() : "";
     const insurancePolicyNumber =
       typeof payload.insurancePolicyNumber === "string" ? payload.insurancePolicyNumber.trim() : "";
+    const insuranceCertificateId =
+      typeof payload.insuranceCertificateId === "string"
+        ? payload.insuranceCertificateId.trim()
+        : "";
     const insuranceExpiresAt = payload.insuranceExpiresAt
       ? new Date(payload.insuranceExpiresAt)
       : undefined;
@@ -342,8 +404,11 @@ export async function carriersListHandler(request: Request) {
       taxId,
       equipmentTypes,
       serviceAreas,
+      paymentTerms,
+      insuredVehicleVINs,
       insuranceCarrier,
       insurancePolicyNumber,
+      insuranceCertificateId,
       insuranceExpiresAt,
       notes,
       status,
