@@ -476,7 +476,9 @@ export async function carriersListHandler(request: Request) {
   const exportFormat = url.searchParams.get("export");
 
   await connectDb();
-  const filter: Record<string, any> = { deletedAt: { $exists: false } };
+  const filter: Record<string, any> = {
+    $or: [{ deletedAt: { $exists: false } }, { deletedAt: null }],
+  };
   if (q) {
     filter.$or = [
       { legalName: { $regex: q, $options: "i" } },
