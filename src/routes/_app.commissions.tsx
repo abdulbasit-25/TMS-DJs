@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { DataTable } from "@/components/data-table";
@@ -36,20 +36,7 @@ import { usd, fmtDate } from "@/lib/format";
 import { apiFetch } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/roles";
-import {
-  Calendar,
-  Clock,
-  DollarSign,
-  Download,
-  Package,
-  Pencil,
-  Plus,
-  RefreshCcw,
-  Trash2,
-  TrendingDown,
-  TrendingUp,
-  User,
-} from "lucide-react";
+import { DollarSign, Download, Pencil, Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/commissions")({ component: CommissionsPage });
@@ -85,113 +72,6 @@ const STATUS_OPTIONS: Array<{ label: string; value: CommissionStatus | "all" }> 
   { label: "Processing", value: "processing" },
   { label: "Paid", value: "paid" },
 ];
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-/* ------------------------------------------------------------------------ */
-/* Margin coloring — same helper shape used on the carriers/loads pages so   */
-/* gain vs. loss reads the same way everywhere in the app.                  */
-/* ------------------------------------------------------------------------ */
-
-function marginTone(margin: number) {
-  if (margin > 0) {
-    return {
-      color: "text-emerald-600",
-      bg: "bg-emerald-500/10",
-      label: "Profit",
-      Icon: TrendingUp,
-    };
-  }
-  if (margin < 0) {
-    return { color: "text-red-500", bg: "bg-red-500/10", label: "Loss", Icon: TrendingDown };
-  }
-  return { color: "text-muted-foreground", bg: "bg-muted", label: "Break-even", Icon: TrendingUp };
-}
-
-function MarginChip({ margin }: { margin: number }) {
-  const tone = marginTone(margin);
-  const Icon = tone.Icon;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tone.bg} ${tone.color}`}
-    >
-      <Icon className="size-3" /> {tone.label}
-    </span>
-  );
-}
-
-/* ------------------------------------------------------------------------ */
-/* Read-only detail primitives — mirrors the carriers/loads pages so every   */
-/* detail sheet in the app feels the same: bordered cards with icon         */
-/* headers, key/value grids.                                                */
-/* ------------------------------------------------------------------------ */
-
-function DetailSection({
-  icon,
-  title,
-  children,
-}: {
-  icon: ReactNode;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {icon}
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function DetailGrid({ children }: { children: ReactNode }) {
-  return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
-}
-
-function DetailRow({
-  label,
-  value,
-  mono,
-  span2,
-}: {
-  label: string;
-  value: ReactNode;
-  mono?: boolean;
-  span2?: boolean;
-}) {
-  return (
-    <div className={span2 ? "sm:col-span-2" : undefined}>
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={`mt-0.5 ${mono ? "font-mono text-xs" : "text-sm"}`}>{value ?? "—"}</div>
-    </div>
-  );
-}
-
-function SummaryStat({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="rounded-md border border-border bg-card/60 px-2.5 py-1.5">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-0.5">{value}</div>
-    </div>
-  );
-}
 
 function CommissionsPage() {
   const { session } = useAuth();
@@ -683,11 +563,7 @@ function CommissionsPage() {
           {
             head: "Gross margin",
             cell: (item) => (
-              <span
-                className={`font-mono text-sm font-medium ${marginTone(item.grossMarginAmount).color}`}
-              >
-                {usd(item.grossMarginAmount)}
-              </span>
+              <span className="font-mono text-sm">{usd(item.grossMarginAmount)}</span>
             ),
           },
           { head: "Tier", cell: (item) => item.commissionTier },
@@ -746,40 +622,9 @@ function CommissionsPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Quick-glance summary strip — same pattern as the loads detail sheet */}
-                {!editing && (
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <SummaryStat label="Status" value={<StatusBadge value={open.payoutStatus} />} />
-                    <SummaryStat
-                      label="Gross Margin"
-                      value={
-                        <span
-                          className={`flex items-center gap-1 font-mono text-sm font-medium ${marginTone(open.grossMarginAmount).color}`}
-                        >
-                          {(() => {
-                            const MarginIcon = marginTone(open.grossMarginAmount).Icon;
-                            return <MarginIcon className="size-3" />;
-                          })()}
-                          {usd(open.grossMarginAmount)}
-                        </span>
-                      }
-                    />
-                    <SummaryStat
-                      label="Rate"
-                      value={<span className="font-mono text-sm">{open.commissionPercent}%</span>}
-                    />
-                    <SummaryStat
-                      label="Commission"
-                      value={
-                        <span className="font-mono text-sm">{usd(open.commissionAmount)}</span>
-                      }
-                    />
-                  </div>
-                )}
               </SheetHeader>
 
-              <div className="space-y-4 px-4 pb-6 pt-4">
+              <div className="space-y-4 px-4 pb-6 pt-2">
                 {editing ? (
                   <form className="grid gap-3" onSubmit={saveCommission}>
                     <div className="grid gap-3 md:grid-cols-2">
@@ -912,62 +757,23 @@ function CommissionsPage() {
                   </form>
                 ) : (
                   <>
-                    <DetailSection icon={<Package className="size-4" />} title="Commission summary">
-                      <DetailGrid>
-                        <DetailRow label="Load" value={open.loadRef} mono />
-                        <DetailRow label="Agent" value={open.agentName} />
-                        <DetailRow label="Tier" value={open.commissionTier} />
-                        <DetailRow
-                          label="Status"
-                          value={<StatusBadge value={open.payoutStatus} />}
-                        />
-                      </DetailGrid>
-                    </DetailSection>
-
-                    <DetailSection icon={<DollarSign className="size-4" />} title="Financials">
-                      <DetailGrid>
-                        <DetailRow
-                          label="Gross Margin"
-                          value={
-                            <span
-                              className={`font-mono font-medium ${marginTone(open.grossMarginAmount).color}`}
-                            >
-                              {usd(open.grossMarginAmount)}
-                            </span>
-                          }
-                        />
-                        <DetailRow label="Rate" value={`${open.commissionPercent}%`} mono />
-                        <DetailRow
-                          label="Commission Amount"
-                          value={<span className="font-mono">{usd(open.commissionAmount)}</span>}
-                        />
-                        <DetailRow
-                          label=""
-                          value={<MarginChip margin={open.grossMarginAmount} />}
-                        />
-                      </DetailGrid>
-                    </DetailSection>
-
-                    <DetailSection icon={<Calendar className="size-4" />} title="Payout">
-                      <DetailGrid>
-                        <DetailRow
-                          label="Payout Date"
-                          value={open.payoutDate ? fmtDate(open.payoutDate) : "—"}
-                          mono
-                        />
-                        <DetailRow
-                          label="Period"
-                          value={`${MONTH_NAMES[open.month - 1] ?? open.month} ${open.year}`}
-                        />
-                      </DetailGrid>
-                    </DetailSection>
-
-                    <DetailSection icon={<Clock className="size-4" />} title="Timestamps">
-                      <DetailGrid>
-                        <DetailRow label="Created" value={fmtDate(open.createdAt)} mono />
-                        <DetailRow label="Updated" value={fmtDate(open.updatedAt)} mono />
-                      </DetailGrid>
-                    </DetailSection>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <Field label="Load" value={open.loadRef} />
+                      <Field label="Agent" value={open.agentName} />
+                      <Field label="Gross margin" value={usd(open.grossMarginAmount)} mono />
+                      <Field label="Tier" value={open.commissionTier} />
+                      <Field label="Rate" value={`${open.commissionPercent}%`} mono />
+                      <Field label="Commission" value={usd(open.commissionAmount)} mono />
+                      <Field label="Status" value={<StatusBadge value={open.payoutStatus} />} />
+                      <Field
+                        label="Payout date"
+                        value={open.payoutDate ? fmtDate(open.payoutDate) : "—"}
+                      />
+                      <Field label="Month" value={String(open.month)} />
+                      <Field label="Year" value={String(open.year)} />
+                      <Field label="Created" value={fmtDate(open.createdAt)} />
+                      <Field label="Updated" value={fmtDate(open.updatedAt)} />
+                    </div>
                   </>
                 )}
               </div>
@@ -975,6 +781,17 @@ function CommissionsPage() {
           )}
         </SheetContent>
       </Sheet>
+    </div>
+  );
+}
+
+function Field({ label, value, mono }: { label: string; value: React.ReactNode; mono?: boolean }) {
+  return (
+    <div>
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={`mt-0.5 ${mono ? "font-mono text-xs" : ""}`}>{value}</div>
     </div>
   );
 }
