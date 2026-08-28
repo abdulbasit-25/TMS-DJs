@@ -23,6 +23,7 @@ import { Route as AppAuditRouteImport } from './routes/_app.audit'
 import { Route as AppCarriersRouteImport } from './routes/_app.carriers'
 import { Route as AppCarrierscopyRouteImport } from './routes/_app.carriers copy'
 import { Route as AppCommissionsRouteImport } from './routes/_app.commissions'
+import { Route as AppCommissionscopyRouteImport } from './routes/_app.commissions copy'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppCustomerscopyRouteImport } from './routes/_app.customers copy'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -111,6 +112,11 @@ const AppCarrierscopyRoute = AppCarrierscopyRouteImport.update({
 const AppCommissionsRoute = AppCommissionsRouteImport.update({
   id: '/commissions',
   path: '/commissions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCommissionscopyRoute = AppCommissionscopyRouteImport.update({
+  id: '/commissions copy',
+  path: '/commissions copy',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCustomersRoute = AppCustomersRouteImport.update({
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/carriers': typeof AppCarriersRoute
   '/carriers copy': typeof AppCarrierscopyRoute
   '/commissions': typeof AppCommissionsRoute
+  '/commissions copy': typeof AppCommissionscopyRoute
   '/customers': typeof AppCustomersRoute
   '/customers copy': typeof AppCustomerscopyRoute
   '/dashboard': typeof AppDashboardRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/carriers': typeof AppCarriersRoute
   '/carriers copy': typeof AppCarrierscopyRoute
   '/commissions': typeof AppCommissionsRoute
+  '/commissions copy': typeof AppCommissionscopyRoute
   '/customers': typeof AppCustomersRoute
   '/customers copy': typeof AppCustomerscopyRoute
   '/dashboard': typeof AppDashboardRoute
@@ -300,6 +308,7 @@ export interface FileRoutesById {
   '/_app/carriers': typeof AppCarriersRoute
   '/_app/carriers copy': typeof AppCarrierscopyRoute
   '/_app/commissions': typeof AppCommissionsRoute
+  '/_app/commissions copy': typeof AppCommissionscopyRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/customers copy': typeof AppCustomerscopyRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -337,6 +346,7 @@ export interface FileRouteTypes {
     | '/carriers'
     | '/carriers copy'
     | '/commissions'
+    | '/commissions copy'
     | '/customers'
     | '/customers copy'
     | '/dashboard'
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/carriers'
     | '/carriers copy'
     | '/commissions'
+    | '/commissions copy'
     | '/customers'
     | '/customers copy'
     | '/dashboard'
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/_app/carriers'
     | '/_app/carriers copy'
     | '/_app/commissions'
+    | '/_app/commissions copy'
     | '/_app/customers'
     | '/_app/customers copy'
     | '/_app/dashboard'
@@ -538,6 +550,13 @@ declare module '@tanstack/react-router' {
       path: '/commissions'
       fullPath: '/commissions'
       preLoaderRoute: typeof AppCommissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/commissions copy': {
+      id: '/_app/commissions copy'
+      path: '/commissions copy'
+      fullPath: '/commissions copy'
+      preLoaderRoute: typeof AppCommissionscopyRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/customers': {
@@ -703,6 +722,7 @@ interface AppRouteChildren {
   AppCarriersRoute: typeof AppCarriersRoute
   AppCarrierscopyRoute: typeof AppCarrierscopyRoute
   AppCommissionsRoute: typeof AppCommissionsRoute
+  AppCommissionscopyRoute: typeof AppCommissionscopyRoute
   AppCustomersRoute: typeof AppCustomersRoute
   AppCustomerscopyRoute: typeof AppCustomerscopyRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -732,6 +752,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCarriersRoute: AppCarriersRoute,
   AppCarrierscopyRoute: AppCarrierscopyRoute,
   AppCommissionsRoute: AppCommissionsRoute,
+  AppCommissionscopyRoute: AppCommissionscopyRoute,
   AppCustomersRoute: AppCustomersRoute,
   AppCustomerscopyRoute: AppCustomerscopyRoute,
   AppDashboardRoute: AppDashboardRoute,
