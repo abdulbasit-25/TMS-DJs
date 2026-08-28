@@ -253,6 +253,28 @@ function AuditPage() {
     return null;
   }
 
+  async function copyIpAddress(ipAddress: string) {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(ipAddress);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = ipAddress;
+        textArea.setAttribute("readonly", "true");
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        const copied = document.execCommand("copy");
+        textArea.remove();
+        if (!copied) throw new Error("Copy command was rejected");
+      }
+      toast.success("IP address copied");
+    } catch {
+      toast.error("Unable to copy IP address");
+    }
+  }
+
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return items;
@@ -413,10 +435,7 @@ function AuditPage() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(u.ipAddress);
-                            toast.success("IP address copied");
-                          }}
+                          onClick={() => void copyIpAddress(u.ipAddress)}
                           className="group inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
                         >
                           <Fingerprint className="size-3 opacity-50" />
