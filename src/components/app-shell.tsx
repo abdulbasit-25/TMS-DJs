@@ -849,7 +849,7 @@ function UserMenu() {
             onClick={() => {
               void handleSignOut();
             }}
-            className="text-destructive hover:text-black focus:text-black"
+            className="bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800 focus:bg-red-100 focus:text-red-800 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300 dark:focus:bg-red-950/50 dark:focus:text-red-300"
           >
             <LogOut className="mr-2 size-4" />
             Sign out
