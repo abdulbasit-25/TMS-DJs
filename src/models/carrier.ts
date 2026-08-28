@@ -9,6 +9,8 @@ export const CARRIER_STATUSES = [
 ] as const;
 export type CarrierStatus = (typeof CARRIER_STATUSES)[number];
 
+export type CarrierServiceArea = string | { region: string; states: string[] };
+
 export interface CarrierDocument extends mongoose.Document {
   legalName: string;
   dba?: string;
@@ -21,7 +23,10 @@ export interface CarrierDocument extends mongoose.Document {
   address?: string;
   taxId?: string;
   equipmentTypes: string[];
-  serviceAreas: string[];
+  serviceAreas: CarrierServiceArea[];
+  paymentTerms?: string;
+  insuredVehicleVINs?: string[];
+  insuranceCertificateId?: string;
   insuranceCarrier?: string;
   insurancePolicyNumber?: string;
   insuranceExpiresAt?: Date;
@@ -76,7 +81,10 @@ const carrierSchema = new mongoose.Schema<CarrierDocument>(
     address: { type: String, required: false, trim: true },
     taxId: { type: String, required: false, trim: true },
     equipmentTypes: { type: [String], default: [] },
-    serviceAreas: { type: [String], default: [] },
+    serviceAreas: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    paymentTerms: { type: String, required: false, trim: true },
+    insuredVehicleVINs: { type: [String], required: false, default: [] },
+    insuranceCertificateId: { type: String, required: false, trim: true },
     insuranceCarrier: { type: String, required: false, trim: true },
     insurancePolicyNumber: { type: String, required: false, trim: true },
     insuranceExpiresAt: { type: Date, required: false },
@@ -101,5 +109,14 @@ const carrierSchema = new mongoose.Schema<CarrierDocument>(
   { timestamps: true },
 );
 
-export const Carrier =
-  mongoose.models.Carrier ?? mongoose.model<CarrierDocument>("Carrier", carrierSchema);
+const existingCarrier = mongoose.models.Carrier;
+if (existingCarrier) {
+  existingCarrier.schema.add({
+    serviceAreas: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    paymentTerms: { type: String, required: false, trim: true },
+    insuredVehicleVINs: { type: [String], required: false, default: [] },
+    insuranceCertificateId: { type: String, required: false, trim: true },
+  });
+}
+
+export const Carrier = existingCarrier ?? mongoose.model<CarrierDocument>("Carrier", carrierSchema);
