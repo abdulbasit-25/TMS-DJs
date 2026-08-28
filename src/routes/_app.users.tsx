@@ -60,14 +60,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
 import { Separator } from "@/components/ui/separator";
@@ -1297,20 +1289,20 @@ function UsersPage() {
           </SheetContent>
         </Sheet>
 
-        {/* ══════════ Create Dialog ══════════ */}
-        <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-lg">Create new user</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+        {/* ══════════ Create Sheet ══════════ */}
+        <Sheet open={showCreate} onOpenChange={setShowCreate}>
+          <SheetContent className="flex w-full flex-col overflow-hidden p-0 sm:max-w-2xl">
+            <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 text-left backdrop-blur">
+              <SheetTitle className="text-lg">Create new user</SheetTitle>
+              <p className="text-sm text-muted-foreground">
                 Add a new team member. They'll receive a temporary password to log in for the first
                 time.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-2">
+              </p>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
               <UserFormFields form={form} setForm={setForm} teams={teams} mode="create" />
             </div>
-            <DialogFooter className="flex-col-reverse gap-2 pt-2 sm:flex-row">
+            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-border bg-background/95 px-6 py-4 backdrop-blur sm:flex-row sm:justify-end">
               <Button
                 variant="outline"
                 className="w-full sm:w-auto"
@@ -1326,24 +1318,24 @@ function UsersPage() {
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
                 {saving ? "Creating…" : "Create user"}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </SheetContent>
+        </Sheet>
 
-        {/* ══════════ Edit Dialog ══════════ */}
-        <Dialog open={showEdit} onOpenChange={setShowEdit}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-lg">Edit user</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+        {/* ══════════ Edit Sheet ══════════ */}
+        <Sheet open={showEdit} onOpenChange={setShowEdit}>
+          <SheetContent className="flex w-full flex-col overflow-hidden p-0 sm:max-w-2xl">
+            <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 text-left backdrop-blur">
+              <SheetTitle className="text-lg">Edit user</SheetTitle>
+              <p className="text-sm text-muted-foreground">
                 Update the profile and settings for{" "}
                 <span className="font-medium text-foreground">{editingUser?.name}</span>.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-2">
+              </p>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto px-6 py-5">
               <UserFormFields form={form} setForm={setForm} teams={teams} mode="edit" />
             </div>
-            <DialogFooter className="flex-col-reverse gap-2 pt-2 sm:flex-row">
+            <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-border bg-background/95 px-6 py-4 backdrop-blur sm:flex-row sm:justify-end">
               <Button
                 variant="outline"
                 className="w-full sm:w-auto"
@@ -1359,9 +1351,9 @@ function UsersPage() {
                 {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                 {saving ? "Saving…" : "Save changes"}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </TooltipProvider>
   );
