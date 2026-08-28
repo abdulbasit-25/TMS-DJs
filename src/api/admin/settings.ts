@@ -8,6 +8,8 @@ const DEFAULTS = {
   supportEmail: "ops@djfreight.example",
 };
 
+type PortalSettingsValues = typeof DEFAULTS;
+
 export async function portalSettingsHandler(request: Request) {
   if (request.method === "PATCH") {
     const user = requireAuth(await getSessionUserFromRequest(request));
@@ -21,13 +23,17 @@ export async function portalSettingsHandler(request: Request) {
     if (!/^\S+@\S+\.\S+$/.test(supportEmail)) throw new Error("A valid support email is required");
 
     await connectDb();
-    const settings = await PortalSettings.findOneAndUpdate(
+    const settingsResult = await PortalSettings.findOneAndUpdate(
       {},
       { companyName, supportEmail },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     )
       .lean()
       .exec();
+    const settings = (Array.isArray(settingsResult) ? settingsResult[0] : settingsResult) as
+      | PortalSettingsValues
+      | null
+      | undefined;
     return jsonResponse({
       companyName: settings?.companyName ?? companyName,
       supportEmail: settings?.supportEmail ?? supportEmail,
@@ -35,7 +41,11 @@ export async function portalSettingsHandler(request: Request) {
   }
 
   await connectDb();
-  const settings = await PortalSettings.findOne().lean().exec();
+  const settingsResult = await PortalSettings.findOne().lean().exec();
+  const settings = (Array.isArray(settingsResult) ? settingsResult[0] : settingsResult) as
+    | PortalSettingsValues
+    | null
+    | undefined;
   return jsonResponse({
     companyName: settings?.companyName ?? DEFAULTS.companyName,
     supportEmail: settings?.supportEmail ?? DEFAULTS.supportEmail,
