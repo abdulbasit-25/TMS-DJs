@@ -18,7 +18,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const COMPANY_URL = "https://djsfreightbroker.com/";
+const COMPANY_URL = "https://abdulbasit-archer.vercel.app/";
 const SUPPORT_MAILTO = "mailto:dispatch@djsfreightbroker.com?subject=Portal%20password%20reset";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -231,7 +231,7 @@ function BrandLogo({ glow = false }: { glow?: boolean }) {
 function CompanyLink({ className }: { className?: string }) {
   return (
     <a href={COMPANY_URL} target="_blank" rel="noopener noreferrer" className={className}>
-      Visit djsfreightbroker.com
+      Visit ARCHER
       <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
     </a>
   );
