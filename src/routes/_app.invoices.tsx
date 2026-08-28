@@ -2031,14 +2031,14 @@ function InvoicesPage() {
         renderTable()
       )}
 
-      {/* ── Create Dialog ──────────────────────────────────────────────── */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Invoice</DialogTitle>
-          </DialogHeader>
-          {renderCreateForm()}
-          <DialogFooter className="pt-4 border-t border-border/60">
+      {/* ── Create Sheet ───────────────────────────────────────────────── */}
+      <Sheet open={showCreate} onOpenChange={setShowCreate}>
+        <SheetContent className="flex w-full flex-col overflow-y-auto p-0 sm:max-w-2xl">
+          <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background/95 px-6 py-4 backdrop-blur">
+            <SheetTitle>Create Invoice</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto px-6 py-5">{renderCreateForm()}</div>
+          <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-border bg-background/95 px-6 py-4 backdrop-blur sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setShowCreate(false)} disabled={saving}>
               Cancel
             </Button>
@@ -2046,9 +2046,9 @@ function InvoicesPage() {
               {saving && <Loader2 className="mr-2 size-4 animate-spin" />}
               Create Invoice
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Edit Dialog ────────────────────────────────────────────────── */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
