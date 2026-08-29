@@ -9,60 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppRouteImport } from './routes/_app'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as LockedRouteImport } from './routes/locked'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AppActivityRouteImport } from './routes/_app.activity'
-import { Route as AppAdminRouteImport } from './routes/_app.admin'
-import { Route as AppApprovalsRouteImport } from './routes/_app.approvals'
-import { Route as AppAuditRouteImport } from './routes/_app.audit'
-import { Route as AppCarrierRateConfirmationRouteImport } from './routes/_app.carrier-rate-confirmation'
-import { Route as AppCarriersRouteImport } from './routes/_app.carriers'
-import { Route as AppCommissionsRouteImport } from './routes/_app.commissions'
-import { Route as AppCustomerInvoiceRouteImport } from './routes/_app.customer-invoice'
-import { Route as AppCustomersRouteImport } from './routes/_app.customers'
-import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
-import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
-import { Route as AppFollowupsRouteImport } from './routes/_app.followups'
-import { Route as AppInvoicesRouteImport } from './routes/_app.invoices'
-import { Route as AppLeadsRouteImport } from './routes/_app.leads'
-import { Route as AppLoadTenderRouteImport } from './routes/_app.load-tender'
-import { Route as AppLoadsRouteImport } from './routes/_app.loads'
-import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
-import { Route as AppOnboardingRouteImport } from './routes/_app.onboarding'
-import { Route as AppQuotesRouteImport } from './routes/_app.quotes'
-import { Route as AppReportsRouteImport } from './routes/_app.reports'
-import { Route as AppSearchRouteImport } from './routes/_app.search'
-import { Route as AppTeamsRouteImport } from './routes/_app.teams'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LockedRouteImport } from './routes/locked'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
+import { Route as AppTeamsRouteImport } from './routes/_app.teams'
+import { Route as AppStraightBillOfLadingRouteImport } from './routes/_app.straight-bill-of-lading'
+import { Route as AppSearchRouteImport } from './routes/_app.search'
+import { Route as AppReportsRouteImport } from './routes/_app.reports'
+import { Route as AppQuotesRouteImport } from './routes/_app.quotes'
+import { Route as AppOnboardingRouteImport } from './routes/_app.onboarding'
+import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppLoadsRouteImport } from './routes/_app.loads'
+import { Route as AppLoadTenderRouteImport } from './routes/_app.load-tender'
+import { Route as AppLeadsRouteImport } from './routes/_app.leads'
+import { Route as AppInvoicesRouteImport } from './routes/_app.invoices'
+import { Route as AppFollowupsRouteImport } from './routes/_app.followups'
+import { Route as AppDocumentsRouteImport } from './routes/_app.documents'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppCustomersRouteImport } from './routes/_app.customers'
+import { Route as AppCustomerInvoiceRouteImport } from './routes/_app.customer-invoice'
+import { Route as AppCommissionsRouteImport } from './routes/_app.commissions'
+import { Route as AppCarriersRouteImport } from './routes/_app.carriers'
+import { Route as AppCarrierRateConfirmationRouteImport } from './routes/_app.carrier-rate-confirmation'
+import { Route as AppAuditRouteImport } from './routes/_app.audit'
+import { Route as AppApprovalsRouteImport } from './routes/_app.approvals'
+import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppActivityRouteImport } from './routes/_app.activity'
 import { Route as AppAdminDataDeletionRouteImport } from './routes/_app.admin.data-deletion'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LockedRoute = LockedRouteImport.update({
-  id: '/locked',
-  path: '/locked',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -70,29 +52,123 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppActivityRoute = AppActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
+const LockedRoute = LockedRouteImport.update({
+  id: '/locked',
+  path: '/locked',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppUsersRoute = AppUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminRoute = AppAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AppTeamsRoute = AppTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
   getParentRoute: () => AppRoute,
 } as any)
-const AppApprovalsRoute = AppApprovalsRouteImport.update({
-  id: '/approvals',
-  path: '/approvals',
+const AppStraightBillOfLadingRoute = AppStraightBillOfLadingRouteImport.update({
+  id: '/straight-bill-of-lading',
+  path: '/straight-bill-of-lading',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAuditRoute = AppAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppQuotesRoute = AppQuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOnboardingRoute = AppOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLoadsRoute = AppLoadsRouteImport.update({
+  id: '/loads',
+  path: '/loads',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLoadTenderRoute = AppLoadTenderRouteImport.update({
+  id: '/load-tender',
+  path: '/load-tender',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeadsRoute = AppLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInvoicesRoute = AppInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFollowupsRoute = AppFollowupsRouteImport.update({
+  id: '/followups',
+  path: '/followups',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDocumentsRoute = AppDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomersRoute = AppCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCustomerInvoiceRoute = AppCustomerInvoiceRouteImport.update({
+  id: '/customer-invoice',
+  path: '/customer-invoice',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCommissionsRoute = AppCommissionsRouteImport.update({
+  id: '/commissions',
+  path: '/commissions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCarriersRoute = AppCarriersRouteImport.update({
+  id: '/carriers',
+  path: '/carriers',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCarrierRateConfirmationRoute =
@@ -101,94 +177,24 @@ const AppCarrierRateConfirmationRoute =
     path: '/carrier-rate-confirmation',
     getParentRoute: () => AppRoute,
   } as any)
-const AppCarriersRoute = AppCarriersRouteImport.update({
-  id: '/carriers',
-  path: '/carriers',
+const AppAuditRoute = AppAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCommissionsRoute = AppCommissionsRouteImport.update({
-  id: '/commissions',
-  path: '/commissions',
+const AppApprovalsRoute = AppApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCustomerInvoiceRoute = AppCustomerInvoiceRouteImport.update({
-  id: '/customer-invoice',
-  path: '/customer-invoice',
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCustomersRoute = AppCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDashboardRoute = AppDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDocumentsRoute = AppDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFollowupsRoute = AppFollowupsRouteImport.update({
-  id: '/followups',
-  path: '/followups',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppInvoicesRoute = AppInvoicesRouteImport.update({
-  id: '/invoices',
-  path: '/invoices',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLeadsRoute = AppLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLoadTenderRoute = AppLoadTenderRouteImport.update({
-  id: '/load-tender',
-  path: '/load-tender',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLoadsRoute = AppLoadsRouteImport.update({
-  id: '/loads',
-  path: '/loads',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppNotificationsRoute = AppNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOnboardingRoute = AppOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppQuotesRoute = AppQuotesRouteImport.update({
-  id: '/quotes',
-  path: '/quotes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppReportsRoute = AppReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSearchRoute = AppSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppTeamsRoute = AppTeamsRouteImport.update({
-  id: '/teams',
-  path: '/teams',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppUsersRoute = AppUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AppActivityRoute = AppActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAdminDataDeletionRoute = AppAdminDataDeletionRouteImport.update({
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/quotes': typeof AppQuotesRoute
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
+  '/straight-bill-of-lading': typeof AppStraightBillOfLadingRoute
   '/teams': typeof AppTeamsRoute
   '/users': typeof AppUsersRoute
   '/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/quotes': typeof AppQuotesRoute
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
+  '/straight-bill-of-lading': typeof AppStraightBillOfLadingRoute
   '/teams': typeof AppTeamsRoute
   '/users': typeof AppUsersRoute
   '/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/_app/quotes': typeof AppQuotesRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/search': typeof AppSearchRoute
+  '/_app/straight-bill-of-lading': typeof AppStraightBillOfLadingRoute
   '/_app/teams': typeof AppTeamsRoute
   '/_app/users': typeof AppUsersRoute
   '/_app/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/reports'
     | '/search'
+    | '/straight-bill-of-lading'
     | '/teams'
     | '/users'
     | '/admin/data-deletion'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/reports'
     | '/search'
+    | '/straight-bill-of-lading'
     | '/teams'
     | '/users'
     | '/admin/data-deletion'
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/_app/quotes'
     | '/_app/reports'
     | '/_app/search'
+    | '/_app/straight-bill-of-lading'
     | '/_app/teams'
     | '/_app/users'
     | '/_app/admin/data-deletion'
@@ -407,39 +419,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_app': {
-      id: '/_app'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/locked': {
-      id: '/locked'
-      path: '/locked'
-      fullPath: '/locked'
-      preLoaderRoute: typeof LockedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -449,158 +433,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/activity': {
-      id: '/_app/activity'
-      path: '/activity'
-      fullPath: '/activity'
-      preLoaderRoute: typeof AppActivityRouteImport
-      parentRoute: typeof AppRoute
+    '/locked': {
+      id: '/locked'
+      path: '/locked'
+      fullPath: '/locked'
+      preLoaderRoute: typeof LockedRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/admin': {
-      id: '/_app/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
-      parentRoute: typeof AppRoute
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/approvals': {
-      id: '/_app/approvals'
-      path: '/approvals'
-      fullPath: '/approvals'
-      preLoaderRoute: typeof AppApprovalsRouteImport
-      parentRoute: typeof AppRoute
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/audit': {
-      id: '/_app/audit'
-      path: '/audit'
-      fullPath: '/audit'
-      preLoaderRoute: typeof AppAuditRouteImport
-      parentRoute: typeof AppRoute
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/carrier-rate-confirmation': {
-      id: '/_app/carrier-rate-confirmation'
-      path: '/carrier-rate-confirmation'
-      fullPath: '/carrier-rate-confirmation'
-      preLoaderRoute: typeof AppCarrierRateConfirmationRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/carriers': {
-      id: '/_app/carriers'
-      path: '/carriers'
-      fullPath: '/carriers'
-      preLoaderRoute: typeof AppCarriersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/commissions': {
-      id: '/_app/commissions'
-      path: '/commissions'
-      fullPath: '/commissions'
-      preLoaderRoute: typeof AppCommissionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/customer-invoice': {
-      id: '/_app/customer-invoice'
-      path: '/customer-invoice'
-      fullPath: '/customer-invoice'
-      preLoaderRoute: typeof AppCustomerInvoiceRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/customers': {
-      id: '/_app/customers'
-      path: '/customers'
-      fullPath: '/customers'
-      preLoaderRoute: typeof AppCustomersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/dashboard': {
-      id: '/_app/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AppDashboardRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/documents': {
-      id: '/_app/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof AppDocumentsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/followups': {
-      id: '/_app/followups'
-      path: '/followups'
-      fullPath: '/followups'
-      preLoaderRoute: typeof AppFollowupsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/invoices': {
-      id: '/_app/invoices'
-      path: '/invoices'
-      fullPath: '/invoices'
-      preLoaderRoute: typeof AppInvoicesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/leads': {
-      id: '/_app/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof AppLeadsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/load-tender': {
-      id: '/_app/load-tender'
-      path: '/load-tender'
-      fullPath: '/load-tender'
-      preLoaderRoute: typeof AppLoadTenderRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/loads': {
-      id: '/_app/loads'
-      path: '/loads'
-      fullPath: '/loads'
-      preLoaderRoute: typeof AppLoadsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/notifications': {
-      id: '/_app/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AppNotificationsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/onboarding': {
-      id: '/_app/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof AppOnboardingRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/quotes': {
-      id: '/_app/quotes'
-      path: '/quotes'
-      fullPath: '/quotes'
-      preLoaderRoute: typeof AppQuotesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/reports': {
-      id: '/_app/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AppReportsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/search': {
-      id: '/_app/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof AppSearchRouteImport
+    '/_app/users': {
+      id: '/_app/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AppUsersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/teams': {
@@ -610,11 +482,158 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/users': {
-      id: '/_app/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof AppUsersRouteImport
+    '/_app/straight-bill-of-lading': {
+      id: '/_app/straight-bill-of-lading'
+      path: '/straight-bill-of-lading'
+      fullPath: '/straight-bill-of-lading'
+      preLoaderRoute: typeof AppStraightBillOfLadingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/quotes': {
+      id: '/_app/quotes'
+      path: '/quotes'
+      fullPath: '/quotes'
+      preLoaderRoute: typeof AppQuotesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/onboarding': {
+      id: '/_app/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AppOnboardingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/loads': {
+      id: '/_app/loads'
+      path: '/loads'
+      fullPath: '/loads'
+      preLoaderRoute: typeof AppLoadsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/load-tender': {
+      id: '/_app/load-tender'
+      path: '/load-tender'
+      fullPath: '/load-tender'
+      preLoaderRoute: typeof AppLoadTenderRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/leads': {
+      id: '/_app/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AppLeadsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/invoices': {
+      id: '/_app/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof AppInvoicesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/followups': {
+      id: '/_app/followups'
+      path: '/followups'
+      fullPath: '/followups'
+      preLoaderRoute: typeof AppFollowupsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/documents': {
+      id: '/_app/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AppDocumentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/customers': {
+      id: '/_app/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof AppCustomersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/customer-invoice': {
+      id: '/_app/customer-invoice'
+      path: '/customer-invoice'
+      fullPath: '/customer-invoice'
+      preLoaderRoute: typeof AppCustomerInvoiceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/commissions': {
+      id: '/_app/commissions'
+      path: '/commissions'
+      fullPath: '/commissions'
+      preLoaderRoute: typeof AppCommissionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/carriers': {
+      id: '/_app/carriers'
+      path: '/carriers'
+      fullPath: '/carriers'
+      preLoaderRoute: typeof AppCarriersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/carrier-rate-confirmation': {
+      id: '/_app/carrier-rate-confirmation'
+      path: '/carrier-rate-confirmation'
+      fullPath: '/carrier-rate-confirmation'
+      preLoaderRoute: typeof AppCarrierRateConfirmationRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/audit': {
+      id: '/_app/audit'
+      path: '/audit'
+      fullPath: '/audit'
+      preLoaderRoute: typeof AppAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/approvals': {
+      id: '/_app/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof AppApprovalsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/activity': {
+      id: '/_app/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AppActivityRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/admin/data-deletion': {
@@ -661,6 +680,7 @@ interface AppRouteChildren {
   AppQuotesRoute: typeof AppQuotesRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSearchRoute: typeof AppSearchRoute
+  AppStraightBillOfLadingRoute: typeof AppStraightBillOfLadingRoute
   AppTeamsRoute: typeof AppTeamsRoute
   AppUsersRoute: typeof AppUsersRoute
 }
@@ -687,6 +707,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppQuotesRoute: AppQuotesRoute,
   AppReportsRoute: AppReportsRoute,
   AppSearchRoute: AppSearchRoute,
+  AppStraightBillOfLadingRoute: AppStraightBillOfLadingRoute,
   AppTeamsRoute: AppTeamsRoute,
   AppUsersRoute: AppUsersRoute,
 }
