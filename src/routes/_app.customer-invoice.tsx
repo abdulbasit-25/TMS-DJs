@@ -45,15 +45,15 @@ function emptyRow(): LoadRow {
 
 const COMPANY = {
   address: "1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179",
-  contact: "(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com",
+  contact: "(682) 552-3169 | info@company.com | company.com",
   mcDot: "FMCSA PROPERTY BROKER | MC 1551655 | USDOT 4079462",
 };
 
 function nextInvoiceNumber() {
-  const key = "djfb-next-invoice-seq";
+  const key = "invoice-next-seq";
   const seq = Number(localStorage.getItem(key) ?? "1");
   localStorage.setItem(key, String(seq + 1));
-  return `DJFB-IN-${String(seq).padStart(3, "0")}`;
+  return `INV-${String(seq).padStart(3, "0")}`;
 }
 
 // ---------- Component ----------
@@ -157,7 +157,7 @@ function CustomerInvoicePage() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(20);
-    doc.text("DJFB", margin, y + 16);
+    doc.text("BROKER", margin, y + 16);
 
     doc.setFontSize(11);
     doc.text(companyDisplayName, margin, y + 32);
