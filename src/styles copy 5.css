@@ -1,0 +1,503 @@
+/* ============================================================================
+   Global styles — Tailwind v4 + shadcn/ui contract
+   ----------------------------------------------------------------------------
+   Token layering:
+     1. Palette      — static ramps (teal, gold, slate, ivory, …), theme-agnostic
+     2. Semantic     — per-theme runtime tokens (bg-*, text-*, brand, on-*, …)
+     3. shadcn       — shared bridge from semantic tokens to the shadcn/ui
+                       variable contract (only values may change, never names)
+
+   NOTE: Layers 2→3 use var() indirection, which requires the theme
+   attribute/class to be set on <html>. Set BOTH, e.g.:
+     document.documentElement.dataset.theme = "dark"
+     document.documentElement.classList.add("dark")
+   ========================================================================== */
+
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/jetbrains-mono";
+
+@source "../src";
+
+/* Dark is the no-attribute default; also honor the class and attribute explicitly. */
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *));
+@custom-variant light (&:is(.light *, [data-theme="light"] *));
+
+@theme inline {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ===== shadcn/ui variable contract — DO NOT rename these ===== */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ===== App semantic tokens as utilities =====
+     bg-app, bg-surface, bg-surface-2, bg-cta, text-on-cta,
+     text-nav, bg-nav-active, text-nav-active-fg, bg-primary-hover, text-error … */
+  --color-app: var(--color-bg-app);
+  --color-surface: var(--color-bg-surface);
+  --color-surface-2: var(--color-bg-surface-2);
+  --color-surface-hover: var(--color-bg-surface-hover);
+  --color-primary-hover: var(--color-brand-hover);
+  --color-cta: var(--color-cta-bg);
+  --color-cta-hover: var(--color-cta-bg-hover);
+  --color-on-cta: var(--color-cta-text);
+  --color-nav: var(--color-nav-text);
+  --color-nav-hover: var(--color-nav-text-hover);
+  --color-nav-active: var(--color-nav-active-bg);
+  --color-nav-active-fg: var(--color-nav-active-text);
+  --color-error: var(--color-danger);
+}
+
+/* ============================================================================
+   1. Palette — theme-independent
+   ========================================================================== */
+:root {
+  --radius: 0.5rem;
+
+  /* Primary — Teal (rich, warm-tinted ocean green — confident, not startup-blue) */
+  --teal-50: #edf7f6;
+  --teal-100: #d2edeb;
+  --teal-200: #a7d9d5;
+  --teal-300: #72c0ba;
+  --teal-400: #48a39d;
+  --teal-500: #2d8782;
+  --teal-600: #236c68;
+  --teal-700: #1c5653;
+  --teal-800: #164442;
+  --teal-900: #113635;
+  --teal-950: #09201f;
+
+  /* Accent / CTA — Gold (warm metallic, luxury highlight) */
+  --gold-50: #faf7f0;
+  --gold-100: #f0e6cf;
+  --gold-200: #e2cca0;
+  --gold-300: #d4b170;
+  --gold-400: #c89a48;
+  --gold-500: #b58535;
+  --gold-600: #966c2b;
+  --gold-700: #775323;
+  --gold-800: #5a3d1b;
+  --gold-900: #3e2914;
+
+  /* Neutrals — Warm Slate (dark theme surfaces; charcoal with subtle amber undertone) */
+  --slate-50: #f0eeeb;
+  --slate-100: #d9d5cf;
+  --slate-200: #bfb9b0;
+  --slate-300: #a29b90;
+  --slate-400: #857e74;
+  --slate-500: #6d6760;
+  --slate-600: #57524c;
+  --slate-700: #43403b;
+  --slate-800: #302e2a;
+  --slate-850: #272522;
+  --slate-900: #1e1c1a;
+  --slate-950: #131211;
+
+  /* Neutrals — Ivory (light theme surfaces; warm parchment with golden undertone) */
+  --ivory-25: #fefdfb;
+  --ivory-50: #f9f6f0;
+  --ivory-100: #f0ebe0;
+  --ivory-200: #e3d9c4;
+  --ivory-300: #d4c4a3;
+  --ivory-400: #c2ac82;
+  --ivory-500: #a8914f;
+  --ivory-600: #8a7640;
+  --ivory-700: #6b5c32;
+  --ivory-800: #4d4224;
+  --ivory-900: #312a16;
+
+  /* Status — Sage / Amber / Coral / Cerulean */
+  --sage-400: #8aaa7e;
+  --sage-500: #6f8e64;
+  --sage-600: #5a754f;
+  --amber-400: #d4a23c;
+  --amber-500: #bb8a2e;
+  --amber-600: #a07424;
+  --coral-400: #c76d60;
+  --coral-500: #ab5246;
+  --coral-600: #923b30;
+  --cerulean-400: #7b9ab8;
+  --cerulean-500: #6382a0;
+  --cerulean-600: #4f6b82;
+}
+
+/* ============================================================================
+   2. Semantic tokens — DARK (default)
+   ========================================================================== */
+:root,
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-bg-app: var(--slate-950);
+  --color-bg-sidebar: var(--slate-900);
+  --color-bg-surface: var(--slate-850);
+  --color-bg-surface-2: var(--slate-800);
+  --color-bg-surface-hover: color-mix(in oklab, var(--slate-100) 6%, var(--color-bg-surface));
+  --color-border: var(--slate-700);
+  --color-border-subtle: var(--slate-800);
+  --color-overlay: color-mix(in oklab, var(--slate-950) 72%, transparent);
+
+  --color-text-primary: #f0ebe2;
+  --color-text-secondary: var(--slate-300);
+  --color-text-muted: var(--slate-400);
+  --color-text-disabled: var(--slate-600);
+
+  --color-brand: var(--teal-500);
+  --color-brand-hover: var(--teal-400);
+  --color-cta-bg: var(--gold-500);
+  --color-cta-bg-hover: var(--gold-400);
+  /* Dark text on gold in dark mode — the "gold foil" luxury effect.
+     gold-500/slate-950 ≈ 6.0:1 — passes AA. */
+  --color-cta-text: var(--slate-950);
+
+  /* Status: light tints on dark bg, dark ink text for contrast.
+     sage-400/slate-950 ≈ 7.9:1 · amber-400/slate-950 ≈ 8.8:1 ·
+     coral-400/slate-950 ≈ 5.7:1 · cerulean-400/slate-950 ≈ 6.1:1 — all pass AA. */
+  --color-success: var(--sage-400);
+  --color-warning: var(--amber-400);
+  --color-danger: var(--coral-400);
+  --color-info: var(--cerulean-400);
+  --color-on-success: var(--slate-950);
+  --color-on-warning: var(--slate-950);
+  --color-on-danger: var(--slate-950);
+  --color-on-info: var(--slate-950);
+
+  /* Nav active: teal tint over sidebar bg */
+  --color-nav-active-bg: color-mix(in oklab, var(--teal-500) 18%, var(--color-bg-sidebar));
+  --color-nav-active-text: var(--teal-300);
+  --color-nav-text: var(--slate-300);
+  --color-nav-text-hover: #f0ebe2;
+
+  /* Link: lighter teal for text readability — teal-300/slate-950 ≈ 9:1 */
+  --color-link: var(--teal-300);
+  --color-link-hover: var(--teal-200);
+
+  /* Document/form surface tokens */
+  --color-doc-surface: color-mix(in oklab, var(--color-bg-surface) 88%, var(--slate-950));
+  --color-doc-surface-strong: color-mix(in oklab, var(--color-bg-surface) 72%, var(--slate-950));
+  --color-doc-surface-muted: color-mix(in oklab, var(--color-bg-surface) 80%, var(--slate-800));
+  --color-doc-border: var(--color-border);
+  --color-doc-text: var(--color-text-primary);
+  --color-doc-text-secondary: var(--color-text-secondary);
+  --color-doc-text-muted: var(--color-text-muted);
+  --color-doc-text-subtle: var(--color-text-secondary);
+  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 16%, var(--color-bg-surface));
+  --color-doc-success-soft: color-mix(in oklab, var(--color-success) 18%, var(--color-bg-surface));
+  --color-doc-danger-soft: color-mix(in oklab, var(--color-danger) 18%, var(--color-bg-surface));
+}
+
+/* ============================================================================
+   2. Semantic tokens — LIGHT (opt-in via data-theme="light" or .light)
+   ========================================================================== */
+[data-theme="light"],
+.light {
+  color-scheme: light;
+
+  --color-bg-app: var(--ivory-25);
+  --color-bg-sidebar: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-2: var(--ivory-50);
+  --color-bg-surface-hover: color-mix(in oklab, var(--slate-900) 4%, var(--color-bg-surface));
+  --color-border: var(--ivory-200);
+  --color-border-subtle: var(--ivory-100);
+  --color-overlay: color-mix(in oklab, var(--slate-950) 45%, transparent);
+
+  --color-text-primary: var(--slate-900);
+  --color-text-secondary: var(--slate-600);
+  --color-text-muted: var(--slate-500);
+  --color-text-disabled: var(--ivory-400);
+
+  --color-brand: var(--teal-700);
+  --color-brand-hover: var(--teal-800);
+  --color-cta-bg: var(--gold-600);
+  --color-cta-bg-hover: var(--gold-700);
+  /* White text on dark gold in light mode — gold-600/white ≈ 5.25:1, passes AA. */
+  --color-cta-text: #ffffff;
+
+  /* Darker steps so white foreground on solid badges/buttons clears AA:
+     sage-600/white ≈ 4.8:1 · coral-600/white ≈ 7.2:1 · cerulean-600/white ≈ 5.6:1.
+     Exception: amber-600/white ≈ 4.0:1 (fails), so warning keeps dark text. */
+  --color-success: var(--sage-600);
+  --color-warning: var(--amber-600);
+  --color-danger: var(--coral-600);
+  --color-info: var(--cerulean-600);
+  --color-on-success: #ffffff;
+  --color-on-warning: var(--slate-900);
+  --color-on-danger: #ffffff;
+  --color-on-info: #ffffff;
+
+  --color-nav-active-bg: color-mix(in oklab, var(--teal-700) 8%, var(--color-bg-sidebar));
+  --color-nav-active-text: var(--teal-700);
+  --color-nav-text: var(--slate-500);
+  --color-nav-text-hover: var(--slate-900);
+
+  --color-link: var(--color-brand);
+  --color-link-hover: var(--color-brand-hover);
+
+  --color-doc-surface: #ffffff;
+  --color-doc-surface-strong: var(--ivory-50);
+  --color-doc-surface-muted: var(--ivory-25);
+  --color-doc-border: var(--color-border);
+  --color-doc-text: var(--color-text-primary);
+  --color-doc-text-secondary: var(--color-text-secondary);
+  --color-doc-text-muted: var(--color-text-muted);
+  --color-doc-text-subtle: var(--color-text-secondary);
+  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 10%, #ffffff);
+  --color-doc-success-soft: color-mix(in oklab, var(--color-success) 14%, #ffffff);
+  --color-doc-danger-soft: color-mix(in oklab, var(--color-danger) 12%, #ffffff);
+}
+
+/* ============================================================================
+   3. shadcn/ui contract + legacy aliases — shared, resolves via layers 1–2
+   ========================================================================== */
+:root {
+  --background: var(--color-bg-app);
+  --foreground: var(--color-text-primary);
+  --card: var(--color-bg-surface);
+  --card-foreground: var(--color-text-primary);
+  --popover: var(--color-bg-surface);
+  --popover-foreground: var(--color-text-primary);
+  --primary: var(--color-brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--color-bg-surface-2);
+  --secondary-foreground: var(--color-text-primary);
+  --muted: var(--color-bg-surface-2);
+  --muted-foreground: var(--color-text-secondary);
+  --accent: var(--color-cta-bg);
+  --accent-foreground: var(--color-cta-text);
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-on-danger);
+  --success: var(--color-success);
+  --success-foreground: var(--color-on-success);
+  --warning: var(--color-warning);
+  --warning-foreground: var(--color-on-warning);
+  --info: var(--color-info);
+  --info-foreground: var(--color-on-info);
+  --border: var(--color-border);
+  --input: var(--color-bg-surface-2);
+  --ring: var(--color-brand);
+  --chart-1: var(--color-brand);
+  --chart-2: var(--color-cta-bg);
+  --chart-3: var(--color-info);
+  --chart-4: var(--color-warning);
+  --chart-5: var(--color-danger);
+  --sidebar: var(--color-bg-sidebar);
+  --sidebar-foreground: var(--color-nav-text);
+  --sidebar-primary: var(--color-brand);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--color-nav-active-bg);
+  --sidebar-accent-foreground: var(--color-nav-active-text);
+  --sidebar-border: var(--color-border);
+  --sidebar-ring: var(--color-brand);
+
+  /* Functional aliases used elsewhere in app code */
+  --color-bg-primary: var(--color-bg-app);
+  --color-bg-secondary: var(--color-bg-surface-2);
+  --color-surface-card: var(--color-bg-surface);
+  --color-cta: var(--color-cta-bg);
+  --color-cta-hover: var(--color-cta-bg-hover);
+  --color-error: var(--color-danger);
+}
+
+/* ============================================================================
+   Base
+   ========================================================================== */
+@layer components {
+  .app-surface-card {
+    @apply rounded-[22px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_10px_24px_rgba(30,28,26,0.08)];
+  }
+
+  .app-surface-subtle {
+    @apply rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface-strong)];
+  }
+
+  .app-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition-colors hover:bg-[var(--color-brand-hover)] disabled:opacity-60;
+  }
+
+  .app-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] px-3.5 py-2 text-sm font-medium text-[var(--color-doc-text)] transition-colors hover:bg-[var(--color-doc-surface-strong)];
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  :root {
+    accent-color: var(--color-brand);
+  }
+
+  html,
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  .font-mono,
+  code,
+  pre,
+  kbd {
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================================
+   Utilities & effects
+   ========================================================================== */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Grid overlay — uses currentColor so it adapts to the containing panel */
+.theme-grid-pattern {
+  background-image:
+    linear-gradient(currentColor 1px, transparent 1px),
+    linear-gradient(90deg, currentColor 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Animated route line */
+.dj-route-line {
+  animation: dj-route-dash 1.2s linear infinite;
+}
+
+@keyframes dj-route-dash {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Floating notification chip */
+@keyframes dj-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-float {
+  animation: dj-float 5s ease-in-out infinite;
+}
+
+/* Load card progress bar grows in on mount */
+@keyframes dj-progress-grow {
+  from {
+    width: 0%;
+  }
+}
+.dj-load-progress {
+  animation: dj-progress-grow 1.1s 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* Error shake */
+@keyframes dj-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
+}
+.dj-shake {
+  animation: dj-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Film-grain texture for the brand panel */
+.dj-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+/* Autofill: stop Chrome painting its default cream over themed inputs */
+@layer base {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--foreground);
+    -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
+    caret-color: var(--foreground);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
