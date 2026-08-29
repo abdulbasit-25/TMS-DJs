@@ -69,7 +69,7 @@ type NavItem = {
   label: string;
   icon: typeof LayoutDashboard;
   cap: Parameters<typeof can>[1];
-  section: "Operate" | "Records" | "Admin";
+  section: "Operate" | "Records" | "Docs" | "Admin";
   adminOnly?: boolean;
 };
 
@@ -122,34 +122,6 @@ const NAV: NavItem[] = [
     section: "Records",
   },
   { to: "/invoices", label: "Invoices", icon: FileText, cap: "invoices", section: "Records" },
-  {
-    to: "/straight-bill-of-lading",
-    label: "Straight Bill of Lading",
-    icon: FileText,
-    cap: "loads",
-    section: "Records",
-  },
-  {
-    to: "/customer-invoice",
-    label: "Customer Invoice",
-    icon: FileText,
-    cap: "invoices",
-    section: "Records",
-  },
-  {
-    to: "/load-tender",
-    label: "Load Tender",
-    icon: Package,
-    cap: "loads",
-    section: "Records",
-  },
-  {
-    to: "/carrier-rate-confirmation",
-    label: "Carrier Rate Confirmation",
-    icon: Truck,
-    cap: "carriers",
-    section: "Records",
-  },
   { to: "/users", label: "Users", icon: Users, cap: "users", section: "Admin" },
   { to: "/teams", label: "Teams", icon: Users, cap: "teams", section: "Admin" },
   { to: "/audit", label: "Session Log", icon: Shield, cap: "audit", section: "Admin" },
@@ -161,6 +133,34 @@ const NAV: NavItem[] = [
     cap: "admin",
     section: "Admin",
     adminOnly: true,
+  },
+  {
+    to: "/straight-bill-of-lading",
+    label: "Straight Bill of Lading",
+    icon: FileText,
+    cap: "loads",
+    section: "Docs",
+  },
+  {
+    to: "/customer-invoice",
+    label: "Customer Invoice",
+    icon: FileText,
+    cap: "invoices",
+    section: "Docs",
+  },
+  {
+    to: "/load-tender",
+    label: "Load Tender",
+    icon: Package,
+    cap: "loads",
+    section: "Docs",
+  },
+  {
+    to: "/carrier-rate-confirmation",
+    label: "Carrier Rate Confirmation",
+    icon: Truck,
+    cap: "carriers",
+    section: "Docs",
   },
 ];
 
@@ -284,6 +284,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const grouped = {
     Operate: visibleNav.filter((n) => n.section === "Operate"),
     Records: visibleNav.filter((n) => n.section === "Records"),
+    Docs: visibleNav.filter((n) => n.section === "Docs"),
     Admin: visibleNav.filter((n) => n.section === "Admin"),
   };
 
