@@ -75,7 +75,7 @@ type TenderFormState = {
 };
 
 const initialState: TenderFormState = {
-  loadNo: "DJFB-LOAD-2048",
+  loadNo: "LOAD-2048",
   tenderedDateTime: "2026-08-29T09:00",
   poReference: "PO-11842",
   offerExpires: "2026-08-29T17:00",
@@ -179,7 +179,7 @@ function LoadTenderPage() {
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(22);
-        doc.text("DJFB", margin + 13, 46);
+        doc.text("BROKER", margin + 13, 46);
 
         doc.setTextColor(24, 47, 70);
         doc.setFont("helvetica", "bold");
@@ -188,11 +188,7 @@ function LoadTenderPage() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", margin + 94, 51);
-        doc.text(
-          "(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com",
-          margin + 94,
-          63,
-        );
+        doc.text("(682) 552-3169 | info@company.com | company.com", margin + 94, 63);
 
         doc.setDrawColor(180, 20, 20);
         doc.setLineWidth(1);
@@ -204,7 +200,7 @@ function LoadTenderPage() {
         doc.text(title, margin, 90);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.3);
-        doc.text("DJFB-LT-001 | Revision 1.0 | Effective August 4, 2026", pageWidth - margin, 90, {
+        doc.text("LT-001 | Revision 1.0 | Effective August 4, 2026", pageWidth - margin, 90, {
           align: "right",
         });
         doc.setFontSize(8.1);
@@ -297,8 +293,7 @@ function LoadTenderPage() {
       doc.text("NOT AN AUTHORIZATION TO PICK UP", margin, 118);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.2);
-      const authText =
-        "This tender is a preliminary offer only. Carrier is not authorized to dispatch, enter a facility, or pick up freight until DJ's issues a signed carrier rate confirmation and the carrier accepts it.";
+      const authText = `This tender is a preliminary offer only. Carrier is not authorized to dispatch, enter a facility, or pick up freight until ${portalCompanyName} issues a signed carrier rate confirmation and the carrier accepts it.`;
       const authLines = doc.splitTextToSize(authText, contentWidth - 8);
       doc.text(authLines, margin, 130);
 
@@ -311,7 +306,7 @@ function LoadTenderPage() {
       doc.text("LOAD DETAILS", margin + 6, y + 12);
       y += 22;
 
-      drawField(margin, y, contentWidth / 4 - 6, 32, "DJFB LOAD NO.", form.loadNo);
+      drawField(margin, y, contentWidth / 4 - 6, 32, "LOAD NO.", form.loadNo);
       drawField(
         margin + contentWidth / 4,
         y,
@@ -569,7 +564,7 @@ function LoadTenderPage() {
         120,
         "MATERIAL CARRIER REQUIREMENTS",
         form.materialCarrierRequirements ||
-          "Maintain active FMCSA authority and all required cargo, auto, and general liability insurance through final delivery. Activate DJ's-approved GPS tracking before pickup and keep it active through delivery; do not handle tracking while driving. Do not rebroker, transfer, cross-dock, or substitute the driver, tractor, or trailer without DJ's prior written approval. Report arrival, loaded status, departure, delays, incidents, cargo exceptions, and delivery immediately to DJ's Operations. Confirm seal number and cargo condition at pickup and delivery. Do not break a seal except as legally required or authorized in writing. Obtain written pre-approval for accessorials and submit signed receipts, in/out times, invoice, signed BOL, and POD.",
+          `Maintain active FMCSA authority and all required cargo, auto, and general liability insurance through final delivery. Activate approved GPS tracking before pickup and keep it active through delivery; do not handle tracking while driving. Do not rebroker, transfer, cross-dock, or substitute the driver, tractor, or trailer without ${portalCompanyName} prior written approval. Report arrival, loaded status, departure, delays, incidents, cargo exceptions, and delivery immediately to operations. Confirm seal number and cargo condition at pickup and delivery. Do not break a seal except as legally required or authorized in writing. Obtain written pre-approval for accessorials and submit signed receipts, in/out times, invoice, signed BOL, and POD.`,
       );
       y2 += 130;
 
@@ -619,7 +614,7 @@ function LoadTenderPage() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text(
-        "DJFB INTERNAL CARRIER VERIFICATION - COMPLETE BEFORE RATE CONFIRMATION",
+        "INTERNAL CARRIER VERIFICATION - COMPLETE BEFORE RATE CONFIRMATION",
         margin + 6,
         y2 + 12,
       );
@@ -660,7 +655,7 @@ function LoadTenderPage() {
       );
       drawFooter();
 
-      doc.save("DJFB-LT-001_Load_Tender.pdf");
+      doc.save("Load_Tender.pdf");
     } catch (error) {
       console.error(error);
       alert("Load tender PDF generation failed. Please verify your input and try again.");
@@ -673,7 +668,7 @@ function LoadTenderPage() {
     <div className="space-y-5">
       <PageHeader
         title="Load Tender"
-        description="DJFB-LT-001 preliminary offer, carrier acceptance, and dispatch verification."
+        description="Preliminary offer, carrier acceptance, and dispatch verification."
       />
 
       <div className="flex justify-end">
@@ -691,7 +686,7 @@ function LoadTenderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <Field label="DJFB LOAD NO." error={errors.loadNo}>
+                <Field label="LOAD NO." error={errors.loadNo}>
                   <Input
                     value={form.loadNo}
                     onChange={(e) => updateField("loadNo", e.target.value)}
@@ -1112,7 +1107,7 @@ function LoadTenderPage() {
             <CardContent className="space-y-3 text-xs text-slate-700">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <div className="text-[11px] font-bold uppercase tracking-wide">DJFB</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wide">BROKER</div>
                   <div className="text-[9px] text-slate-500">P1 of 2</div>
                 </div>
                 <div className="space-y-2">
