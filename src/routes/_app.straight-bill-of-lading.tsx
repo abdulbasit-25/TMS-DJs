@@ -184,8 +184,7 @@ const initialFreightItems: FreightItem[] = [
   },
 ];
 
-const sectionClass =
-  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100";
+const sectionClass = "app-surface-card";
 
 const REQUIRED_FIELDS: Array<{ key: keyof BOLFormState; label: string }> = [
   { key: "loadNo", label: "Load No." },
@@ -214,8 +213,8 @@ function SectionTitle({
   children: React.ReactNode;
 }) {
   return (
-    <CardTitle className="flex items-center gap-2 text-base font-bold text-blue-950 dark:text-blue-100">
-      <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200">
+    <CardTitle className="flex items-center gap-2 text-base font-bold text-[var(--color-doc-text)]">
+      <span className="flex size-7 items-center justify-center rounded-lg bg-[var(--color-doc-brand-soft)] text-[var(--color-brand)]">
         <Icon className="size-4" />
       </span>
       {children}
@@ -899,25 +898,25 @@ function StraightBillOfLadingPage() {
         description="Complete the shipment record, review the live preview, and generate a polished PDF for release and compliance."
       />
 
-      <div className="sticky top-0 z-20 -mx-1 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-slate-700 dark:bg-slate-950/80">
+      <div className="sticky top-0 z-20 -mx-1 rounded-[26px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)]/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-[var(--color-doc-surface)]/80">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-black tracking-[0.18em] text-white">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-[var(--color-brand)] text-xs font-black tracking-[0.18em] text-[var(--color-cta-text)]">
               BOL
             </div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-slate-900">
+              <div className="truncate text-sm font-semibold text-[var(--color-doc-text)]">
                 {form.bolNo || "Untitled BOL"} · {form.loadNo || "No load number"}
               </div>
-              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-[var(--color-doc-text-subtle)]">
                 {completion.missing.length === 0 ? (
                   <>
-                    <CheckCircle2 className="size-3.5 text-emerald-600" />
+                    <CheckCircle2 className="size-3.5 text-[var(--color-success)]" />
                     Ready to generate
                   </>
                 ) : (
                   <>
-                    <AlertTriangle className="size-3.5 text-amber-500" />
+                    <AlertTriangle className="size-3.5 text-[var(--color-warning)]" />
                     {completion.done}/{completion.total} required fields complete
                   </>
                 )}
@@ -931,7 +930,7 @@ function StraightBillOfLadingPage() {
               variant="outline"
               size="sm"
               onClick={() => setForm(initialState)}
-              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              className="app-button-secondary border"
             >
               Reset form
             </Button>
@@ -940,7 +939,7 @@ function StraightBillOfLadingPage() {
               variant="outline"
               size="sm"
               onClick={() => setFreightItems(initialFreightItems)}
-              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              className="app-button-secondary border"
             >
               Clear freight rows
             </Button>
@@ -948,7 +947,7 @@ function StraightBillOfLadingPage() {
               type="button"
               onClick={generatePDF}
               disabled={isGenerating}
-              className="bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+              className="app-button-primary shadow-sm"
             >
               <FileDown className="mr-2 size-4" />
               {isGenerating ? "Generating…" : "Generate PDF"}
@@ -1037,7 +1036,7 @@ function StraightBillOfLadingPage() {
                 </Field>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-500">
+              <div className="app-surface-subtle rounded-lg border px-3 py-2 text-right text-xs italic text-[var(--color-doc-text-subtle)]">
                 {portalCompanyName} acts solely as a property broker
               </div>
             </CardContent>
@@ -1126,7 +1125,7 @@ function StraightBillOfLadingPage() {
                   variant="outline"
                   size="sm"
                   onClick={addFreightRow}
-                  className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="app-button-secondary border"
                 >
                   <Plus className="mr-2 size-4" /> Add row
                 </Button>
@@ -1134,15 +1133,15 @@ function StraightBillOfLadingPage() {
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               {errors.freight ? (
-                <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-doc-danger-soft)] px-3 py-2 text-xs font-medium text-[var(--color-danger)]">
                   <AlertTriangle className="size-3.5" />
                   {errors.freight}
                 </div>
               ) : null}
 
-              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+              <div className="overflow-x-auto rounded-lg border border-[var(--color-doc-border)]">
                 <div className="min-w-[780px]">
-                  <div className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
+                  <div className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] gap-2 border-b border-[var(--color-doc-border)] bg-[var(--color-doc-surface-strong)] px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-doc-text-muted)]">
                     <span>HM</span>
                     <span>Units</span>
                     <span>Pkg</span>
@@ -1156,9 +1155,7 @@ function StraightBillOfLadingPage() {
                     <div
                       key={item.id}
                       className={`grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] items-start gap-2 px-2 py-2 ${
-                        idx % 2 === 1
-                          ? "bg-slate-50/60 dark:bg-slate-800/40"
-                          : "dark:bg-slate-900/50"
+                        idx % 2 === 1 ? "bg-[var(--color-doc-surface-muted)]" : "bg-[var(--color-doc-surface)]"
                       }`}
                     >
                       <Input
@@ -1198,7 +1195,7 @@ function StraightBillOfLadingPage() {
                         disabled={freightItems.length === 1}
                         aria-label="Remove row"
                       >
-                        <Trash2 className="size-4 text-red-500" />
+                        <Trash2 className="size-4 text-[var(--color-danger)]" />
                       </Button>
                     </div>
                   ))}
@@ -1207,13 +1204,13 @@ function StraightBillOfLadingPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="Total units">
-                  <Input value={formatNumber(totals.units)} readOnly className="bg-slate-50" />
+                  <Input value={formatNumber(totals.units)} readOnly className="bg-[var(--color-doc-surface-strong)]" />
                 </Field>
                 <Field label="Total weight">
                   <Input
                     value={`${formatNumber(totals.weight)} lb`}
                     readOnly
-                    className="bg-slate-50"
+                    className="bg-[var(--color-doc-surface-strong)]"
                   />
                 </Field>
                 <Field label="Declared value (if any)">
@@ -1232,8 +1229,8 @@ function StraightBillOfLadingPage() {
                   aria-pressed={form.hazmat === "No"}
                   className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                     form.hazmat === "No"
-                      ? "border-slate-800 bg-slate-800 text-white dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900"
-                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                      ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-cta-text)]"
+                      : "border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] text-[var(--color-doc-text)] hover:bg-[var(--color-doc-surface-strong)]"
                   }`}
                 >
                   Hazmat — No
@@ -1244,8 +1241,8 @@ function StraightBillOfLadingPage() {
                   aria-pressed={form.hazmat === "Yes"}
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                     form.hazmat === "Yes"
-                      ? "border-red-600 bg-red-600 text-white dark:border-red-500 dark:bg-red-500"
-                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                      ? "border-[var(--color-danger)] bg-[var(--color-danger)] text-[var(--color-on-danger)]"
+                      : "border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] text-[var(--color-doc-text)] hover:bg-[var(--color-doc-surface-strong)]"
                   }`}
                 >
                   <Flame className="size-3.5" />
@@ -1253,7 +1250,7 @@ function StraightBillOfLadingPage() {
                 </button>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
+              <div className="app-surface-subtle rounded-lg border px-3 py-2 text-right text-xs italic text-[var(--color-doc-text-subtle)]">
                 Shipper must identify hazardous materials and special handling needs
               </div>
             </CardContent>
@@ -1337,7 +1334,7 @@ function StraightBillOfLadingPage() {
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-doc-text)]">
                   <Checkbox
                     checked={form.driverCountedFreight}
                     onCheckedChange={(checked) =>
@@ -1346,7 +1343,7 @@ function StraightBillOfLadingPage() {
                   />
                   Driver counted freight
                 </label>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-doc-text)]">
                   <Checkbox
                     checked={form.shipperLoadAndCount}
                     onCheckedChange={(checked) =>
@@ -1355,7 +1352,7 @@ function StraightBillOfLadingPage() {
                   />
                   Shipper load and count (SLC)
                 </label>
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-doc-text)]">
                   <Checkbox
                     checked={form.sealVerified}
                     onCheckedChange={(checked) => updateField("sealVerified", checked === true)}
@@ -1511,7 +1508,7 @@ function StraightBillOfLadingPage() {
               </SectionTitle>
             </CardHeader>
             <CardContent className="pt-4">
-              <p className="text-sm leading-6 text-slate-700">
+              <p className="text-sm leading-6 text-[var(--color-doc-text)]">
                 {portalCompanyName} is a property broker, not the motor carrier or warehouseman. The
                 motor carrier has exclusive custody, control, and responsibility for transportation,
                 loading review, securement, and delivery. This BOL does not change the load-specific
@@ -1531,27 +1528,27 @@ function StraightBillOfLadingPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900">
-                <div className="border-b border-slate-700/80 bg-slate-900 px-4 py-3">
+              <div className="overflow-hidden rounded-[18px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                <div className="border-b border-[var(--color-doc-border)] bg-[var(--color-brand)] px-4 py-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-11 items-center justify-center rounded-md bg-white text-[10px] font-black tracking-[0.2em] text-slate-900">
+                      <div className="flex h-8 w-11 items-center justify-center rounded-md bg-[var(--color-cta-text)] text-[10px] font-black tracking-[0.2em] text-[var(--color-brand)]">
                         BOL
                       </div>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-cta-text)]">
                           {portalCompanyName}
                         </div>
-                        <div className="text-[9px] text-slate-300">Straight Bill of Lading</div>
+                        <div className="text-[9px] text-[var(--color-doc-text-secondary)]">Straight Bill of Lading</div>
                       </div>
                     </div>
-                    <div className="text-[9px] font-medium text-slate-300">
+                    <div className="text-[9px] font-medium text-[var(--color-cta-text)]">
                       {form.bolNo || "BOL"} · {DOCUMENT_REVISION}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3 p-3 text-[11px] text-slate-700 dark:text-slate-200">
+                <div className="space-y-3 p-3 text-[11px] text-[var(--color-doc-text)]">
                   <div className="grid grid-cols-2 gap-2">
                     <FieldPreview label="Load No." value={form.loadNo} />
                     <FieldPreview label="Date issued" value={formatDate(form.dateIssued)} />
@@ -1565,8 +1562,8 @@ function StraightBillOfLadingPage() {
                     <FieldPreview label="Delivery" value={form.deliveryAddress} />
                   </div>
 
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/70">
-                    <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+                  <div className="rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface-strong)] p-2">
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-[var(--color-doc-text-muted)]">
                       <span>Freight summary</span>
                       <span>
                         {formatNumber(totals.units)} units · {formatNumber(totals.weight)} lb
@@ -1575,13 +1572,13 @@ function StraightBillOfLadingPage() {
                     {freightItems.slice(0, 3).map((item) => (
                       <div key={item.id} className="mb-1 flex justify-between gap-2 text-[10px]">
                         <span className="truncate">{item.commodity || "Untitled commodity"}</span>
-                        <span className="shrink-0 text-slate-500 dark:text-slate-300">
+                        <span className="shrink-0 text-[var(--color-doc-text-subtle)]">
                           {item.weight || "0"} lb
                         </span>
                       </div>
                     ))}
                     {freightItems.length > 3 ? (
-                      <div className="text-[10px] text-slate-400 dark:text-slate-400">
+                      <div className="text-[10px] text-[var(--color-doc-text-subtle)]">
                         +{freightItems.length - 3} more row
                         {freightItems.length - 3 === 1 ? "" : "s"}
                       </div>
@@ -1592,37 +1589,37 @@ function StraightBillOfLadingPage() {
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                         form.hazmat === "Yes"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-slate-100 text-slate-600"
+                          ? "bg-[var(--color-doc-danger-soft)] text-[var(--color-danger)]"
+                          : "bg-[var(--color-doc-surface-strong)] text-[var(--color-doc-text-muted)]"
                       }`}
                     >
                       {form.hazmat === "Yes" ? <Flame className="size-3" /> : null}
                       Hazmat: {form.hazmat}
                     </span>
-                    <span className="text-[10px] text-slate-400">2-page document</span>
+                    <span className="text-[10px] text-[var(--color-doc-text-subtle)]">2-page document</span>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs dark:border-slate-600 dark:bg-slate-800/60">
+              <div className="rounded-lg border border-dashed border-[var(--color-doc-border)] bg-[var(--color-doc-surface-strong)] p-3 text-xs">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  <span className="font-semibold text-[var(--color-doc-text)]">
                     Required fields
                   </span>
-                  <span className="text-slate-500 dark:text-slate-400">
+                  <span className="text-[var(--color-doc-text-muted)]">
                     {completion.done}/{completion.total}
                   </span>
                 </div>
-                <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-doc-surface)]">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      completion.missing.length === 0 ? "bg-emerald-500" : "bg-blue-800"
+                      completion.missing.length === 0 ? "bg-[var(--color-success)]" : "bg-[var(--color-brand)]"
                     }`}
                     style={{ width: `${(completion.done / completion.total) * 100}%` }}
                   />
                 </div>
                 {completion.missing.length > 0 ? (
-                  <ul className="space-y-1 text-amber-700">
+                  <ul className="space-y-1 text-[var(--color-warning)]">
                     {completion.missing.map((f) => (
                       <li key={f.key} className="flex items-center gap-1.5">
                         <AlertTriangle className="size-3" /> {f.label}
@@ -1630,7 +1627,7 @@ function StraightBillOfLadingPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div className="flex items-center gap-1.5 text-emerald-700">
+                  <div className="flex items-center gap-1.5 text-[var(--color-success)]">
                     <CheckCircle2 className="size-3.5" /> All required fields are complete
                   </div>
                 )}
@@ -1654,12 +1651,12 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5 text-left">
-      <Label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
+      <Label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-doc-text-muted)]">
         {label}
       </Label>
       {children}
       {error ? (
-        <span className="flex items-center gap-1 text-xs font-medium text-red-600">
+        <span className="flex items-center gap-1 text-xs font-medium text-[var(--color-danger)]">
           <AlertTriangle className="size-3" /> {error}
         </span>
       ) : null}
@@ -1669,11 +1666,11 @@ function Field({
 
 function FieldPreview({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900/80">
-      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+    <div className="rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] p-2">
+      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-[var(--color-doc-text-subtle)]">
         {label}
       </div>
-      <div className="truncate text-[10px] text-slate-700 dark:text-slate-200">{value || "—"}</div>
+      <div className="truncate text-[10px] text-[var(--color-doc-text)]">{value || "—"}</div>
     </div>
   );
 }
@@ -1750,7 +1747,7 @@ function SignatureField({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
+        <Label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-doc-text-muted)]">
           {label}
         </Label>
         <Button type="button" variant="ghost" size="sm" onClick={clearSignature}>
@@ -1766,16 +1763,16 @@ function SignatureField({
           onPointerMove={continueDraw}
           onPointerUp={stopDraw}
           onPointerLeave={stopDraw}
-          className="w-full touch-none rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-950"
+          className="w-full touch-none rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)]"
         />
         {!value ? (
-          <span className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-slate-300">
+          <span className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-[var(--color-doc-text-subtle)]">
             Sign here
           </span>
         ) : null}
       </div>
       {value ? (
-        <img src={value} alt={label} className="h-12 rounded border border-slate-200 bg-white" />
+        <img src={value} alt={label} className="h-12 rounded border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)]" />
       ) : null}
     </div>
   );
