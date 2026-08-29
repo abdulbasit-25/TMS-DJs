@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { usePortalSettings } from "@/hooks/use-portal-settings";
-import { FileDown, Plus, Trash2, ReceiptText } from "lucide-react";
+import { FileDown, Plus, Trash2, ReceiptText, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/customer-invoice")({
   component: CustomerInvoicePage,
@@ -56,6 +57,12 @@ function nextInvoiceNumber() {
   return `INV-${String(seq).padStart(3, "0")}`;
 }
 
+function money(n: number) {
+  return `$${n.toFixed(2)}`;
+}
+
+const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
+
 // ---------- Component ----------
 
 function CustomerInvoicePage() {
@@ -93,6 +100,8 @@ function CustomerInvoicePage() {
   const [approvedBy, setApprovedBy] = useState("");
   const [internalStatus, setInternalStatus] = useState("");
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const subtotal = useMemo(
     () => loads.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0),
     [loads],
@@ -105,6 +114,7 @@ function CustomerInvoicePage() {
 
   function updateRow(id: string, field: keyof LoadRow, value: string) {
     setLoads((rows) => rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+    setErrors((prev) => ({ ...prev, loads: "" }));
   }
   function addRow() {
     setLoads((rows) => [...rows, emptyRow()]);
@@ -113,145 +123,219 @@ function CustomerInvoicePage() {
     setLoads((rows) => (rows.length > 1 ? rows.filter((r) => r.id !== id) : rows));
   }
 
-  function money(n: number) {
-    return `$${n.toFixed(2)}`;
+  function validate() {
+    const next: Record<string, string> = {};
+    if (!customerCompany.trim()) next.customerCompany = "Customer / Company is required.";
+    if (!invoiceNo.trim()) next.invoiceNo = "Invoice No. is required.";
+    if (!loads.some((r) => (parseFloat(r.amount) || 0) > 0)) {
+      next.loads = "At least one load row needs an amount greater than $0.";
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
   }
 
   function generatePDF() {
-    const doc = new jsPDF({ unit: "pt", format: "letter" }); // 612 x 792
-    const pageWidth = 612;
-    const pageHeight = 792;
-    const margin = 36;
-    const contentWidth = pageWidth - margin * 2;
-    let y = margin;
+    if (!validate()) return;
 
-    const checkPageBreak = (needed: number) => {
-      if (y + needed > pageHeight - 60) {
+    // ----- Palette (shared with Carrier Rate Confirmation for a consistent brand system) -----
+    const NAVY: [number, number, number] = [21, 38, 61];
+    const GOLD: [number, number, number] = [173, 138, 84];
+    const BORDER: [number, number, number] = [214, 219, 226];
+    const TEXT: [number, number, number] = [26, 32, 40];
+    const MUTED: [number, number, number] = [110, 118, 128];
+
+    const doc = new jsPDF({ unit: "pt", format: "letter" }); // 612 x 792
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 40;
+    const contentWidth = pageWidth - margin * 2;
+    const footerTop = pageHeight - 34;
+    let y = 0;
+
+    const drawHeader = (continued: boolean) => {
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(margin, 26, 76, 30, 4, 4, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12.5);
+      doc.text("BROKER", margin + 12, 46);
+
+      doc.setTextColor(...NAVY);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12.5);
+      doc.text(companyDisplayName, margin + 92, 38);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.8);
+      doc.setTextColor(...MUTED);
+      doc.text(COMPANY.address, margin + 92, 49);
+      doc.text(COMPANY.contact, margin + 92, 59);
+
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(1.4);
+      doc.line(margin, 70, pageWidth - margin, 70);
+
+      doc.setTextColor(...NAVY);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14.5);
+      doc.text(continued ? "CUSTOMER INVOICE (CONTINUED)" : "CUSTOMER INVOICE", margin, 90);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.3);
+      doc.setTextColor(...MUTED);
+      doc.text(invoiceNo, pageWidth - margin, 82, { align: "right" });
+      // Page number stamped in a final pass once total page count is known.
+
+      y = 108;
+    };
+
+    const drawFooter = () => {
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(0.6);
+      doc.line(margin, footerTop - 8, pageWidth - margin, footerTop - 8);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(...MUTED);
+      doc.text(COMPANY.mcDot, margin, footerTop);
+      doc.text(
+        "Generated invoice — verify against current template revision",
+        pageWidth - margin,
+        footerTop,
+        { align: "right" },
+      );
+    };
+
+    const ensureSpace = (h: number) => {
+      if (y + h > footerTop - 14) {
+        drawFooter();
         doc.addPage();
-        y = margin;
+        drawHeader(true);
       }
     };
 
     const label = (text: string, x: number, yPos: number) => {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.setTextColor(110);
-      doc.text(text.toUpperCase(), x, yPos);
-    };
-    const value = (text: string, x: number, yPos: number) => {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9.5);
-      doc.setTextColor(20);
-      doc.text(text || "-", x, yPos);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.4);
+      doc.setTextColor(...MUTED);
+      doc.text(text.toUpperCase(), x, yPos, { charSpace: 0.4 });
     };
 
-    // Draws a bordered field box with a label and value
-    function fieldBox(x: number, boxY: number, w: number, h: number, lbl: string, val: string) {
-      doc.setDrawColor(190);
-      doc.rect(x, boxY, w, h);
-      label(lbl, x + 6, boxY + 12);
-      value(val, x + 6, boxY + 27);
-    }
+    // Bordered field box — fill is set explicitly every call so it never inherits
+    // whatever color a previous section happened to leave active.
+    const fieldBox = (x: number, boxY: number, w: number, h: number, lbl: string, val: string) => {
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(0.75);
+      doc.roundedRect(x, boxY, w, h, 2, 2, "FD");
+      label(lbl, x + 7, boxY + 13);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.6);
+      doc.setTextColor(...TEXT);
+      const maxLines = Math.max(1, Math.floor((h - 21) / 9.5));
+      const lines = doc.splitTextToSize(val || "—", w - 14);
+      doc.text(lines.slice(0, maxLines), x + 7, boxY + 24);
+    };
+
+    const fieldRow = (fields: { label: string; value: string; w: number }[], h = 36) => {
+      ensureSpace(h + 10);
+      let cx = margin;
+      fields.forEach((f) => {
+        fieldBox(cx, y, f.w, h, f.label, f.value);
+        cx += f.w + 8;
+      });
+      y += h + 10;
+    };
+
+    const sectionHeader = (title: string) => {
+      ensureSpace(30);
+      doc.setFillColor(...NAVY);
+      doc.rect(margin, y, contentWidth, 20, "F");
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(1.2);
+      doc.line(margin, y + 20, margin + contentWidth, y + 20);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.text(title.toUpperCase(), margin + 8, y + 14, { charSpace: 0.5 });
+      y += 30;
+    };
 
     // ---- Header ----
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(20);
-    doc.text("BROKER", margin, y + 16);
-
-    doc.setFontSize(11);
-    doc.text(companyDisplayName, margin, y + 32);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(90);
-    doc.text(COMPANY.address, margin, y + 44);
-    doc.text(COMPANY.contact, margin, y + 55);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
-    doc.setTextColor(20);
-    doc.text("CUSTOMER INVOICE", pageWidth - margin, y + 16, { align: "right" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(90);
-    doc.text(invoiceNo, pageWidth - margin, y + 30, { align: "right" });
-
-    y += 70;
-    doc.setDrawColor(20);
-    doc.setLineWidth(1);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 14;
+    drawHeader(false);
 
     // ---- Invoice Information ----
-    const infoColW = contentWidth / 4;
-    const infoH = 38;
-    fieldBox(margin, y, infoColW, infoH, "Invoice No.", invoiceNo);
-    fieldBox(margin + infoColW, y, infoColW, infoH, "Issue Date", issueDate);
-    fieldBox(margin + infoColW * 2, y, infoColW, infoH, "Due Date", dueDate);
-    fieldBox(margin + infoColW * 3, y, infoColW, infoH, "Payment Terms", paymentTerms);
-    y += infoH + 10;
+    fieldRow([
+      { label: "Invoice No.", value: invoiceNo, w: contentWidth / 4 - 6 },
+      { label: "Issue Date", value: issueDate, w: contentWidth / 4 - 6 },
+      { label: "Due Date", value: dueDate, w: contentWidth / 4 - 6 },
+      { label: "Payment Terms", value: paymentTerms, w: contentWidth / 4 - 6 },
+    ]);
 
     // ---- Bill To / Remit To ----
+    // Height is computed from the actual address + reference lines instead of a
+    // fixed value, so a longer billing address can no longer overflow the box.
     const halfW = contentWidth / 2 - 6;
-    const billH = 92;
-
-    doc.setDrawColor(190);
-    doc.rect(margin, y, halfW, billH);
-    label("Bill To", margin + 6, y + 12);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
-    doc.setTextColor(20);
-    doc.text(customerCompany || "-", margin + 6, y + 27);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.setTextColor(60);
+    const addrLines = doc.splitTextToSize(billingAddress || "—", halfW - 14);
     const billLines = [
       apContact && `AP: ${apContact}`,
       poReference && `PO / Ref: ${poReference}`,
     ].filter(Boolean) as string[];
-    const addrLines = doc.splitTextToSize(billingAddress || "-", halfW - 12);
-    let by = y + 40;
-    addrLines.slice(0, 3).forEach((line: string) => {
-      doc.text(line, margin + 6, by);
+    const billH = Math.max(92, 40 + (addrLines.length + billLines.length) * 11 + 8);
+    ensureSpace(billH + 14);
+
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...BORDER);
+    doc.setLineWidth(0.75);
+    doc.roundedRect(margin, y, halfW, billH, 2, 2, "FD");
+    label("Bill To", margin + 7, y + 13);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...TEXT);
+    doc.text(customerCompany || "—", margin + 7, y + 28);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...MUTED);
+    let by = y + 41;
+    addrLines.forEach((line: string) => {
+      doc.text(line, margin + 7, by);
       by += 11;
     });
     billLines.forEach((line) => {
-      doc.text(line, margin + 6, by);
+      doc.text(line, margin + 7, by);
       by += 11;
     });
 
     const remitX = margin + halfW + 12;
-    doc.rect(remitX, y, halfW, billH);
-    label("Remit To / Notice of Assignment", remitX + 6, y + 12);
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...BORDER);
+    doc.roundedRect(remitX, y, halfW, billH, 2, 2, "FD");
+    label("Remit To / Notice of Assignment", remitX + 7, y + 13);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9.5);
-    doc.setTextColor(20);
-    doc.text(companyDisplayName, remitX + 6, y + 27);
+    doc.setTextColor(...TEXT);
+    doc.text(companyDisplayName, remitX + 7, y + 28);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(60);
-    doc.text(COMPANY.address, remitX + 6, y + 39);
-    doc.text(COMPANY.contact, remitX + 6, y + 50);
+    doc.setTextColor(...MUTED);
+    doc.text(COMPANY.address, remitX + 7, y + 40);
+    doc.text(COMPANY.contact, remitX + 7, y + 51);
     if (factoringCompany) {
-      doc.setTextColor(20);
-      doc.text(`Factoring / Payee: ${factoringCompany}`, remitX + 6, y + 64);
+      doc.setTextColor(...TEXT);
+      doc.text(`Factoring / Payee: ${factoringCompany}`, remitX + 7, y + 65);
     }
-    doc.setTextColor(120);
-    doc.setFontSize(7);
+    doc.setTextColor(...MUTED);
+    doc.setFontSize(6.8);
     const secNote = doc.splitTextToSize(
       "Payment security: verify remit-to changes by calling (682) 552-3169. Never rely on email alone.",
-      halfW - 12,
+      halfW - 14,
     );
-    doc.text(secNote, remitX + 6, y + billH - 16);
+    doc.text(secNote, remitX + 7, y + billH - secNote.length * 8 - 6);
 
     y += billH + 14;
 
     // ---- Load / Service Details table ----
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(20);
-    doc.text("LOAD / SERVICE DETAILS", margin, y);
-    y += 8;
+    sectionHeader("Load / Service Details");
 
     const cols = [
       { key: "loadNo", label: "Load No.", w: 55 },
@@ -264,16 +348,17 @@ function CustomerInvoicePage() {
     ] as const;
 
     const drawTableHeader = () => {
-      doc.setFillColor(240, 240, 240);
+      ensureSpace(20);
+      doc.setFillColor(241, 244, 248);
       doc.rect(margin, y, contentWidth, 20, "F");
-      doc.setDrawColor(190);
+      doc.setDrawColor(...BORDER);
       doc.rect(margin, y, contentWidth, 20);
       let cx = margin;
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.setTextColor(80);
+      doc.setFontSize(7.2);
+      doc.setTextColor(...MUTED);
       cols.forEach((c) => {
-        doc.text(c.label.toUpperCase(), cx + 4, y + 13);
+        doc.text(c.label.toUpperCase(), cx + 4, y + 13, { charSpace: 0.3 });
         cx += c.w;
       });
       y += 20;
@@ -283,15 +368,17 @@ function CustomerInvoicePage() {
     loads.forEach((row) => {
       const descLines = doc.splitTextToSize(row.description || "", cols[5].w - 8);
       const rowH = Math.max(18, descLines.length * 10 + 8);
-      checkPageBreak(rowH + 20);
-      if (y === margin) drawTableHeader();
+      const brokeToNewPage = y + rowH + 20 > footerTop - 14;
+      ensureSpace(rowH + 20);
+      if (brokeToNewPage) drawTableHeader();
 
       let cx = margin;
-      doc.setDrawColor(210);
-      doc.rect(margin, y, contentWidth, rowH);
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(...BORDER);
+      doc.rect(margin, y, contentWidth, rowH, "FD");
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
-      doc.setTextColor(30);
+      doc.setTextColor(...TEXT);
 
       doc.text(row.loadNo || "-", cx + 4, y + 12);
       cx += cols[0].w;
@@ -307,10 +394,9 @@ function CustomerInvoicePage() {
       cx += cols[5].w;
       doc.text(row.amount ? money(parseFloat(row.amount) || 0) : "-", cx + 4, y + 12);
 
-      // vertical column separators
       let sepX = margin;
+      doc.setDrawColor(...BORDER);
       cols.forEach((c) => {
-        doc.setDrawColor(225);
         doc.line(sepX, y, sepX, y + rowH);
         sepX += c.w;
       });
@@ -319,17 +405,17 @@ function CustomerInvoicePage() {
       y += rowH;
     });
 
-    y += 4;
+    y += 10;
 
     // ---- Totals ----
     const totalsW = 220;
     const totalsX = pageWidth - margin - totalsW;
-    checkPageBreak(90);
+    ensureSpace(90);
 
     const totalLine = (lbl: string, val: string, bold = false) => {
       doc.setFont("helvetica", bold ? "bold" : "normal");
       doc.setFontSize(bold ? 10 : 9);
-      doc.setTextColor(bold ? 20 : 60);
+      doc.setTextColor(...(bold ? NAVY : MUTED));
       doc.text(lbl, totalsX, y);
       doc.text(val, totalsX + totalsW, y, { align: "right" });
       y += bold ? 16 : 14;
@@ -337,31 +423,32 @@ function CustomerInvoicePage() {
     totalLine("Subtotal", money(subtotal));
     totalLine("Approved Accessorials", money(parseFloat(approvedAccessorials) || 0));
     totalLine("Credits / Adjustments", money(parseFloat(creditsAdjustments) || 0));
-    doc.setDrawColor(20);
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(1);
     doc.line(totalsX, y - 4, totalsX + totalsW, y - 4);
     totalLine("TOTAL AMOUNT DUE", money(total), true);
 
     y += 12;
 
     // ---- Notes ----
-    checkPageBreak(60);
-    doc.setDrawColor(190);
-    const notesH = 55;
-    doc.rect(margin, y, contentWidth, notesH);
-    label("Notes / Special Instructions", margin + 6, y + 12);
+    // Height now grows with content instead of a fixed 55pt box that could clip text.
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.setTextColor(40);
-    doc.text(doc.splitTextToSize(notes || "-", contentWidth - 12), margin + 6, y + 26);
+    const noteLines = doc.splitTextToSize(notes || "—", contentWidth - 14);
+    const notesH = Math.max(40, 24 + noteLines.length * 11);
+    ensureSpace(notesH + 12);
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...BORDER);
+    doc.roundedRect(margin, y, contentWidth, notesH, 2, 2, "FD");
+    label("Notes / Special Instructions", margin + 7, y + 13);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...TEXT);
+    doc.text(noteLines, margin + 7, y + 27);
     y += notesH + 12;
 
     // ---- Supporting Documents ----
-    checkPageBreak(30);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(20);
-    doc.text("SUPPORTING DOCUMENTS AND CERTIFICATION", margin, y);
-    y += 14;
+    sectionHeader("Supporting Documents and Certification");
     const checks: [string, boolean][] = [
       ["Rate confirmation", docs.rateConfirmation],
       ["Signed BOL", docs.signedBOL],
@@ -369,47 +456,56 @@ function CustomerInvoicePage() {
       ["Accessorial receipts", docs.accessorialReceipts],
       [`Other${otherDocText ? `: ${otherDocText}` : ""}`, docs.other],
     ];
+    ensureSpace(20);
     let cxx = margin;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.4);
     checks.forEach(([txt, checked]) => {
-      doc.setDrawColor(80);
-      doc.rect(cxx, y - 8, 8, 8);
+      doc.setDrawColor(...NAVY);
+      doc.setLineWidth(0.9);
+      doc.setFillColor(checked ? NAVY[0] : 255, checked ? NAVY[1] : 255, checked ? NAVY[2] : 255);
+      doc.roundedRect(cxx, y - 8, 10, 10, 1.5, 1.5, "FD");
       if (checked) {
-        doc.setLineWidth(1.1);
-        doc.line(cxx, y - 8, cxx + 8, y);
-        doc.line(cxx + 8, y - 8, cxx, y);
-        doc.setLineWidth(1);
+        doc.setDrawColor(255, 255, 255);
+        doc.setLineWidth(1.3);
+        doc.line(cxx + 2, y - 3, cxx + 4.2, y - 0.6);
+        doc.line(cxx + 4.2, y - 0.6, cxx + 8, y - 7);
       }
-      doc.setTextColor(30);
-      doc.text(txt, cxx + 12, y);
-      cxx += doc.getTextWidth(txt) + 32;
+      doc.setTextColor(...TEXT);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.4);
+      doc.text(txt, cxx + 15, y);
+      cxx += doc.getTextWidth(txt) + 38;
     });
-    y += 22;
+    y += 24;
 
     // ---- Prepared / Approved / Status ----
-    checkPageBreak(48);
     const sigW = contentWidth / 3 - 8;
-    fieldBox(margin, y, sigW, 38, "Prepared By", preparedBy);
-    fieldBox(margin + sigW + 12, y, sigW, 38, "Approved By", approvedBy);
-    fieldBox(margin + (sigW + 12) * 2, y, sigW, 38, "Internal Status / Paid Date", internalStatus);
-
-    // ---- Footer ----
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(120);
-    doc.text(COMPANY.mcDot, margin, pageHeight - 30);
-    doc.text(
-      "Generated invoice — verify against current template revision",
-      pageWidth - margin,
-      pageHeight - 30,
-      {
-        align: "right",
-      },
+    fieldRow(
+      [
+        { label: "Prepared By", value: preparedBy, w: sigW },
+        { label: "Approved By", value: approvedBy, w: sigW },
+        { label: "Internal Status / Paid Date", value: internalStatus, w: sigW },
+      ],
+      38,
     );
+
+    drawFooter();
+
+    // Stamp final page numbers now that the true page count is known.
+    const totalPages = doc.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p += 1) {
+      doc.setPage(p);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.3);
+      doc.setTextColor(...MUTED);
+      doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, 94, { align: "right" });
+    }
 
     doc.save(`${invoiceNo}.pdf`);
   }
+
+  const hasErrors = Object.values(errors).some(Boolean);
 
   return (
     <div className="space-y-5">
@@ -418,15 +514,31 @@ function CustomerInvoicePage() {
         description="Fill in load and billing details, then export a print-ready invoice PDF."
       />
 
-      <Card>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {hasErrors ? (
+          <Alert variant="destructive" className="sm:flex-1">
+            <AlertCircle className="size-4" />
+            <AlertTitle>Missing required fields</AlertTitle>
+            <AlertDescription>{Object.values(errors).filter(Boolean).join(" ")}</AlertDescription>
+          </Alert>
+        ) : (
+          <div />
+        )}
+        <Button onClick={generatePDF} className="shrink-0">
+          <FileDown className="size-4" />
+          Generate PDF
+        </Button>
+      </div>
+
+      <Card className={sectionClass}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <ReceiptText className="size-4" />
+            <ReceiptText className="size-4 text-slate-500" />
             Invoice Information
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Invoice No.">
+          <Field label="Invoice No." required error={errors.invoiceNo}>
             <Input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} />
           </Field>
           <Field label="Issue Date">
@@ -441,12 +553,12 @@ function CustomerInvoicePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={sectionClass}>
         <CardHeader>
           <CardTitle className="text-base">Bill To</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Customer / Company">
+          <Field label="Customer / Company" required error={errors.customerCompany}>
             <Input value={customerCompany} onChange={(e) => setCustomerCompany(e.target.value)} />
           </Field>
           <Field label="AP Email / Phone">
@@ -468,7 +580,7 @@ function CustomerInvoicePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={sectionClass}>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Load / Service Details</CardTitle>
           <Button size="sm" variant="outline" onClick={addRow}>
@@ -477,6 +589,7 @@ function CustomerInvoicePage() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
+          {errors.loads ? <p className="text-xs text-red-600">{errors.loads}</p> : null}
           {loads.map((row) => (
             <div
               key={row.id}
@@ -536,7 +649,7 @@ function CustomerInvoicePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={sectionClass}>
         <CardHeader>
           <CardTitle className="text-base">Totals</CardTitle>
         </CardHeader>
@@ -571,7 +684,7 @@ function CustomerInvoicePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={sectionClass}>
         <CardHeader>
           <CardTitle className="text-base">Notes / Special Instructions</CardTitle>
         </CardHeader>
@@ -580,7 +693,7 @@ function CustomerInvoicePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={sectionClass}>
         <CardHeader>
           <CardTitle className="text-base">Supporting Documents and Certification</CardTitle>
         </CardHeader>
@@ -621,7 +734,7 @@ function CustomerInvoicePage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className={sectionClass}>
         <CardHeader>
           <CardTitle className="text-base">Prepared / Approved / Status</CardTitle>
         </CardHeader>
@@ -648,11 +761,25 @@ function CustomerInvoicePage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Label className="text-xs text-muted-foreground">
+        {label}
+        {required ? <span className="ml-0.5 text-red-500">*</span> : null}
+      </Label>
       {children}
+      {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>
   );
 }
