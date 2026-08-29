@@ -216,7 +216,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
       {
         name: "application-name",
-        content: "DJ's Freight Portal",
+        content: "TMS Freight Portal",
       },
     ],
 
