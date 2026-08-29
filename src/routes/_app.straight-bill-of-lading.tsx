@@ -185,7 +185,7 @@ const initialFreightItems: FreightItem[] = [
 ];
 
 const sectionClass =
-  "rounded-2xl border border-slate-200/80 bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md";
+  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]";
 
 const REQUIRED_FIELDS: Array<{ key: keyof BOLFormState; label: string }> = [
   { key: "loadNo", label: "Load No." },
@@ -291,40 +291,41 @@ function StraightBillOfLadingPage() {
 
       const drawHeader = (title: string) => {
         const leftX = margin;
-        const topY = 28;
+        const topY = 24;
 
-        doc.setFillColor(24, 47, 70);
-        doc.roundedRect(leftX, topY, 72, 34, 4, 4, "F");
+        doc.setFillColor(12, 28, 47);
+        doc.roundedRect(leftX, topY, 96, 40, 5, 5, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text("BROKER", leftX + 13, topY + 22);
+        doc.setFontSize(21);
+        doc.text("BROKER", leftX + 15, topY + 25);
 
-        doc.setTextColor(26, 56, 86);
+        doc.setTextColor(22, 49, 76);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text(portalCompanyName, leftX + 92, topY + 15);
+        doc.setFontSize(15);
+        doc.text(portalCompanyName, leftX + 118, topY + 15);
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.6);
-        doc.text(BROKER_ADDRESS, leftX + 92, topY + 27);
-        doc.text(`${BROKER_PHONE} | ${BROKER_EMAIL} | ${BROKER_WEBSITE}`, leftX + 92, topY + 38);
+        doc.setFontSize(8.2);
+        doc.text(BROKER_ADDRESS, leftX + 118, topY + 28);
+        doc.text(`${BROKER_PHONE} | ${BROKER_EMAIL} | ${BROKER_WEBSITE}`, leftX + 118, topY + 39);
 
-        doc.setDrawColor(180, 20, 20);
-        doc.setLineWidth(1.2);
-        doc.line(margin, topY + 46, pageWidth - margin, topY + 46);
+        doc.setDrawColor(151, 172, 190);
+        doc.setLineWidth(0.8);
+        doc.line(margin, topY + 53, pageWidth - margin, topY + 53);
 
-        doc.setTextColor(23, 40, 58);
+        doc.setTextColor(24, 38, 54);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(18);
-        doc.text(title, margin, 78);
+        doc.text(title, margin, 86);
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.3);
+        doc.setFontSize(8.1);
+        doc.setTextColor(86, 96, 108);
         doc.text(
           `${form.bolNo || "BOL"} | ${DOCUMENT_REVISION} | Effective ${formatDate(form.dateIssued)}`,
           pageWidth - margin,
-          78,
+          86,
           { align: "right" },
         );
       };
@@ -378,20 +379,20 @@ function StraightBillOfLadingPage() {
         value: string,
         labelSize = 7,
       ) => {
-        doc.setDrawColor(151, 171, 193);
+        doc.setDrawColor(204, 214, 224);
         doc.setFillColor(248, 250, 252);
-        doc.roundedRect(x, y, w, h, 1.5, 1.5, "FD");
+        doc.roundedRect(x, y, w, h, 2, 2, "FD");
         doc.setTextColor(40, 52, 62);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(labelSize);
-        doc.text(label, x + 5, y + 13);
+        doc.text(label, x + 5, y + 12);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
+        doc.setFontSize(8.4);
         doc.setTextColor(18, 23, 32);
         const text = value || "";
         const lines = doc.splitTextToSize(text, w - 12);
         const lineHeight = 9;
-        const startY = y + 24;
+        const startY = y + 22;
         const maxLines = Math.max(1, Math.min(3, lines.length));
         for (let i = 0; i < maxLines; i += 1) {
           doc.text(lines[i] || "", x + 5, startY + i * lineHeight);
@@ -409,11 +410,11 @@ function StraightBillOfLadingPage() {
       };
 
       const drawSectionHeading = (label: string, x: number, y: number, width: number) => {
-        doc.setFillColor(229, 236, 245);
-        doc.roundedRect(x, y, width, 18, 0, 0, "F");
-        doc.setTextColor(20, 44, 70);
+        doc.setFillColor(235, 241, 247);
+        doc.roundedRect(x, y, width, 18, 2, 2, "F");
+        doc.setTextColor(17, 39, 61);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(10.8);
+        doc.setFontSize(10.6);
         doc.text(label, x + 6, y + 12);
       };
 
@@ -895,61 +896,74 @@ function StraightBillOfLadingPage() {
     <div className="space-y-6 pb-16">
       <PageHeader
         title="Straight Bill of Lading"
-        description="Bill of lading document workflow with live preview and PDF generation."
+        description="Complete the shipment record, review the live preview, and generate a polished PDF for release and compliance."
       />
 
-      {/* Sticky action + progress bar */}
-      <div className="sticky top-0 z-10 -mx-1 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/70 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-blue-900 text-xs font-bold text-white">
-            BOL
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-slate-800">
-              {form.bolNo || "Untitled BOL"} · {form.loadNo || "No load number"}
+      <div className="sticky top-0 z-20 -mx-1 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-black tracking-[0.18em] text-white">
+              BOL
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              {completion.missing.length === 0 ? (
-                <>
-                  <CheckCircle2 className="size-3.5 text-emerald-600" />
-                  Ready to generate
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="size-3.5 text-amber-500" />
-                  {completion.done}/{completion.total} required fields complete
-                </>
-              )}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-slate-900">
+                {form.bolNo || "Untitled BOL"} · {form.loadNo || "No load number"}
+              </div>
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+                {completion.missing.length === 0 ? (
+                  <>
+                    <CheckCircle2 className="size-3.5 text-emerald-600" />
+                    Ready to generate
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="size-3.5 text-amber-500" />
+                    {completion.done}/{completion.total} required fields complete
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => setForm(initialState)}>
-            Reset form
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setFreightItems(initialFreightItems)}
-          >
-            Clear freight rows
-          </Button>
-          <Button type="button" onClick={generatePDF} disabled={isGenerating}>
-            <FileDown className="mr-2 size-4" />
-            {isGenerating ? "Generating…" : "Generate PDF"}
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setForm(initialState)}
+              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            >
+              Reset form
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setFreightItems(initialFreightItems)}
+              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            >
+              Clear freight rows
+            </Button>
+            <Button
+              type="button"
+              onClick={generatePDF}
+              disabled={isGenerating}
+              className="bg-slate-900 text-white shadow-sm hover:bg-slate-800"
+            >
+              <FileDown className="mr-2 size-4" />
+              {isGenerating ? "Generating…" : "Generate PDF"}
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.7fr)]">
         <div className="space-y-6">
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={ClipboardList}>Shipment Identification</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Field label="Load No." error={errors.loadNo}>
                   <Input
@@ -1030,10 +1044,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={MapPin}>Origin / Shipper</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Shipper name" error={errors.shipperName}>
                   <Input
@@ -1067,10 +1081,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={MapPin}>Destination / Consignee</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Consignee name" error={errors.consigneeName}>
                   <Input
@@ -1104,15 +1118,21 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <div className="flex items-center justify-between gap-3">
                 <SectionTitle icon={Package}>Freight Description</SectionTitle>
-                <Button type="button" variant="outline" size="sm" onClick={addFreightRow}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addFreightRow}
+                  className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                >
                   <Plus className="mr-2 size-4" /> Add row
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               {errors.freight ? (
                 <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
                   <AlertTriangle className="size-3.5" />
@@ -1238,10 +1258,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={ClipboardList}>Special Instructions</SectionTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <Field label="Handling / temperature / securement">
                 <Textarea
                   value={form.specialInstructions}
@@ -1253,10 +1273,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={Truck}>Carrier, Driver and Cargo Control</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Carrier legal name">
                   <Input
@@ -1345,10 +1365,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={ShieldCheck}>Pickup Certifications and Exceptions</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <p className="rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700">
                 <span className="font-semibold text-slate-900">Shipper certification: </span>
                 The freight is properly described, packaged, marked, labeled, and in apparent good
@@ -1395,10 +1415,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={FileSignature}>Carrier Receipt</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <Field label="Carrier receipt acknowledgment text">
                 <Textarea
                   value={form.carrierReceiptText}
@@ -1438,10 +1458,10 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={CheckCircle2}>Delivery Receipt / Proof of Delivery</SectionTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-4">
               <Field label="Delivery exceptions / shortage / over / damage / seal condition">
                 <Textarea
                   value={form.deliveryExceptions}
@@ -1481,12 +1501,12 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <SectionTitle icon={ShieldCheck}>
                 Broker Status and Controlling Documents
               </SectionTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <p className="text-sm leading-6 text-slate-700">
                 {portalCompanyName} is a property broker, not the motor carrier or warehouseman. The
                 motor carrier has exclusive custody, control, and responsibility for transportation,
@@ -1501,25 +1521,25 @@ function StraightBillOfLadingPage() {
 
         <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
           <Card className={sectionClass}>
-            <CardHeader className="pb-2">
+            <CardHeader className="border-b border-slate-100 pb-3">
               <CardTitle className="text-base font-bold text-blue-950">Live Preview</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-red-600/70 bg-slate-900 px-4 py-3">
-                  <div className="flex items-center justify-between">
+            <CardContent className="space-y-4 pt-4">
+              <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                <div className="border-b border-slate-700/80 bg-slate-900 px-4 py-3">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-11 items-center justify-center rounded-md bg-white text-[10px] font-bold text-slate-900">
+                      <div className="flex h-8 w-11 items-center justify-center rounded-md bg-white text-[10px] font-black tracking-[0.2em] text-slate-900">
                         BOL
                       </div>
                       <div>
-                        <div className="text-xs font-bold uppercase tracking-wide text-white">
+                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white">
                           {portalCompanyName}
                         </div>
-                        <div className="text-[10px] text-slate-300">Straight Bill of Lading</div>
+                        <div className="text-[9px] text-slate-300">Straight Bill of Lading</div>
                       </div>
                     </div>
-                    <div className="text-[10px] font-medium text-slate-300">
+                    <div className="text-[9px] font-medium text-slate-300">
                       {form.bolNo || "BOL"} · {DOCUMENT_REVISION}
                     </div>
                   </div>
