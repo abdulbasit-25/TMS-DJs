@@ -31,7 +31,7 @@ type RateFormState = {
   loadNo: string;
   confirmationDate: string;
   poReference: string;
-  djfbAgent: string;
+  brokerAgent: string;
   carrierLegalName: string;
   carrierMcUsdot: string;
   dispatcherContact: string;
@@ -76,10 +76,10 @@ type RateFormState = {
 };
 
 const initialState: RateFormState = {
-  loadNo: "DJFB-LOAD-2048",
+  loadNo: "LOAD-2048",
   confirmationDate: "2026-08-29",
   poReference: "PO-11842",
-  djfbAgent: "A. Johnson",
+  brokerAgent: "A. Johnson",
   carrierLegalName: "Crossroads Logistics Group",
   carrierMcUsdot: "MC 154602 / USDOT 3984402",
   dispatcherContact: "Dispatch Desk | (214) 555-0148",
@@ -109,7 +109,7 @@ const initialState: RateFormState = {
   paymentTerms: "Net 30",
   rateIncludesExcludes: "Includes linehaul and fuel. No extra charges unless approved in writing.",
   specialInstructions:
-    "Confirm arrival and departure updates with DJ's Operations. Keep GPS active through delivery.",
+    "Confirm arrival and departure updates with the Broker's operations team. Keep GPS active through delivery.",
   otherRequiredDocuments: "Carrier invoice; signed BOL; clean POD; receipts; photos; other",
   brokerRepresentativeTitle: "Broker Agent",
   brokerSignatureName: "A. Johnson",
@@ -135,23 +135,23 @@ const REQUIRED_FIELDS: { key: keyof RateFormState; label: string }[] = [
 
 // Static legal boilerplate — kept out of component state since it never changes per-load.
 const TERMS_INTRO =
-  "Active GPS tracking is a material condition of this shipment. Tracking must be activated before pickup and remain active through delivery. Carrier shall not rebroker, transfer, cross-dock, or substitute a driver or equipment without DJ's prior written approval. Failure to comply is a material breach and may result in cancellation, nonpayment where legally permitted, indemnification, and recovery of resulting losses. Safety instruction: tracking setup and updates must be completed while safely parked, never while driving.";
+  "Active GPS tracking is a material condition of this shipment. Tracking must be activated before pickup and remain active through delivery. Carrier shall not rebroker, transfer, cross-dock, or substitute a driver or equipment without the Broker's prior written approval. Failure to comply is a material breach and may result in cancellation, nonpayment where legally permitted, indemnification, and recovery of resulting losses. Safety instruction: tracking setup and updates must be completed while safely parked, never while driving.";
 
 const TERMS_CLAUSES: { num: number; title: string; body: string }[] = [
   {
     num: 1,
     title: "Authority, Identity and Insurance",
-    body: "Carrier warrants that its legal name, MC/USDOT number, dispatch contact, driver, tractor, and trailer information are accurate and match the carrier vetted by DJ's. Carrier will maintain active operating authority and all insurance required by law, the broker-carrier agreement, and this load through final delivery. Carrier must immediately disclose any authority, insurance, ownership, contact, or factoring change.",
+    body: "Carrier warrants that its legal name, MC/USDOT number, dispatch contact, driver, tractor, and trailer information are accurate and match the carrier vetted by the Broker. Carrier will maintain active operating authority and all insurance required by law, the broker-carrier agreement, and this load through final delivery. Carrier must immediately disclose any authority, insurance, ownership, contact, or factoring change.",
   },
   {
     num: 2,
     title: "Exclusive Custody and No Substitution",
-    body: "Carrier retains exclusive possession, control, and use of the equipment and assumes full responsibility for the freight from pickup through delivery. No trip lease, interchange, subcontracting, team/driver change, trailer swap, cross-dock, transload, storage, or other transfer is permitted without DJ's prior written approval. Approval of a change does not release Carrier from responsibility.",
+    body: "Carrier retains exclusive possession, control, and use of the equipment and assumes full responsibility for the freight from pickup through delivery. No trip lease, interchange, subcontracting, team/driver change, trailer swap, cross-dock, transload, storage, or other transfer is permitted without the Broker's prior written approval. Approval of a change does not release Carrier from responsibility.",
   },
   {
     num: 3,
     title: "Communication and Incident Reporting",
-    body: "Carrier must report arrival, loaded status, departure, location/status updates, delays, route deviations, OS&D, seal issues, accidents, theft, cargo exposure, temperature deviations, and delivery immediately. Emergencies must be reported to 911 first when appropriate, then to DJ's at (682) 552-3169. Carrier must preserve documents, photos, telematics, and other evidence relating to any incident.",
+    body: "Carrier must report arrival, loaded status, departure, location/status updates, delays, route deviations, OS&D, seal issues, accidents, theft, cargo exposure, temperature deviations, and delivery immediately. Emergencies must be reported to 911 first when appropriate, then to the Broker's dispatch contact using the contact details provided on the load. Carrier must preserve documents, photos, telematics, and other evidence relating to any incident.",
   },
   {
     num: 4,
@@ -161,47 +161,47 @@ const TERMS_CLAUSES: { num: number; title: string; body: string }[] = [
   {
     num: 5,
     title: "Accessorials, Detention and Route Costs",
-    body: "The total rate is all-inclusive except items expressly listed on page 1 or later approved in writing by DJ's. Accessorials require prior written approval and supporting receipts. Detention requires timely arrival, immediate notice at the start of delay, signed facility in/out times, and the free-time/rate stated in the special instructions or controlling agreement. Tolls, permits, fuel, parking, and ordinary operating costs are included unless stated otherwise.",
+    body: "The total rate is all-inclusive except items expressly listed on page 1 or later approved in writing by the Broker. Accessorials require prior written approval and supporting receipts. Detention requires timely arrival, immediate notice at the start of delay, signed facility in/out times, and the free-time/rate stated in the special instructions or controlling agreement. Tolls, permits, fuel, parking, and ordinary operating costs are included unless stated otherwise.",
   },
   {
     num: 6,
     title: "Documents and Payment",
-    body: "Payment is conditioned on receipt of a correct carrier invoice, this accepted rate confirmation, signed BOL, clean POD, and all required receipts and shipment records. Documents should be submitted promptly to info@djsfreightbroker.com unless DJ's provides another written billing address. Quick Pay, if offered, is subject to separate approval and fees. Carrier may not change payment or factoring instructions without verified written documentation.",
+    body: "Payment is conditioned on receipt of a correct carrier invoice, this accepted rate confirmation, signed BOL, clean POD, and all required receipts and shipment records. Documents should be submitted promptly to the Broker's designated billing contact unless the Broker provides another written billing address. Quick Pay, if offered, is subject to separate approval and fees. Carrier may not change payment or factoring instructions without verified written documentation.",
   },
   {
     num: 7,
     title: "Customer Service and Cargo Claims",
-    body: "Carrier will perform safely, lawfully, and on schedule and will cooperate with reasonable cargo-claim investigation. Carrier remains responsible for loss, damage, delay, contamination, and theft to the extent imposed by applicable law and controlling contracts. No notation by a driver or facility waives DJ's or the customer's rights.",
+    body: "Carrier will perform safely, lawfully, and on schedule and will cooperate with reasonable cargo-claim investigation. Carrier remains responsible for loss, damage, delay, contamination, and theft to the extent imposed by applicable law and controlling contracts. No notation by a driver or facility waives the Broker's or the customer's rights.",
   },
   {
     num: 8,
     title: "Indemnity and Recovery of Loss",
-    body: "To the fullest extent permitted by law, Carrier will defend, indemnify, and hold harmless DJ's, the customer, and their personnel from claims, fines, penalties, liabilities, cargo loss, property damage, bodily injury, costs, and reasonable attorney fees arising from Carrier's or its personnel's acts, omissions, breach, regulatory violation, identity misrepresentation, unauthorized rebrokering, or unauthorized transfer. DJ's may offset documented amounts owed by Carrier against freight charges when permitted by law and controlling agreements.",
+    body: "To the fullest extent permitted by law, Carrier will defend, indemnify, and hold harmless the Broker, the customer, and their personnel from claims, fines, penalties, liabilities, cargo loss, property damage, bodily injury, costs, and reasonable attorney fees arising from Carrier's or its personnel's acts, omissions, breach, regulatory violation, identity misrepresentation, unauthorized rebrokering, or unauthorized transfer. The Broker may offset documented amounts owed by Carrier against freight charges when permitted by law and controlling agreements.",
   },
   {
     num: 9,
     title: "Broker Role; Independent Contractor",
-    body: "DJ's is a licensed property broker arranging transportation and is not the motor carrier, driver, employer, or warehouseman. Carrier is an independent contractor with exclusive control over its personnel and safe operation. Nothing in this rate confirmation creates an employment, agency, partnership, or joint-venture relationship.",
+    body: "The Broker is a licensed property broker arranging transportation and is not the motor carrier, driver, employer, or warehouseman. Carrier is an independent contractor with exclusive control over its personnel and safe operation. Nothing in this rate confirmation creates an employment, agency, partnership, or joint-venture relationship.",
   },
   {
     num: 10,
     title: "Controlling Documents; No Unilateral Changes",
-    body: "This rate confirmation supplements the signed broker-carrier agreement. Load-specific rates, stops, dates, cargo, equipment, and special instructions in this document control for this load; the broker-carrier agreement controls general legal terms if a conflict exists. Carrier tariffs, invoices, BOL language, stamps, portals, or other unilateral terms do not amend DJ's obligations unless DJ's expressly agrees in writing.",
+    body: "This rate confirmation supplements the signed broker-carrier agreement. Load-specific rates, stops, dates, cargo, equipment, and special instructions in this document control for this load; the broker-carrier agreement controls general legal terms if a conflict exists. Carrier tariffs, invoices, BOL language, stamps, portals, or other unilateral terms do not amend the Broker's obligations unless the Broker expressly agrees in writing.",
   },
   {
     num: 11,
     title: "Acceptance; Electronic Records",
-    body: "Carrier accepts this rate confirmation by signature, electronic acceptance, written confirmation, dispatch, or pickup after receiving it. Electronic signatures and records are enforceable to the same extent as originals. Carrier must notify DJ's in writing before pickup of any disagreement; silence followed by performance constitutes acceptance.",
+    body: "Carrier accepts this rate confirmation by signature, electronic acceptance, written confirmation, dispatch, or pickup after receiving it. Electronic signatures and records are enforceable to the same extent as originals. Carrier must notify the Broker in writing before pickup of any disagreement; silence followed by performance constitutes acceptance.",
   },
   {
     num: 12,
     title: "Governing Law; Severability; No Waiver",
-    body: "Except where federal law controls, Texas law applies, and venue lies in state or federal courts in Tarrant County, Texas. If any term is unenforceable, the remaining obligations remain enforceable. No waiver or course of dealing excuses a breach unless signed in writing by DJ's.",
+    body: "Except where federal law controls, Texas law applies, and venue lies in state or federal courts in Tarrant County, Texas. If any term is unenforceable, the remaining obligations remain enforceable. No waiver or course of dealing excuses a breach unless signed in writing by the Broker.",
   },
   {
     num: 13,
     title: "Signatures and Validation",
-    body: "By accepting this confirmation, Carrier confirms the rate, terms, and supporting load information, and authorizes DJ's to rely on the information provided for freight tendering and payment processing.",
+    body: "By accepting this confirmation, Carrier confirms the rate, terms, and supporting load information, and authorizes the Broker to rely on the information provided for freight tendering and payment processing.",
   },
 ];
 
@@ -276,7 +276,7 @@ function CarrierRateConfirmationPage() {
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text("DJFB", margin + 12, 46);
+        doc.text("BROKER", margin + 12, 46);
 
         doc.setTextColor(...NAVY);
         doc.setFont("helvetica", "bold");
@@ -287,7 +287,7 @@ function CarrierRateConfirmationPage() {
         doc.setTextColor(...MUTED);
         doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", margin + 80, 49);
         doc.text(
-          "(682) 552-3169  |  info@djsfreightbroker.com  |  djsfreightbroker.com",
+          "(682) 552-3169  |  broker-billing@company.com  |  broker-company.com",
           margin + 80,
           59,
         );
@@ -481,7 +481,7 @@ function CarrierRateConfirmationPage() {
         { label: "Load No.", value: form.loadNo, w: contentWidth / 4 - 6 },
         { label: "Confirmation Date", value: form.confirmationDate, w: contentWidth / 4 - 6 },
         { label: "PO / Reference", value: form.poReference, w: contentWidth / 4 - 6 },
-        { label: "Broker Agent", value: form.djfbAgent, w: contentWidth / 4 - 6 },
+        { label: "Broker Agent", value: form.brokerAgent, w: contentWidth / 4 - 6 },
       ]);
       fieldRow([
         {
@@ -626,7 +626,7 @@ function CarrierRateConfirmationPage() {
         doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, 94, { align: "right" });
       }
 
-      doc.save(`Rate_Confirmation_${form.loadNo || "DJFB"}.pdf`);
+      doc.save(`Rate_Confirmation_${form.loadNo || "BROKER"}.pdf`);
     } catch (error) {
       console.error(error);
       alert(
@@ -693,8 +693,8 @@ function CarrierRateConfirmationPage() {
               </Field>
               <Field label="Broker Agent">
                 <Input
-                  value={form.djfbAgent}
-                  onChange={(e) => updateField("djfbAgent", e.target.value)}
+                  value={form.brokerAgent}
+                  onChange={(e) => updateField("brokerAgent", e.target.value)}
                 />
               </Field>
             </div>
