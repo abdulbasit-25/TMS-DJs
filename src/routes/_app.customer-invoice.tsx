@@ -62,7 +62,7 @@ function money(n: number) {
 }
 
 const sectionClass =
-  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]";
+  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100";
 
 // ---------- Component ----------
 
@@ -496,7 +496,7 @@ function CustomerInvoicePage() {
         description="Prepare billing details, review the live summary, and export a polished invoice PDF for customer delivery."
       />
 
-      <div className="sticky top-0 z-20 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="sticky top-0 z-20 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-slate-700 dark:bg-slate-950/80">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {hasErrors ? (
             <Alert variant="destructive" className="sm:flex-1">
@@ -505,8 +505,8 @@ function CustomerInvoicePage() {
               <AlertDescription>{Object.values(errors).filter(Boolean).join(" ")}</AlertDescription>
             </Alert>
           ) : (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                 <span className="size-2 rounded-full bg-emerald-500" />
                 Invoice ready to export
               </span>
@@ -514,7 +514,7 @@ function CustomerInvoicePage() {
           )}
           <Button
             onClick={generatePDF}
-            className="shrink-0 bg-slate-900 text-white shadow-sm hover:bg-slate-800"
+            className="shrink-0 bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
           >
             <FileDown className="size-4" />
             Generate PDF
@@ -582,7 +582,7 @@ function CustomerInvoicePage() {
               size="sm"
               variant="outline"
               onClick={addRow}
-              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <Plus className="size-4" />
               Add Row
@@ -696,7 +696,9 @@ function CustomerInvoicePage() {
 
       <Card className={sectionClass}>
         <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-base text-blue-950">Supporting Documents and Certification</CardTitle>
+          <CardTitle className="text-base text-blue-950">
+            Supporting Documents and Certification
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-6 pt-4">
           <CheckField
@@ -775,7 +777,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">
+      <Label className="text-xs text-muted-foreground dark:text-slate-300">
         {label}
         {required ? <span className="ml-0.5 text-red-500">*</span> : null}
       </Label>
@@ -796,7 +798,7 @@ function CheckField({
 }) {
   return (
     <label className="flex items-center gap-2 text-sm">
-      <Checkbox checked={checked} onCheckedChange={(v) => onChange(Boolean(v))} />
+      <Checkbox checked={checked} onCheckedChange={(v) => onChange(Boolean(v))} className="dark:border-slate-600" />
       {label}
     </label>
   );

@@ -185,7 +185,7 @@ const initialFreightItems: FreightItem[] = [
 ];
 
 const sectionClass =
-  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]";
+  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100";
 
 const REQUIRED_FIELDS: Array<{ key: keyof BOLFormState; label: string }> = [
   { key: "loadNo", label: "Load No." },
@@ -899,7 +899,7 @@ function StraightBillOfLadingPage() {
         description="Complete the shipment record, review the live preview, and generate a polished PDF for release and compliance."
       />
 
-      <div className="sticky top-0 z-20 -mx-1 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80">
+      <div className="sticky top-0 z-20 -mx-1 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-slate-700 dark:bg-slate-950/80">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xs font-black tracking-[0.18em] text-white">
@@ -909,7 +909,7 @@ function StraightBillOfLadingPage() {
               <div className="truncate text-sm font-semibold text-slate-900">
                 {form.bolNo || "Untitled BOL"} · {form.loadNo || "No load number"}
               </div>
-              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500">
+              <div className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                 {completion.missing.length === 0 ? (
                   <>
                     <CheckCircle2 className="size-3.5 text-emerald-600" />
@@ -948,7 +948,7 @@ function StraightBillOfLadingPage() {
               type="button"
               onClick={generatePDF}
               disabled={isGenerating}
-              className="bg-slate-900 text-white shadow-sm hover:bg-slate-800"
+              className="bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
               <FileDown className="mr-2 size-4" />
               {isGenerating ? "Generating…" : "Generate PDF"}
@@ -1230,8 +1230,8 @@ function StraightBillOfLadingPage() {
                   aria-pressed={form.hazmat === "No"}
                   className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                     form.hazmat === "No"
-                      ? "border-slate-800 bg-slate-800 text-white"
-                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                      ? "border-slate-800 bg-slate-800 text-white dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900"
+                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                   }`}
                 >
                   Hazmat — No
@@ -1242,8 +1242,8 @@ function StraightBillOfLadingPage() {
                   aria-pressed={form.hazmat === "Yes"}
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                     form.hazmat === "Yes"
-                      ? "border-red-600 bg-red-600 text-white"
-                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                      ? "border-red-600 bg-red-600 text-white dark:border-red-500 dark:bg-red-500"
+                      : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                   }`}
                 >
                   <Flame className="size-3.5" />
@@ -1644,7 +1644,7 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5 text-left">
-      <Label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+      <Label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
         {label}
       </Label>
       {children}
@@ -1663,7 +1663,7 @@ function FieldPreview({ label, value }: { label: string; value: string }) {
       <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </div>
-      <div className="truncate text-[10px] text-slate-700">{value || "—"}</div>
+      <div className="truncate text-[10px] text-slate-700 dark:text-slate-200">{value || "—"}</div>
     </div>
   );
 }
@@ -1740,7 +1740,7 @@ function SignatureField({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+        <Label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
           {label}
         </Label>
         <Button type="button" variant="ghost" size="sm" onClick={clearSignature}>
@@ -1756,7 +1756,7 @@ function SignatureField({
           onPointerMove={continueDraw}
           onPointerUp={stopDraw}
           onPointerLeave={stopDraw}
-          className="w-full touch-none rounded-lg border border-slate-300 bg-white"
+          className="w-full touch-none rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-950"
         />
         {!value ? (
           <span className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-slate-300">
