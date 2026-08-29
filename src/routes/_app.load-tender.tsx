@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
+import { usePortalSettings } from "@/hooks/use-portal-settings";
 import { FileDown } from "lucide-react";
 
 export const Route = createFileRoute("/_app/load-tender")({
@@ -137,6 +138,8 @@ const initialState: TenderFormState = {
 const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
 
 function LoadTenderPage() {
+  const { companyName } = usePortalSettings();
+  const portalCompanyName = companyName?.trim() || "TMS Freight Portal";
   const [form, setForm] = useState<TenderFormState>(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -181,7 +184,7 @@ function LoadTenderPage() {
         doc.setTextColor(24, 47, 70);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text("DJ'S FREIGHT BROKER LLC", margin + 94, 39);
+        doc.text(portalCompanyName, margin + 94, 39);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", margin + 94, 51);

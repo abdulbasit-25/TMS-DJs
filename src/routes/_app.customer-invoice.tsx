@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { usePortalSettings } from "@/hooks/use-portal-settings";
 import { FileDown, Plus, Trash2, ReceiptText } from "lucide-react";
 
 export const Route = createFileRoute("/_app/customer-invoice")({
@@ -43,7 +44,6 @@ function emptyRow(): LoadRow {
 }
 
 const COMPANY = {
-  name: "DJ'S FREIGHT BROKER LLC",
   address: "1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179",
   contact: "(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com",
   mcDot: "FMCSA PROPERTY BROKER | MC 1551655 | USDOT 4079462",
@@ -59,6 +59,8 @@ function nextInvoiceNumber() {
 // ---------- Component ----------
 
 function CustomerInvoicePage() {
+  const { companyName } = usePortalSettings();
+  const companyDisplayName = companyName?.trim() || "TMS Freight Portal";
   const [invoiceNo, setInvoiceNo] = useState(() => nextInvoiceNumber());
   const [issueDate, setIssueDate] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -158,7 +160,7 @@ function CustomerInvoicePage() {
     doc.text("DJFB", margin, y + 16);
 
     doc.setFontSize(11);
-    doc.text(COMPANY.name, margin, y + 32);
+    doc.text(companyDisplayName, margin, y + 32);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(90);
@@ -224,7 +226,7 @@ function CustomerInvoicePage() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(20);
-    doc.text(COMPANY.name, remitX + 6, y + 27);
+    doc.text(companyDisplayName, remitX + 6, y + 27);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(60);

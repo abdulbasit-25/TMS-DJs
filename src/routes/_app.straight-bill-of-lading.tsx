@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
+import { usePortalSettings } from "@/hooks/use-portal-settings";
 import { FileDown, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/straight-bill-of-lading")({
@@ -159,6 +160,8 @@ const initialFreightItems: FreightItem[] = [
 const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
 
 function StraightBillOfLadingPage() {
+  const { companyName } = usePortalSettings();
+  const portalCompanyName = companyName?.trim() || "TMS Freight Portal";
   const [form, setForm] = useState<BOLFormState>(initialState);
   const [freightItems, setFreightItems] = useState<FreightItem[]>(initialFreightItems);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -229,7 +232,7 @@ function StraightBillOfLadingPage() {
         doc.setTextColor(26, 56, 86);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text("DJ'S FREIGHT BROKER LLC", leftX + 92, topY + 15);
+        doc.text(portalCompanyName, leftX + 92, topY + 15);
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.6);
@@ -405,14 +408,9 @@ function StraightBillOfLadingPage() {
       doc.setFont("helvetica", "italic");
       doc.setTextColor(90, 96, 103);
       doc.setFontSize(8.5);
-      doc.text(
-        "DJ's Freight Broker LLC acts solely as a property broker",
-        pageWidth - margin,
-        y + 4,
-        {
-          align: "right",
-        },
-      );
+      doc.text(`${portalCompanyName} acts solely as a property broker`, pageWidth - margin, y + 4, {
+        align: "right",
+      });
 
       y += 12;
       drawSectionHeading("ORIGIN / SHIPPER", margin, y, contentWidth);
@@ -758,8 +756,7 @@ function StraightBillOfLadingPage() {
       doc.setTextColor(35, 44, 58);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.15);
-      const legalText =
-        "DJ's Freight Broker LLC is a property broker, not the motor carrier or warehouseman. The motor carrier has exclusive custody, control, and responsibility for transportation, loading review, securement, and delivery. This BOL does not change the load-specific rate confirmation or any signed broker-carrier agreement. Cargo claims are governed by applicable law and controlling contracts, including 49 U.S.C. 14706 when applicable.";
+      const legalText = `${portalCompanyName} is a property broker, not the motor carrier or warehouseman. The motor carrier has exclusive custody, control, and responsibility for transportation, loading review, securement, and delivery. This BOL does not change the load-specific rate confirmation or any signed broker-carrier agreement. Cargo claims are governed by applicable law and controlling contracts, including 49 U.S.C. 14706 when applicable.`;
       const legalLines = doc.splitTextToSize(legalText, contentWidth - 18);
       doc.text(legalLines, margin + 8, y2 + 26);
 
@@ -881,7 +878,7 @@ function StraightBillOfLadingPage() {
               </div>
 
               <div className="rounded-md border border-muted bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-600">
-                DJ&apos;s Freight Broker LLC acts solely as a property broker
+                {portalCompanyName} acts solely as a property broker
               </div>
             </CardContent>
           </Card>
@@ -1319,12 +1316,12 @@ function StraightBillOfLadingPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-6 text-slate-700">
-                DJ&apos;s Freight Broker LLC is a property broker, not the motor carrier or
-                warehouseman. The motor carrier has exclusive custody, control, and responsibility
-                for transportation, loading review, securement, and delivery. This BOL does not
-                change the load-specific rate confirmation or any signed broker-carrier agreement.
-                Cargo claims are governed by applicable law and controlling contracts, including 49
-                U.S.C. 14706 when applicable.
+                {portalCompanyName} is a property broker, not the motor carrier or warehouseman. The
+                motor carrier has exclusive custody, control, and responsibility for transportation,
+                loading review, securement, and delivery. This BOL does not change the load-specific
+                rate confirmation or any signed broker-carrier agreement. Cargo claims are governed
+                by applicable law and controlling contracts, including 49 U.S.C. 14706 when
+                applicable.
               </p>
             </CardContent>
           </Card>
@@ -1344,7 +1341,7 @@ function StraightBillOfLadingPage() {
                     </div>
                     <div>
                       <div className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                        DJ&apos;S FREIGHT BROKER LLC
+                        {portalCompanyName}
                       </div>
                       <div className="text-[10px] text-slate-500">Straight Bill of Lading</div>
                     </div>
