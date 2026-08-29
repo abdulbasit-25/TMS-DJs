@@ -1156,7 +1156,9 @@ function StraightBillOfLadingPage() {
                     <div
                       key={item.id}
                       className={`grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] items-start gap-2 px-2 py-2 ${
-                        idx % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-800/40" : "dark:bg-slate-900/50"
+                        idx % 2 === 1
+                          ? "bg-slate-50/60 dark:bg-slate-800/40"
+                          : "dark:bg-slate-900/50"
                       }`}
                     >
                       <Input
@@ -1370,7 +1372,9 @@ function StraightBillOfLadingPage() {
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <p className="rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700 dark:bg-slate-800/70 dark:text-slate-200">
-                <span className="font-semibold text-slate-900 dark:text-slate-100">Shipper certification: </span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  Shipper certification:{" "}
+                </span>
                 The freight is properly described, packaged, marked, labeled, and in apparent good
                 order. For hazardous materials, the shipper certifies compliance with applicable
                 transportation regulations and has supplied required shipping papers.
@@ -1522,7 +1526,9 @@ function StraightBillOfLadingPage() {
         <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
           <Card className={sectionClass}>
             <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-              <CardTitle className="text-base font-bold text-blue-950 dark:text-blue-100">Live Preview</CardTitle>
+              <CardTitle className="text-base font-bold text-blue-950 dark:text-blue-100">
+                Live Preview
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900">
@@ -1569,7 +1575,9 @@ function StraightBillOfLadingPage() {
                     {freightItems.slice(0, 3).map((item) => (
                       <div key={item.id} className="mb-1 flex justify-between gap-2 text-[10px]">
                         <span className="truncate">{item.commodity || "Untitled commodity"}</span>
-                        <span className="shrink-0 text-slate-500 dark:text-slate-300">{item.weight || "0"} lb</span>
+                        <span className="shrink-0 text-slate-500 dark:text-slate-300">
+                          {item.weight || "0"} lb
+                        </span>
                       </div>
                     ))}
                     {freightItems.length > 3 ? (
@@ -1598,7 +1606,9 @@ function StraightBillOfLadingPage() {
 
               <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs dark:border-slate-600 dark:bg-slate-800/60">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">Required fields</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    Required fields
+                  </span>
                   <span className="text-slate-500 dark:text-slate-400">
                     {completion.done}/{completion.total}
                   </span>
