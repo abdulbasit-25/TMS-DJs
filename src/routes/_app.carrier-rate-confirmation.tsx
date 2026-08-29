@@ -152,7 +152,7 @@ function CarrierRateConfirmationPage() {
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(22);
-        doc.text("DJFB", margin + 13, 46);
+        doc.text("BROKER", margin + 13, 46);
 
         doc.setTextColor(24, 47, 70);
         doc.setFont("helvetica", "bold");
@@ -176,7 +176,7 @@ function CarrierRateConfirmationPage() {
         doc.text(title, margin, 90);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.3);
-        doc.text("DJFB-RC-001 | Revision 1.0 | Effective August 4, 2026", pageWidth - margin, 90, {
+        doc.text("RC-001 | Revision 1.0 | Effective August 4, 2026", pageWidth - margin, 90, {
           align: "right",
         });
         doc.setFontSize(8.1);
@@ -277,7 +277,7 @@ function CarrierRateConfirmationPage() {
       doc.setFontSize(10);
       doc.text("LOAD AND CARRIER IDENTIFICATION", margin + 6, y + 12);
       y += 22;
-      drawField(margin, y, contentWidth / 4 - 6, 32, "DJFB LOAD NO.", form.loadNo);
+      drawField(margin, y, contentWidth / 4 - 6, 32, "LOAD NO.", form.loadNo);
       drawField(
         margin + contentWidth / 4,
         y,
@@ -299,7 +299,7 @@ function CarrierRateConfirmationPage() {
         y,
         contentWidth / 4 - 12,
         32,
-        "DJFB AGENT",
+        "BROKER AGENT",
         form.djfbAgent,
       );
       y += 42;
@@ -534,7 +534,7 @@ function CarrierRateConfirmationPage() {
       drawCheck(margin + 160, y3, form.driverEquipmentVerified, "Driver/equipment verified");
       drawFooter();
 
-      doc.save("DJFB-RC-001_Carrier_Rate_Confirmation.pdf");
+      doc.save("Carrier_Rate_Confirmation.pdf");
     } catch (error) {
       console.error(error);
       alert(
@@ -549,7 +549,7 @@ function CarrierRateConfirmationPage() {
     <div className="space-y-5">
       <PageHeader
         title="Carrier Rate Confirmation"
-        description="DJFB-RC-001 carrier pricing acceptance and legal terms."
+        description="Carrier pricing acceptance and legal terms."
       />
 
       <div className="flex justify-end">
@@ -568,7 +568,7 @@ function CarrierRateConfirmationPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Field label="DJFB LOAD NO." error={errors.loadNo}>
+              <Field label="LOAD NO." error={errors.loadNo}>
                 <Input
                   value={form.loadNo}
                   onChange={(e) => updateField("loadNo", e.target.value)}
@@ -587,7 +587,7 @@ function CarrierRateConfirmationPage() {
                   onChange={(e) => updateField("poReference", e.target.value)}
                 />
               </Field>
-              <Field label="DJFB AGENT">
+              <Field label="BROKER AGENT">
                 <Input
                   value={form.djfbAgent}
                   onChange={(e) => updateField("djfbAgent", e.target.value)}
