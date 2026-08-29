@@ -130,7 +130,7 @@ function LoginPage() {
               autoCapitalize="none"
               autoCorrect="off"
               className="h-11 pl-10"
-              placeholder="you@djsfreightbroker.com"
+              placeholder="you@company.com"
             />
           </div>
         </div>
@@ -260,7 +260,7 @@ function LoadCard() {
     <div className="relative mt-10 max-w-sm">
       <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/40 backdrop-blur-md">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-xs tracking-widest text-white/60">DJFB-2481</span>
+          <span className="font-mono text-xs tracking-widest text-white/60">LOAD-2481</span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--moss-400)]/15 px-2 py-0.5 text-[11px] font-semibold text-[var(--moss-400)]">
             <span className="relative flex size-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-75" />
