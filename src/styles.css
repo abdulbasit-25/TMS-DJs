@@ -215,6 +215,19 @@
      --color-brand (navy-400, ~3.6:1) which is tuned for button fills. */
   --color-link: var(--navy-300);
   --color-link-hover: var(--navy-200);
+
+  /* Document/form surface tokens used by premium BOL/invoice screens */
+  --color-doc-surface: color-mix(in oklab, var(--color-bg-surface) 88%, var(--ink-950));
+  --color-doc-surface-strong: color-mix(in oklab, var(--color-bg-surface) 72%, var(--ink-950));
+  --color-doc-surface-muted: color-mix(in oklab, var(--color-bg-surface) 80%, var(--ink-800));
+  --color-doc-border: var(--color-border);
+  --color-doc-text: var(--color-text-primary);
+  --color-doc-text-secondary: var(--color-text-secondary);
+  --color-doc-text-muted: var(--color-text-muted);
+  --color-doc-text-subtle: var(--color-text-secondary);
+  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 16%, var(--color-bg-surface));
+  --color-doc-success-soft: color-mix(in oklab, var(--color-success) 18%, var(--color-bg-surface));
+  --color-doc-danger-soft: color-mix(in oklab, var(--color-danger) 18%, var(--color-bg-surface));
 }
 
 /* ============================================================================
@@ -263,6 +276,18 @@
 
   --color-link: var(--color-brand);
   --color-link-hover: var(--color-brand-hover);
+
+  --color-doc-surface: #ffffff;
+  --color-doc-surface-strong: var(--oatmeal-50);
+  --color-doc-surface-muted: var(--oatmeal-25);
+  --color-doc-border: var(--color-border);
+  --color-doc-text: var(--color-text-primary);
+  --color-doc-text-secondary: var(--color-text-secondary);
+  --color-doc-text-muted: var(--color-text-muted);
+  --color-doc-text-subtle: var(--color-text-secondary);
+  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 10%, #ffffff);
+  --color-doc-success-soft: color-mix(in oklab, var(--color-success) 14%, #ffffff);
+  --color-doc-danger-soft: color-mix(in oklab, var(--color-danger) 12%, #ffffff);
 }
 
 /* ============================================================================
@@ -322,6 +347,24 @@
 /* ============================================================================
    Base
    ========================================================================== */
+@layer components {
+  .app-surface-card {
+    @apply rounded-[22px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_10px_24px_rgba(15,23,42,0.06)];
+  }
+
+  .app-surface-subtle {
+    @apply rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface-strong)];
+  }
+
+  .app-button-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-cta-text)] shadow-sm transition-colors hover:bg-[var(--color-brand-hover)] disabled:opacity-60;
+  }
+
+  .app-button-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] px-3.5 py-2 text-sm font-medium text-[var(--color-doc-text)] transition-colors hover:bg-[var(--color-doc-surface-strong)];
+  }
+}
+
 @layer base {
   * {
     border-color: var(--border);
