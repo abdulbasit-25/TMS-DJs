@@ -523,9 +523,9 @@ function CustomerInvoicePage() {
       </div>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="flex items-center gap-2 text-base text-blue-950">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900">
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+          <CardTitle className="flex items-center gap-2 text-base text-blue-950 dark:text-blue-100">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200">
               <ReceiptText className="size-4" />
             </span>
             Invoice Information
@@ -548,8 +548,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-base text-blue-950">Bill To</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+          <CardTitle className="text-base text-blue-950 dark:text-blue-100">Bill To</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
           <Field label="Customer / Company" required error={errors.customerCompany}>
@@ -575,9 +575,9 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-base text-blue-950">Load / Service Details</CardTitle>
+            <CardTitle className="text-base text-blue-950 dark:text-blue-100">Load / Service Details</CardTitle>
             <Button
               size="sm"
               variant="outline"
@@ -594,7 +594,7 @@ function CustomerInvoicePage() {
           {loads.map((row) => (
             <div
               key={row.id}
-              className="grid grid-cols-1 gap-2 rounded-md border p-3 sm:grid-cols-7"
+              className="grid grid-cols-1 gap-2 rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60 sm:grid-cols-7"
             >
               <Input
                 placeholder="Load No."
@@ -651,8 +651,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-base text-blue-950">Totals</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+          <CardTitle className="text-base text-blue-950 dark:text-blue-100">Totals</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -672,12 +672,12 @@ function CustomerInvoicePage() {
             </Field>
           </div>
           <Separator />
-          <div className="flex flex-col gap-1 text-sm">
-            <div className="flex justify-between text-muted-foreground">
+          <div className="flex flex-col gap-1 text-sm text-slate-600 dark:text-slate-300">
+            <div className="flex justify-between text-muted-foreground dark:text-slate-400">
               <span>Subtotal</span>
               <span>{money(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-base font-semibold">
+            <div className="flex justify-between text-base font-semibold text-slate-900 dark:text-slate-100">
               <span>Total Amount Due</span>
               <span>{money(total)}</span>
             </div>
@@ -686,8 +686,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-base text-blue-950">Notes / Special Instructions</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+          <CardTitle className="text-base text-blue-950 dark:text-blue-100">Notes / Special Instructions</CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
           <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -695,8 +695,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-base text-blue-950">
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+          <CardTitle className="text-base text-blue-950 dark:text-blue-100">
             Supporting Documents and Certification
           </CardTitle>
         </CardHeader>

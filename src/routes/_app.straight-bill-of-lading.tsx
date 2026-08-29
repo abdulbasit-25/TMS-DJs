@@ -214,8 +214,8 @@ function SectionTitle({
   children: React.ReactNode;
 }) {
   return (
-    <CardTitle className="flex items-center gap-2 text-base font-bold text-blue-950">
-      <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900">
+    <CardTitle className="flex items-center gap-2 text-base font-bold text-blue-950 dark:text-blue-100">
+      <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200">
         <Icon className="size-4" />
       </span>
       {children}
@@ -960,7 +960,7 @@ function StraightBillOfLadingPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.7fr)]">
         <div className="space-y-6">
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={ClipboardList}>Shipment Identification</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
@@ -1044,7 +1044,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={MapPin}>Origin / Shipper</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
@@ -1081,7 +1081,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={MapPin}>Destination / Consignee</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
@@ -1118,7 +1118,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <div className="flex items-center justify-between gap-3">
                 <SectionTitle icon={Package}>Freight Description</SectionTitle>
                 <Button
@@ -1126,7 +1126,7 @@ function StraightBillOfLadingPage() {
                   variant="outline"
                   size="sm"
                   onClick={addFreightRow}
-                  className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <Plus className="mr-2 size-4" /> Add row
                 </Button>
@@ -1140,9 +1140,9 @@ function StraightBillOfLadingPage() {
                 </div>
               ) : null}
 
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
                 <div className="min-w-[780px]">
-                  <div className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                  <div className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] gap-2 border-b border-slate-200 bg-slate-50 px-2 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300">
                     <span>HM</span>
                     <span>Units</span>
                     <span>Pkg</span>
@@ -1156,7 +1156,7 @@ function StraightBillOfLadingPage() {
                     <div
                       key={item.id}
                       className={`grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] items-start gap-2 px-2 py-2 ${
-                        idx % 2 === 1 ? "bg-slate-50/60" : ""
+                        idx % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-800/40" : "dark:bg-slate-900/50"
                       }`}
                     >
                       <Input
@@ -1251,14 +1251,14 @@ function StraightBillOfLadingPage() {
                 </button>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-500">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
                 Shipper must identify hazardous materials and special handling needs
               </div>
             </CardContent>
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={ClipboardList}>Special Instructions</SectionTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -1273,7 +1273,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={Truck}>Carrier, Driver and Cargo Control</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
@@ -1365,12 +1365,12 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={ShieldCheck}>Pickup Certifications and Exceptions</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              <p className="rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700">
-                <span className="font-semibold text-slate-900">Shipper certification: </span>
+              <p className="rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700 dark:bg-slate-800/70 dark:text-slate-200">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Shipper certification: </span>
                 The freight is properly described, packaged, marked, labeled, and in apparent good
                 order. For hazardous materials, the shipper certifies compliance with applicable
                 transportation regulations and has supplied required shipping papers.
@@ -1415,7 +1415,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={FileSignature}>Carrier Receipt</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
@@ -1458,7 +1458,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={CheckCircle2}>Delivery Receipt / Proof of Delivery</SectionTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
@@ -1501,7 +1501,7 @@ function StraightBillOfLadingPage() {
           </Card>
 
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
               <SectionTitle icon={ShieldCheck}>
                 Broker Status and Controlling Documents
               </SectionTitle>
@@ -1521,11 +1521,11 @@ function StraightBillOfLadingPage() {
 
         <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
           <Card className={sectionClass}>
-            <CardHeader className="border-b border-slate-100 pb-3">
-              <CardTitle className="text-base font-bold text-blue-950">Live Preview</CardTitle>
+            <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+              <CardTitle className="text-base font-bold text-blue-950 dark:text-blue-100">Live Preview</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+              <div className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900">
                 <div className="border-b border-slate-700/80 bg-slate-900 px-4 py-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -1545,7 +1545,7 @@ function StraightBillOfLadingPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 p-3 text-[11px] text-slate-700">
+                <div className="space-y-3 p-3 text-[11px] text-slate-700 dark:text-slate-200">
                   <div className="grid grid-cols-2 gap-2">
                     <FieldPreview label="Load No." value={form.loadNo} />
                     <FieldPreview label="Date issued" value={formatDate(form.dateIssued)} />
@@ -1559,8 +1559,8 @@ function StraightBillOfLadingPage() {
                     <FieldPreview label="Delivery" value={form.deliveryAddress} />
                   </div>
 
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-2">
-                    <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/70">
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-300">
                       <span>Freight summary</span>
                       <span>
                         {formatNumber(totals.units)} units · {formatNumber(totals.weight)} lb
@@ -1569,11 +1569,11 @@ function StraightBillOfLadingPage() {
                     {freightItems.slice(0, 3).map((item) => (
                       <div key={item.id} className="mb-1 flex justify-between gap-2 text-[10px]">
                         <span className="truncate">{item.commodity || "Untitled commodity"}</span>
-                        <span className="shrink-0 text-slate-500">{item.weight || "0"} lb</span>
+                        <span className="shrink-0 text-slate-500 dark:text-slate-300">{item.weight || "0"} lb</span>
                       </div>
                     ))}
                     {freightItems.length > 3 ? (
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[10px] text-slate-400 dark:text-slate-400">
                         +{freightItems.length - 3} more row
                         {freightItems.length - 3 === 1 ? "" : "s"}
                       </div>
@@ -1596,10 +1596,10 @@ function StraightBillOfLadingPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs">
+              <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs dark:border-slate-600 dark:bg-slate-800/60">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-semibold text-slate-700">Required fields</span>
-                  <span className="text-slate-500">
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">Required fields</span>
+                  <span className="text-slate-500 dark:text-slate-400">
                     {completion.done}/{completion.total}
                   </span>
                 </div>
@@ -1659,8 +1659,8 @@ function Field({
 
 function FieldPreview({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-2">
-      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+    <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900/80">
+      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {label}
       </div>
       <div className="truncate text-[10px] text-slate-700 dark:text-slate-200">{value || "—"}</div>
