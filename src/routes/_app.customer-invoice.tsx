@@ -511,10 +511,7 @@ function CustomerInvoicePage() {
               </span>
             </div>
           )}
-          <Button
-            onClick={generatePDF}
-            className="app-button-primary shrink-0 shadow-sm"
-          >
+          <Button onClick={generatePDF} className="app-button-primary shrink-0 shadow-sm">
             <FileDown className="size-4" />
             Generate PDF
           </Button>
@@ -591,7 +588,9 @@ function CustomerInvoicePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
-          {errors.loads ? <p className="text-xs text-[var(--color-danger)]">{errors.loads}</p> : null}
+          {errors.loads ? (
+            <p className="text-xs text-[var(--color-danger)]">{errors.loads}</p>
+          ) : null}
           {loads.map((row) => (
             <div
               key={row.id}
@@ -742,7 +741,9 @@ function CustomerInvoicePage() {
 
       <Card className={sectionClass}>
         <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
-          <CardTitle className="text-base text-[var(--color-doc-text)]">Prepared / Approved / Status</CardTitle>
+          <CardTitle className="text-base text-[var(--color-doc-text)]">
+            Prepared / Approved / Status
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3">
           <Field label="Prepared By">

@@ -1155,7 +1155,9 @@ function StraightBillOfLadingPage() {
                     <div
                       key={item.id}
                       className={`grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_32px] items-start gap-2 px-2 py-2 ${
-                        idx % 2 === 1 ? "bg-[var(--color-doc-surface-muted)]" : "bg-[var(--color-doc-surface)]"
+                        idx % 2 === 1
+                          ? "bg-[var(--color-doc-surface-muted)]"
+                          : "bg-[var(--color-doc-surface)]"
                       }`}
                     >
                       <Input
@@ -1204,7 +1206,11 @@ function StraightBillOfLadingPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="Total units">
-                  <Input value={formatNumber(totals.units)} readOnly className="bg-[var(--color-doc-surface-strong)]" />
+                  <Input
+                    value={formatNumber(totals.units)}
+                    readOnly
+                    className="bg-[var(--color-doc-surface-strong)]"
+                  />
                 </Field>
                 <Field label="Total weight">
                   <Input
@@ -1539,7 +1545,9 @@ function StraightBillOfLadingPage() {
                         <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-cta-text)]">
                           {portalCompanyName}
                         </div>
-                        <div className="text-[9px] text-[var(--color-doc-text-secondary)]">Straight Bill of Lading</div>
+                        <div className="text-[9px] text-[var(--color-doc-text-secondary)]">
+                          Straight Bill of Lading
+                        </div>
                       </div>
                     </div>
                     <div className="text-[9px] font-medium text-[var(--color-cta-text)]">
@@ -1596,7 +1604,9 @@ function StraightBillOfLadingPage() {
                       {form.hazmat === "Yes" ? <Flame className="size-3" /> : null}
                       Hazmat: {form.hazmat}
                     </span>
-                    <span className="text-[10px] text-[var(--color-doc-text-subtle)]">2-page document</span>
+                    <span className="text-[10px] text-[var(--color-doc-text-subtle)]">
+                      2-page document
+                    </span>
                   </div>
                 </div>
               </div>
@@ -1613,7 +1623,9 @@ function StraightBillOfLadingPage() {
                 <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-doc-surface)]">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      completion.missing.length === 0 ? "bg-[var(--color-success)]" : "bg-[var(--color-brand)]"
+                      completion.missing.length === 0
+                        ? "bg-[var(--color-success)]"
+                        : "bg-[var(--color-brand)]"
                     }`}
                     style={{ width: `${(completion.done / completion.total) * 100}%` }}
                   />
@@ -1772,7 +1784,11 @@ function SignatureField({
         ) : null}
       </div>
       {value ? (
-        <img src={value} alt={label} className="h-12 rounded border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)]" />
+        <img
+          src={value}
+          alt={label}
+          className="h-12 rounded border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)]"
+        />
       ) : null}
     </div>
   );
