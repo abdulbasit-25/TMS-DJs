@@ -262,7 +262,7 @@ function CustomerInvoicePage() {
     ] as const;
 
     const drawTableHeader = () => {
-      doc.setFillColor(240);
+      doc.setFillColor(240, 240, 240);
       doc.rect(margin, y, contentWidth, 20, "F");
       doc.setDrawColor(190);
       doc.rect(margin, y, contentWidth, 20);
