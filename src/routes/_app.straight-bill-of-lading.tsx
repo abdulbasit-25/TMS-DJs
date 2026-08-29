@@ -1,70 +1,82 @@
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Download, Plus, Trash2, RotateCcw, FileText } from "lucide-react";
-import { useState, useCallback } from "react";
-import { generateBOL, type BOLData, type FreightItem } from "@/components/bol-pdf-document";
-
-// ─── Route ───────────────────────────────────────────────────────────────────
+import { PageHeader } from "@/components/page-header";
+import { FileDown, Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/straight-bill-of-lading")({
   component: StraightBillOfLadingPage,
 });
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+type FreightItem = {
+  id: string;
+  hm: string;
+  units: string;
+  pkg: string;
+  commodity: string;
+  nmfcClass: string;
+  weight: string;
+};
 
-const TIME_ZONES = [
-  { value: "ET", label: "Eastern (ET)" },
-  { value: "CT", label: "Central (CT)" },
-  { value: "MT", label: "Mountain (MT)" },
-  { value: "PT", label: "Pacific (PT)" },
-  { value: "AK", label: "Alaska (AK)" },
-  { value: "HI", label: "Hawaii (HI)" },
-];
+type BOLFormState = {
+  loadNo: string;
+  bolNo: string;
+  customerReference: string;
+  dateIssued: string;
+  pickupDate: string;
+  pickupTime: string;
+  pickupTimezone: string;
+  deliveryDate: string;
+  deliveryTime: string;
+  deliveryTimezone: string;
+  equipmentType: string;
+  shipperName: string;
+  shipperContact: string;
+  pickupAddress: string;
+  pickupDock: string;
+  consigneeName: string;
+  consigneeContact: string;
+  deliveryAddress: string;
+  deliveryDock: string;
+  hazmat: "Yes" | "No";
+  specialInstructions: string;
+  carrierLegalName: string;
+  carrierMcUsdot: string;
+  driverName: string;
+  driverPhone: string;
+  tractorTrailerNo: string;
+  sealNo: string;
+  sealRequired: string;
+  trackingLink: string;
+  driverCountedFreight: boolean;
+  shipperLoadAndCount: boolean;
+  sealVerified: boolean;
+  pickupExceptions: string;
+  shipperSignature: string;
+  shipperTypedName: string;
+  shipperDateTime: string;
+  shipperTitle: string;
+  carrierReceiptText: string;
+  driverSignature: string;
+  driverTypedName: string;
+  driverDateTime: string;
+  sealConfirmed: string;
+  deliveryExceptions: string;
+  consigneeSignature: string;
+  consigneeTypedName: string;
+  consigneeDateTime: string;
+  consigneeTitle: string;
+};
 
-const EQUIPMENT_TYPES = [
-  { value: "Dry Van", label: "Dry Van" },
-  { value: "Reefer / Refrigerated", label: "Reefer / Refrigerated" },
-  { value: "Flatbed", label: "Flatbed" },
-  { value: "Step Deck", label: "Step Deck" },
-  { value: "Conestoga", label: "Conestoga" },
-  { value: "Box Truck", label: "Box Truck" },
-  { value: "Hotshot", label: "Hotshot" },
-  { value: "Lowboy", label: "Lowboy" },
-  { value: "Tanker", label: "Tanker" },
-  { value: "Other", label: "Other" },
-];
-
-const PKG_TYPES = [
-  "Pallets",
-  "Skids",
-  "Crates",
-  "Cartons",
-  "Drums",
-  "Totes",
-  "Boxes",
-  "Bundles",
-  "Pieces",
-  "Rolls",
-  "Coils",
-  "Other",
-];
-
-const blankItem = (): FreightItem => ({
+const createFreightItem = (): FreightItem => ({
   id: crypto.randomUUID(),
-  hm: false,
+  hm: "",
   units: "",
   pkg: "",
   commodity: "",
@@ -72,802 +84,1029 @@ const blankItem = (): FreightItem => ({
   weight: "",
 });
 
-const defaultData: BOLData = {
-  djfbLoadNo: "",
-  bolNo: "",
-  customerPO: "",
-  dateIssued: new Date().toISOString().split("T")[0],
-  pickupDate: "",
-  pickupTime: "",
-  pickupTimeZone: "CT",
-  deliveryDate: "",
-  deliveryTime: "",
-  deliveryTimeZone: "CT",
-  equipmentType: "",
-  shipperName: "",
-  shipperContact: "",
-  shipperPhone: "",
-  pickupAddress: "",
-  dockAppointment: "",
-  consigneeName: "",
-  consigneeContact: "",
-  consigneePhone: "",
-  deliveryAddress: "",
-  deliveryDockAppointment: "",
-  freightItems: [blankItem()],
-  totalUnits: "",
-  totalWeight: "",
-  declaredValue: "",
-  hazmat: "",
-  specialInstructions: "",
-  carrierName: "",
+const initialState: BOLFormState = {
+  loadNo: "DJFB-LOAD-2048",
+  bolNo: "DJFB-BL-001",
+  customerReference: "PO-11842",
+  dateIssued: "2026-08-04",
+  pickupDate: "2026-08-05",
+  pickupTime: "08:00",
+  pickupTimezone: "CST",
+  deliveryDate: "2026-08-06",
+  deliveryTime: "18:30",
+  deliveryTimezone: "CST",
+  equipmentType: "53' Dry Van",
+  shipperName: "North Texas Distribution Center",
+  shipperContact: "(214) 555-0188",
+  pickupAddress: "1209 N Saginaw Blvd, Suite G-194, Saginaw, TX 76179",
+  pickupDock: "Dock 4",
+  consigneeName: "Atlas Retail Group",
+  consigneeContact: "(972) 555-2222",
+  deliveryAddress: "5400 Commerce Ave, Dallas, TX 75247",
+  deliveryDock: "Warehouse B",
+  hazmat: "No",
+  specialInstructions: "Handle with care. Keep freight secure and deliver by appointment window.",
+  carrierLegalName: "",
   carrierMcUsdot: "",
   driverName: "",
   driverPhone: "",
   tractorTrailerNo: "",
   sealNo: "",
-  requiredTemp: "",
-  actualTemp: "",
+  sealRequired: "",
   trackingLink: "",
-  driverCounted: false,
-  slc: false,
+  driverCountedFreight: false,
+  shipperLoadAndCount: false,
   sealVerified: false,
   pickupExceptions: "",
   shipperSignature: "",
-  shipperDate: "",
-  shipperTime: "",
+  shipperTypedName: "",
+  shipperDateTime: "",
   shipperTitle: "",
+  carrierReceiptText:
+    "Carrier acknowledges receipt and custody of the freight in apparent good order except as written above. Driver confirms the carrier, driver, tractor, trailer, seal, and shipment information shown on this BOL.",
   driverSignature: "",
-  driverDate: "",
-  driverTime: "",
-  sealNoConfirmed: "",
+  driverTypedName: "",
+  driverDateTime: "",
+  sealConfirmed: "",
   deliveryExceptions: "",
   consigneeSignature: "",
-  consigneeDate: "",
-  consigneeTime: "",
+  consigneeTypedName: "",
+  consigneeDateTime: "",
   consigneeTitle: "",
 };
 
-// ─── Reusable Form Field ─────────────────────────────────────────────────────
+const initialFreightItems: FreightItem[] = [
+  {
+    id: crypto.randomUUID(),
+    hm: "",
+    units: "1",
+    pkg: "Pallet",
+    commodity: "Consumer Goods",
+    nmfcClass: "N/A",
+    weight: "1200",
+  },
+  {
+    id: crypto.randomUUID(),
+    hm: "",
+    units: "2",
+    pkg: "Pallet",
+    commodity: "General Freight",
+    nmfcClass: "N/A",
+    weight: "1800",
+  },
+];
 
-function Field({
-  label,
-  value,
-  onChange,
-  className = "",
-  type = "text",
-  placeholder = "",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  className?: string;
-  type?: string;
-  placeholder?: string;
-}) {
-  return (
-    <div className={className}>
-      <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </Label>
-      <Input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-1 h-8 text-sm"
-      />
-    </div>
-  );
-}
-
-function SelectField({
-  label,
-  value,
-  onValueChange,
-  options,
-  placeholder = "Select…",
-  className = "",
-}: {
-  label: string;
-  value: string;
-  onValueChange: (v: string) => void;
-  options: { value: string; label: string }[];
-  placeholder?: string;
-  className?: string;
-}) {
-  return (
-    <div className={className}>
-      <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </Label>
-      <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className="mt-1 h-8 text-sm">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
-        {description && <CardDescription className="text-xs">{description}</CardDescription>}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
-  );
-}
-
-// ─── Page Component ──────────────────────────────────────────────────────────
+const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
 
 function StraightBillOfLadingPage() {
-  const [data, setData] = useState<BOLData>(defaultData);
+  const [form, setForm] = useState<BOLFormState>(initialState);
+  const [freightItems, setFreightItems] = useState<FreightItem[]>(initialFreightItems);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const set = useCallback((key: keyof BOLData, value: BOLData[keyof BOLData]) => {
-    setData((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const totals = useMemo(() => {
+    const units = freightItems.reduce((sum, row) => sum + Number(row.units || 0), 0);
+    const weight = freightItems.reduce((sum, row) => sum + Number(row.weight || 0), 0);
+    return { units, weight };
+  }, [freightItems]);
 
-  const setItem = useCallback((id: string, key: keyof FreightItem, value: string | boolean) => {
-    setData((prev) => ({
-      ...prev,
-      freightItems: prev.freightItems.map((item) =>
-        item.id === id ? { ...item, [key]: value } : item,
-      ),
-    }));
-  }, []);
+  const updateField = <K extends keyof BOLFormState>(field: K, value: BOLFormState[K]) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
 
-  const addItem = useCallback(() => {
-    setData((prev) => ({
-      ...prev,
-      freightItems: [...prev.freightItems, blankItem()],
-    }));
-  }, []);
+  const onFreightChange = (id: string, field: keyof FreightItem, value: string) => {
+    setFreightItems((rows) => rows.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
+  };
 
-  const removeItem = useCallback((id: string) => {
-    setData((prev) => ({
-      ...prev,
-      freightItems:
-        prev.freightItems.length > 1
-          ? prev.freightItems.filter((i) => i.id !== id)
-          : prev.freightItems,
-    }));
-  }, []);
+  const addFreightRow = () => setFreightItems((rows) => [...rows, createFreightItem()]);
 
-  const handleGenerate = () => {
-    generateBOL(data);
+  const removeFreightRow = (id: string) => {
+    setFreightItems((rows) => (rows.length > 1 ? rows.filter((row) => row.id !== id) : rows));
+  };
+
+  const validate = () => {
+    const nextErrors: Record<string, string> = {};
+    if (!form.loadNo.trim()) nextErrors.loadNo = "Load number is required.";
+    if (!form.bolNo.trim()) nextErrors.bolNo = "BOL number is required.";
+    if (!form.dateIssued) nextErrors.dateIssued = "Date issued is required.";
+    if (!form.shipperName.trim()) nextErrors.shipperName = "Shipper name is required.";
+    if (!form.consigneeName.trim()) nextErrors.consigneeName = "Consignee name is required.";
+    if (freightItems.length === 0) nextErrors.freight = "Add at least one freight item.";
+    const hasMissingFreight = freightItems.some(
+      (row) => !row.commodity.trim() && !row.pkg.trim() && !row.weight.trim(),
+    );
+    if (hasMissingFreight) nextErrors.freight = "Complete each freight row before generating.";
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const generatePDF = () => {
+    if (!validate()) {
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const doc = new jsPDF({ unit: "pt", format: "letter" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 36;
+      const contentWidth = pageWidth - margin * 2;
+
+      const drawHeader = (pageNumber: number, title: string) => {
+        const leftX = margin;
+        const topY = 28;
+
+        doc.setFillColor(24, 47, 70);
+        doc.roundedRect(leftX, topY, 72, 34, 4, 4, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.text("DJFB", leftX + 13, topY + 22);
+
+        doc.setTextColor(26, 56, 86);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("DJ'S FREIGHT BROKER LLC", leftX + 92, topY + 15);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.6);
+        doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", leftX + 92, topY + 27);
+        doc.text("(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com", leftX + 92, topY + 38);
+
+        doc.setDrawColor(180, 20, 20);
+        doc.setLineWidth(1.2);
+        doc.line(margin, topY + 46, pageWidth - margin, topY + 46);
+
+        doc.setTextColor(23, 40, 58);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text(title, margin, 78);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.3);
+        doc.text(
+          `DJFB-BL-001 | Revision 1.0 | Effective August 4, 2026`,
+          pageWidth - margin,
+          78,
+          { align: "right" },
+        );
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.1);
+        doc.text(`Page ${pageNumber} of 2`, pageWidth - margin, 90, { align: "right" });
+      };
+
+      const drawFooter = () => {
+        doc.setTextColor(40, 52, 62);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.4);
+        doc.text("FMCSA PROPERTY BROKER | MC 1551655 | USDOT 4079462", margin, pageHeight - 18);
+        doc.text("CONTROLLED TEMPLATE | Verify current revision", pageWidth - margin, pageHeight - 18, {
+          align: "right",
+        });
+      };
+
+      const drawField = (
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        label: string,
+        value: string,
+        labelSize = 7,
+      ) => {
+        doc.setDrawColor(151, 171, 193);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(x, y, w, h, 1.5, 1.5, "FD");
+        doc.setTextColor(40, 52, 62);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(labelSize);
+        doc.text(label, x + 5, y + 13);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(18, 23, 32);
+        const text = value || "";
+        const lines = doc.splitTextToSize(text, w - 12);
+        const lineHeight = 9;
+        const startY = y + 24;
+        const maxLines = Math.max(1, Math.min(3, lines.length));
+        for (let i = 0; i < maxLines; i += 1) {
+          doc.text(lines[i] || "", x + 5, startY + i * lineHeight);
+        }
+      };
+
+      const drawCheck = (x: number, y: number, checked: boolean) => {
+        doc.setDrawColor(125, 136, 147);
+        doc.rect(x, y, 10, 10);
+        if (checked) {
+          doc.setDrawColor(20, 31, 47);
+          doc.line(x + 2, y + 5, x + 4, y + 7);
+          doc.line(x + 4, y + 7, x + 8, y + 3);
+        }
+      };
+
+      const drawSectionHeading = (label: string, x: number, y: number, width: number) => {
+        doc.setFillColor(229, 236, 245);
+        doc.roundedRect(x, y, width, 18, 0, 0, "F");
+        doc.setTextColor(20, 44, 70);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.8);
+        doc.text(label, x + 6, y + 12);
+      };
+
+      const drawLongBox = (x: number, y: number, width: number, height: number, label: string, value: string) => {
+        doc.setDrawColor(151, 171, 193);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(x, y, width, height, 0, 0, "FD");
+        if (label) {
+          doc.setTextColor(41, 50, 70);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7.5);
+          doc.text(label, x + 5, y + 13);
+        }
+        doc.setTextColor(18, 23, 32);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.2);
+        const text = doc.splitTextToSize(value || "", width - 12);
+        text.forEach((line: string, idx: number) => {
+          doc.text(line, x + 5, y + 23 + idx * 10);
+        });
+      };
+
+      // page 1
+      drawHeader(1, "STRAIGHT BILL OF LADING - NON-NEGOTIABLE");
+
+      let y = 110;
+      drawSectionHeading("SHIPMENT IDENTIFICATION", margin, y, contentWidth);
+      y += 24;
+
+      drawField(margin, y, contentWidth / 4 - 6, 28, "DJFB LOAD NO.", form.loadNo);
+      drawField(margin + contentWidth / 4, y, contentWidth / 4 - 6, 28, "BOL NO.", form.bolNo);
+      drawField(
+        margin + (contentWidth / 4) * 2,
+        y,
+        contentWidth / 4 - 6,
+        28,
+        "CUSTOMER PO / REFERENCE",
+        form.customerReference,
+      );
+      drawField(margin + (contentWidth / 4) * 3 + 6, y, contentWidth / 4 - 12, 28, "DATE ISSUED", form.dateIssued);
+      y += 38;
+
+      drawField(margin, y, contentWidth / 3 - 8, 28, "PICKUP DATE / TIME / TIME ZONE", `${form.pickupDate} ${form.pickupTime} ${form.pickupTimezone}`);
+      drawField(margin + contentWidth / 3, y, contentWidth / 3 - 8, 28, "DELIVERY DATE / TIME / TIME ZONE", `${form.deliveryDate} ${form.deliveryTime} ${form.deliveryTimezone}`);
+      drawField(margin + (contentWidth / 3) * 2 + 8, y, contentWidth / 3 - 16, 28, "EQUIPMENT TYPE", form.equipmentType);
+      y += 42;
+
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(90, 96, 103);
+      doc.setFontSize(8.5);
+      doc.text("DJ's Freight Broker LLC acts solely as a property broker", pageWidth - margin, y + 4, {
+        align: "right",
+      });
+
+      y += 12;
+      drawSectionHeading("ORIGIN / SHIPPER", margin, y, contentWidth);
+      y += 24;
+      drawField(margin, y, contentWidth / 2 - 8, 28, "SHIPPER NAME", form.shipperName);
+      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "CONTACT / PHONE", form.shipperContact);
+      y += 38;
+      drawField(margin, y, contentWidth / 2 - 8, 28, "PICKUP ADDRESS", form.pickupAddress);
+      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "DOCK / APPOINTMENT NO.", form.pickupDock);
+      y += 46;
+
+      drawSectionHeading("DESTINATION / CONSIGNEE", margin, y, contentWidth);
+      y += 24;
+      drawField(margin, y, contentWidth / 2 - 8, 28, "CONSIGNEE NAME", form.consigneeName);
+      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "CONTACT / PHONE", form.consigneeContact);
+      y += 38;
+      drawField(margin, y, contentWidth / 2 - 8, 28, "DELIVERY ADDRESS", form.deliveryAddress);
+      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "DOCK / APPOINTMENT NO.", form.deliveryDock);
+      y += 46;
+
+      drawSectionHeading("FREIGHT DESCRIPTION", margin, y, contentWidth);
+      doc.setTextColor(90, 96, 103);
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7.3);
+      doc.text("Shipper must identify hazardous materials and special handling needs", pageWidth - margin, y + 12, {
+        align: "right",
+      });
+      y += 22;
+
+      const freightTableY = y;
+      const rowHeight = 36;
+      const tableWidth = contentWidth;
+      const colW = {
+        hm: 46,
+        units: 52,
+        pkg: 50,
+        commodity: 200,
+        nmfc: 83,
+        weight: 64,
+      };
+      let x = margin;
+      const headers = ["HM", "Units", "Pkg", "Commodity / Description", "NMFC / Class", "Weight"];
+      const headerWidths = [colW.hm, colW.units, colW.pkg, colW.commodity, colW.nmfc, colW.weight];
+
+      headers.forEach((header, idx) => {
+        doc.setFillColor(243, 247, 250);
+        doc.setDrawColor(151, 171, 193);
+        doc.rect(x, freightTableY, headerWidths[idx], 18, "FD");
+        doc.setTextColor(35, 46, 60);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.2);
+        doc.text(header, x + 4, freightTableY + 12);
+        x += headerWidths[idx];
+      });
+
+      let currentY = freightTableY + 18;
+      freightItems.forEach((row) => {
+        x = margin;
+        const rowValues = [
+          row.hm,
+          row.units,
+          row.pkg,
+          row.commodity,
+          row.nmfcClass,
+          row.weight,
+        ];
+        rowValues.forEach((value, idx) => {
+          doc.setDrawColor(151, 171, 193);
+          doc.rect(x, currentY, headerWidths[idx], rowHeight, "S");
+          if (idx === 3) {
+            const lines = doc.splitTextToSize(value || "", headerWidths[idx] - 10);
+            const lineStartY = currentY + 12;
+            lines.slice(0, 2).forEach((line: string, lineIndex: number) => {
+              doc.text(line, x + 5, lineStartY + lineIndex * 10);
+            });
+          } else {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(7.5);
+            doc.text(value || "", x + 5, currentY + 12);
+          }
+          x += headerWidths[idx];
+        });
+        currentY += rowHeight;
+      });
+      y = currentY + 10;
+
+      drawField(margin, y, 172, 26, "TOTAL UNITS", String(totals.units));
+      drawField(margin + 172 + 10, y, 172, 26, "TOTAL WEIGHT", String(totals.weight));
+      drawField(margin + 354 + 20, y, 136, 26, "DECLARED VALUE (IF ANY)", "");
+      y += 38;
+
+      drawCheck(margin + 350, y, form.hazmat === "Yes");
+      doc.setTextColor(28, 34, 40);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.4);
+      doc.text("Hazmat - Yes", margin + 366, y + 8);
+      drawCheck(margin + 450, y, form.hazmat === "No");
+      doc.text("Hazmat - No", margin + 466, y + 8);
+      y += 16;
+
+      drawLongBox(margin, y, contentWidth, 72, "SPECIAL INSTRUCTIONS / HANDLING / TEMPERATURE / SECUREMENT", form.specialInstructions);
+      y += 90;
+
+      drawFooter();
+      doc.addPage();
+
+      drawHeader(2, "STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS");
+      let y2 = 110;
+
+      drawSectionHeading("CARRIER, DRIVER AND CARGO CONTROL", margin, y2, contentWidth);
+      y2 += 22;
+      drawField(margin, y2, contentWidth / 2 - 8, 28, "CARRIER LEGAL NAME", form.carrierLegalName);
+      drawField(margin + contentWidth / 2 + 8, y2, contentWidth / 2 - 16, 28, "CARRIER MC / USDOT", form.carrierMcUsdot);
+      y2 += 38;
+      drawField(margin, y2, contentWidth / 3 - 8, 28, "DRIVER NAME", form.driverName);
+      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DRIVER PHONE", form.driverPhone);
+      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TRACTOR / TRAILER NO.", form.tractorTrailerNo);
+      y2 += 38;
+      drawField(margin, y2, contentWidth / 3 - 8, 28, "SEAL NO.", form.sealNo);
+      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "REQUIRED / ACTUAL TEMP", `${form.sealRequired}`);
+      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TRACKING LINK / REFERENCE", form.trackingLink);
+      y2 += 46;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.4);
+      const checkY = y2;
+      drawCheck(margin, checkY, form.driverCountedFreight);
+      doc.text("Driver counted freight", margin + 18, checkY + 8);
+      drawCheck(margin + 195, checkY, form.shipperLoadAndCount);
+      doc.text("Shipper load and count (SLC)", margin + 213, checkY + 8);
+      drawCheck(margin + 390, checkY, form.sealVerified);
+      doc.text("Seal verified at pickup", margin + 408, checkY + 8);
+      y2 += 22;
+
+      drawSectionHeading("PICKUP CERTIFICATIONS AND EXCEPTIONS", margin, y2, contentWidth);
+      y2 += 22;
+      doc.setTextColor(35, 44, 58);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.3);
+      const certText =
+        "SHIPPER CERTIFICATION: The freight is properly described, packaged, marked, labeled, and in apparent good order. For hazardous materials, the shipper certifies compliance with applicable transportation regulations and has supplied required shipping papers.";
+      const certLines = doc.splitTextToSize(certText, contentWidth - 12);
+      doc.text(certLines, margin + 6, y2 + 12);
+      y2 += 28;
+      drawLongBox(margin, y2, contentWidth, 52, "EXCEPTIONS / VISIBLE DAMAGE / COUNT DISCREPANCY AT PICKUP", form.pickupExceptions);
+      y2 += 70;
+      drawField(margin, y2, contentWidth / 3 - 8, 28, "SHIPPER SIGNATURE / TYPED NAME", form.shipperTypedName);
+      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DATE / TIME", form.shipperDateTime);
+      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TITLE", form.shipperTitle);
+      if (form.shipperSignature) {
+        try {
+          doc.addImage(form.shipperSignature, "PNG", margin + 8, y2 + 30, 150, 32);
+        } catch {
+          // no-op
+        }
+      }
+      y2 += 54;
+
+      const carrierReceiptText =
+        "CARRIER RECEIPT: Carrier acknowledges receipt and custody of the freight in apparent good order except as written above. Driver confirms the carrier, driver, tractor, trailer, seal, and shipment information shown on this BOL.";
+      const carrierLines = doc.splitTextToSize(carrierReceiptText, contentWidth - 8);
+      doc.text(carrierLines, margin + 6, y2 + 6);
+      y2 += 18;
+      drawField(margin, y2, contentWidth / 3 - 8, 28, "DRIVER SIGNATURE / TYPED NAME", form.driverTypedName);
+      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DATE / TIME", form.driverDateTime);
+      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "SEAL NO. CONFIRMED", form.sealConfirmed);
+      if (form.driverSignature) {
+        try {
+          doc.addImage(form.driverSignature, "PNG", margin + 8, y2 + 32, 150, 32);
+        } catch {
+          // no-op
+        }
+      }
+      y2 += 70;
+
+      drawSectionHeading("DELIVERY RECEIPT / PROOF OF DELIVERY", margin, y2, contentWidth);
+      y2 += 24;
+      drawLongBox(margin, y2, contentWidth, 52, "DELIVERY EXCEPTIONS / SHORTAGE / OVER / DAMAGE / SEAL CONDITION", form.deliveryExceptions);
+      y2 += 70;
+      drawField(margin, y2, contentWidth / 3 - 8, 28, "CONSIGNEE SIGNATURE / TYPED NAME", form.consigneeTypedName);
+      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DATE / TIME", form.consigneeDateTime);
+      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TITLE", form.consigneeTitle);
+      if (form.consigneeSignature) {
+        try {
+          doc.addImage(form.consigneeSignature, "PNG", margin + 8, y2 + 32, 150, 32);
+        } catch {
+          // no-op
+        }
+      }
+      y2 += 70;
+
+      doc.setFillColor(230, 238, 246);
+      doc.roundedRect(margin, y2, contentWidth, 52, 1.5, 1.5, "F");
+      doc.setTextColor(20, 44, 70);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.8);
+      doc.text("BROKER STATUS AND CONTROLLING DOCUMENTS", margin + 8, y2 + 15);
+      doc.setTextColor(35, 44, 58);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.15);
+      const legalText =
+        "DJ's Freight Broker LLC is a property broker, not the motor carrier or warehouseman. The motor carrier has exclusive custody, control, and responsibility for transportation, loading review, securement, and delivery. This BOL does not change the load-specific rate confirmation or any signed broker-carrier agreement. Cargo claims are governed by applicable law and controlling contracts, including 49 U.S.C. 14706 when applicable.";
+      const legalLines = doc.splitTextToSize(legalText, contentWidth - 18);
+      doc.text(legalLines, margin + 8, y2 + 26);
+
+      drawFooter();
+
+      doc.save("DJFB-BL-001-Bill-of-Lading.pdf");
+    } catch (error) {
+      console.error(error);
+      alert("PDF generation failed. Please check the form values and try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Straight Bill of Lading"
-        description="Complete the form below and generate a professional PDF document."
+        description="DJFB-BL-001 document workflow with preview and PDF generation."
       />
 
-      {/* ── Actions ── */}
-      <div className="flex flex-wrap gap-3">
-        <Button onClick={handleGenerate} size="sm">
-          <Download className="mr-2 h-4 w-4" />
-          Generate PDF
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <Button type="button" variant="outline" onClick={() => setForm(initialState)}>
+          Reset
         </Button>
-        <Button variant="outline" size="sm" onClick={() => setData(defaultData)}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Clear Form
+        <Button type="button" variant="outline" onClick={() => setFreightItems(initialFreightItems)}>
+          Clear freight rows
+        </Button>
+        <Button type="button" onClick={generatePDF} disabled={isGenerating}>
+          <FileDown className="mr-2 size-4" />
+          {isGenerating ? "Generating..." : "Generate PDF"}
         </Button>
       </div>
 
-      {/* ── Shipment Identification ── */}
-      <Section
-        title="Shipment Identification"
-        description="DJ's Freight Broker LLC acts solely as a property broker"
-      >
-        <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field
-            label="DJFB Load No."
-            value={data.djfbLoadNo}
-            onChange={(v) => set("djfbLoadNo", v)}
-            placeholder="e.g. LD-20260804-001"
-          />
-          <Field
-            label="BOL No."
-            value={data.bolNo}
-            onChange={(v) => set("bolNo", v)}
-            placeholder="e.g. BOL-001"
-          />
-          <Field
-            label="Customer PO / Reference"
-            value={data.customerPO}
-            onChange={(v) => set("customerPO", v)}
-            placeholder="PO number"
-          />
-          <Field
-            label="Date Issued"
-            type="date"
-            value={data.dateIssued}
-            onChange={(v) => set("dateIssued", v)}
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field
-            label="Pickup Date"
-            type="date"
-            value={data.pickupDate}
-            onChange={(v) => set("pickupDate", v)}
-          />
-          <Field
-            label="Pickup Time"
-            type="time"
-            value={data.pickupTime}
-            onChange={(v) => set("pickupTime", v)}
-          />
-          <SelectField
-            label="Pickup Time Zone"
-            value={data.pickupTimeZone}
-            onValueChange={(v) => set("pickupTimeZone", v)}
-            options={TIME_ZONES}
-          />
-          <div />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field
-            label="Delivery Date"
-            type="date"
-            value={data.deliveryDate}
-            onChange={(v) => set("deliveryDate", v)}
-          />
-          <Field
-            label="Delivery Time"
-            type="time"
-            value={data.deliveryTime}
-            onChange={(v) => set("deliveryTime", v)}
-          />
-          <SelectField
-            label="Delivery Time Zone"
-            value={data.deliveryTimeZone}
-            onValueChange={(v) => set("deliveryTimeZone", v)}
-            options={TIME_ZONES}
-          />
-          <SelectField
-            label="Equipment Type"
-            value={data.equipmentType}
-            onValueChange={(v) => set("equipmentType", v)}
-            options={EQUIPMENT_TYPES}
-            placeholder="Select type…"
-          />
-        </div>
-      </Section>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.7fr)]">
+        <div className="space-y-5">
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Shipment Identification</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <Field label="DJFB LOAD NO." error={errors.loadNo}>
+                  <Input value={form.loadNo} onChange={(e) => updateField("loadNo", e.target.value)} />
+                </Field>
+                <Field label="BOL NO." error={errors.bolNo}>
+                  <Input value={form.bolNo} onChange={(e) => updateField("bolNo", e.target.value)} />
+                </Field>
+                <Field label="CUSTOMER PO / REFERENCE">
+                  <Input value={form.customerReference} onChange={(e) => updateField("customerReference", e.target.value)} />
+                </Field>
+                <Field label="DATE ISSUED" error={errors.dateIssued}>
+                  <Input type="date" value={form.dateIssued} onChange={(e) => updateField("dateIssued", e.target.value)} />
+                </Field>
+              </div>
 
-      {/* ── Origin / Shipper ── */}
-      <Section title="Origin / Shipper">
-        <div className="grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-3">
-          <Field
-            label="Shipper Name"
-            value={data.shipperName}
-            onChange={(v) => set("shipperName", v)}
-            placeholder="Company or individual"
-            className="lg:col-span-2"
-          />
-          <Field
-            label="Contact / Phone"
-            value={data.shipperContact}
-            onChange={(v) => set("shipperContact", v)}
-            placeholder="Name / (phone)"
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-3">
-          <Field
-            label="Pickup Address"
-            value={data.pickupAddress}
-            onChange={(v) => set("pickupAddress", v)}
-            placeholder="Street, City, State ZIP"
-            className="lg:col-span-2"
-          />
-          <Field
-            label="Dock / Appointment No."
-            value={data.dockAppointment}
-            onChange={(v) => set("dockAppointment", v)}
-            placeholder="Dock # or appt ref"
-          />
-        </div>
-      </Section>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="PICKUP DATE / TIME / TIME ZONE">
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Input type="date" value={form.pickupDate} onChange={(e) => updateField("pickupDate", e.target.value)} />
+                    <Input type="time" value={form.pickupTime} onChange={(e) => updateField("pickupTime", e.target.value)} />
+                    <Input value={form.pickupTimezone} onChange={(e) => updateField("pickupTimezone", e.target.value)} />
+                  </div>
+                </Field>
+                <Field label="DELIVERY DATE / TIME / TIME ZONE">
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <Input type="date" value={form.deliveryDate} onChange={(e) => updateField("deliveryDate", e.target.value)} />
+                    <Input type="time" value={form.deliveryTime} onChange={(e) => updateField("deliveryTime", e.target.value)} />
+                    <Input value={form.deliveryTimezone} onChange={(e) => updateField("deliveryTimezone", e.target.value)} />
+                  </div>
+                </Field>
+                <Field label="EQUIPMENT TYPE">
+                  <Input value={form.equipmentType} onChange={(e) => updateField("equipmentType", e.target.value)} />
+                </Field>
+              </div>
 
-      {/* ── Destination / Consignee ── */}
-      <Section title="Destination / Consignee">
-        <div className="grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-3">
-          <Field
-            label="Consignee Name"
-            value={data.consigneeName}
-            onChange={(v) => set("consigneeName", v)}
-            placeholder="Company or individual"
-            className="lg:col-span-2"
-          />
-          <Field
-            label="Contact / Phone"
-            value={data.consigneeContact}
-            onChange={(v) => set("consigneeContact", v)}
-            placeholder="Name / (phone)"
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-3">
-          <Field
-            label="Delivery Address"
-            value={data.deliveryAddress}
-            onChange={(v) => set("deliveryAddress", v)}
-            placeholder="Street, City, State ZIP"
-            className="lg:col-span-2"
-          />
-          <Field
-            label="Dock / Appointment No."
-            value={data.deliveryDockAppointment}
-            onChange={(v) => set("deliveryDockAppointment", v)}
-            placeholder="Dock # or appt ref"
-          />
-        </div>
-      </Section>
+              <div className="rounded-md border border-muted bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-600">
+                DJ&apos;s Freight Broker LLC acts solely as a property broker
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* ── Freight Description ── */}
-      <Section
-        title="Freight Description"
-        description="Shipper must identify hazardous materials and special handling needs"
-      >
-        {/* Desktop table */}
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                <th className="w-10 px-2 py-2">HM</th>
-                <th className="w-16 px-2 py-2">Units</th>
-                <th className="w-24 px-2 py-2">Pkg</th>
-                <th className="px-2 py-2">Commodity / Description</th>
-                <th className="w-28 px-2 py-2">NMFC / Class</th>
-                <th className="w-24 px-2 py-2">Weight</th>
-                <th className="w-10 px-2 py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {data.freightItems.map((item) => (
-                <tr key={item.id} className="border-b border-border/50 align-top">
-                  <td className="px-2 py-1.5">
-                    <Checkbox
-                      checked={item.hm}
-                      onCheckedChange={(c) => setItem(item.id, "hm", c === true)}
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <Input
-                      className="h-7 text-xs"
-                      value={item.units}
-                      onChange={(e) => setItem(item.id, "units", e.target.value)}
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <Select value={item.pkg} onValueChange={(v) => setItem(item.id, "pkg", v)}>
-                      <SelectTrigger className="h-7 text-xs">
-                        <SelectValue placeholder="Pkg" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PKG_TYPES.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <Input
-                      className="h-7 text-xs"
-                      value={item.commodity}
-                      onChange={(e) => setItem(item.id, "commodity", e.target.value)}
-                      placeholder="Description of freight"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <Input
-                      className="h-7 text-xs"
-                      value={item.nmfcClass}
-                      onChange={(e) => setItem(item.id, "nmfcClass", e.target.value)}
-                      placeholder="NMFC / Class"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <Input
-                      className="h-7 text-xs"
-                      value={item.weight}
-                      onChange={(e) => setItem(item.id, "weight", e.target.value)}
-                      placeholder="lbs"
-                    />
-                  </td>
-                  <td className="px-2 py-1.5">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeItem(item.id)}
-                      disabled={data.freightItems.length <= 1}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Origin / Shipper</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="SHIPPER NAME" error={errors.shipperName}>
+                  <Input value={form.shipperName} onChange={(e) => updateField("shipperName", e.target.value)} />
+                </Field>
+                <Field label="CONTACT / PHONE">
+                  <Input value={form.shipperContact} onChange={(e) => updateField("shipperContact", e.target.value)} />
+                </Field>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="PICKUP ADDRESS">
+                  <Textarea value={form.pickupAddress} onChange={(e) => updateField("pickupAddress", e.target.value)} className="min-h-20" />
+                </Field>
+                <Field label="DOCK / APPOINTMENT NO.">
+                  <Input value={form.pickupDock} onChange={(e) => updateField("pickupDock", e.target.value)} />
+                </Field>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Mobile cards */}
-        <div className="space-y-3 md:hidden">
-          {data.freightItems.map((item, idx) => (
-            <div key={item.id} className="space-y-2 rounded-lg border border-border/60 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground">Line {idx + 1}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                  onClick={() => removeItem(item.id)}
-                  disabled={data.freightItems.length <= 1}
-                >
-                  <Trash2 className="h-3 w-3" />
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Destination / Consignee</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="CONSIGNEE NAME" error={errors.consigneeName}>
+                  <Input value={form.consigneeName} onChange={(e) => updateField("consigneeName", e.target.value)} />
+                </Field>
+                <Field label="CONTACT / PHONE">
+                  <Input value={form.consigneeContact} onChange={(e) => updateField("consigneeContact", e.target.value)} />
+                </Field>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="DELIVERY ADDRESS">
+                  <Textarea value={form.deliveryAddress} onChange={(e) => updateField("deliveryAddress", e.target.value)} className="min-h-20" />
+                </Field>
+                <Field label="DOCK / APPOINTMENT NO.">
+                  <Input value={form.deliveryDock} onChange={(e) => updateField("deliveryDock", e.target.value)} />
+                </Field>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-lg font-bold text-blue-900">Freight Description</CardTitle>
+                <Button type="button" variant="outline" size="sm" onClick={addFreightRow}>
+                  <Plus className="mr-2 size-4" /> Add row
                 </Button>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Field
-                  label="Units"
-                  value={item.units}
-                  onChange={(v) => setItem(item.id, "units", v)}
-                />
-                <SelectField
-                  label="Pkg"
-                  value={item.pkg}
-                  onValueChange={(v) => setItem(item.id, "pkg", v)}
-                  options={PKG_TYPES.map((p) => ({ value: p, label: p }))}
-                  placeholder="Pkg"
-                />
-                <Field
-                  label="NMFC / Class"
-                  value={item.nmfcClass}
-                  onChange={(v) => setItem(item.id, "nmfcClass", v)}
-                />
-                <Field
-                  label="Weight (lbs)"
-                  value={item.weight}
-                  onChange={(v) => setItem(item.id, "weight", v)}
-                />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="overflow-x-auto">
+                <div className="min-w-[760px] space-y-2">
+                  <div className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px] gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                    <span>HM</span>
+                    <span>Units</span>
+                    <span>Pkg</span>
+                    <span>Commodity / Description</span>
+                    <span>NMFC / Class</span>
+                    <span>Weight</span>
+                  </div>
+
+                  {freightItems.map((item) => (
+                    <div key={item.id} className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_28px] items-start gap-2">
+                      <Input value={item.hm} onChange={(e) => onFreightChange(item.id, "hm", e.target.value)} />
+                      <Input value={item.units} onChange={(e) => onFreightChange(item.id, "units", e.target.value)} />
+                      <Input value={item.pkg} onChange={(e) => onFreightChange(item.id, "pkg", e.target.value)} />
+                      <Input value={item.commodity} onChange={(e) => onFreightChange(item.id, "commodity", e.target.value)} />
+                      <Input value={item.nmfcClass} onChange={(e) => onFreightChange(item.id, "nmfcClass", e.target.value)} />
+                      <Input value={item.weight} onChange={(e) => onFreightChange(item.id, "weight", e.target.value)} />
+                      <Button variant="ghost" size="icon" onClick={() => removeFreightRow(item.id)} aria-label="Remove row">
+                        <Trash2 className="size-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <Field
-                label="Commodity / Description"
-                value={item.commodity}
-                onChange={(v) => setItem(item.id, "commodity", v)}
-                className="w-full"
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="TOTAL UNITS">
+                  <Input value={totals.units} readOnly />
+                </Field>
+                <Field label="TOTAL WEIGHT">
+                  <Input value={totals.weight} readOnly />
+                </Field>
+                <Field label="DECLARED VALUE (IF ANY)">
+                  <Input value="" />
+                </Field>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-6 pt-1">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Checkbox checked={form.hazmat === "Yes"} onCheckedChange={() => updateField("hazmat", "Yes")} />
+                  Hazmat - Yes
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Checkbox checked={form.hazmat === "No"} onCheckedChange={() => updateField("hazmat", "No")} />
+                  Hazmat - No
+                </label>
+              </div>
+
+              <div className="rounded-md border border-muted bg-slate-50 px-3 py-2 text-right text-xs italic text-slate-600">
+                Shipper must identify hazardous materials and special handling needs
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Special Instructions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Field label="SPECIAL INSTRUCTIONS / HANDLING / TEMPERATURE / SECUREMENT">
+                <Textarea value={form.specialInstructions} onChange={(e) => updateField("specialInstructions", e.target.value)} className="min-h-28" />
+              </Field>
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Carrier, Driver and Cargo Control</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="CARRIER LEGAL NAME">
+                  <Input value={form.carrierLegalName} onChange={(e) => updateField("carrierLegalName", e.target.value)} />
+                </Field>
+                <Field label="CARRIER MC / USDOT">
+                  <Input value={form.carrierMcUsdot} onChange={(e) => updateField("carrierMcUsdot", e.target.value)} />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="DRIVER NAME">
+                  <Input value={form.driverName} onChange={(e) => updateField("driverName", e.target.value)} />
+                </Field>
+                <Field label="DRIVER PHONE">
+                  <Input value={form.driverPhone} onChange={(e) => updateField("driverPhone", e.target.value)} />
+                </Field>
+                <Field label="TRACTOR / TRAILER NO.">
+                  <Input value={form.tractorTrailerNo} onChange={(e) => updateField("tractorTrailerNo", e.target.value)} />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="SEAL NO.">
+                  <Input value={form.sealNo} onChange={(e) => updateField("sealNo", e.target.value)} />
+                </Field>
+                <Field label="REQUIRED / ACTUAL TEMP">
+                  <Input value={form.sealRequired} onChange={(e) => updateField("sealRequired", e.target.value)} />
+                </Field>
+                <Field label="TRACKING LINK / REFERENCE">
+                  <Input value={form.trackingLink} onChange={(e) => updateField("trackingLink", e.target.value)} />
+                </Field>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Checkbox checked={form.driverCountedFreight} onCheckedChange={(checked) => updateField("driverCountedFreight", checked === true)} />
+                  Driver counted freight
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Checkbox checked={form.shipperLoadAndCount} onCheckedChange={(checked) => updateField("shipperLoadAndCount", checked === true)} />
+                  Shipper load and count (SLC)
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Checkbox checked={form.sealVerified} onCheckedChange={(checked) => updateField("sealVerified", checked === true)} />
+                  Seal verified at pickup
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Pickup Certifications and Exceptions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-slate-700">
+                SHIPPER CERTIFICATION: The freight is properly described, packaged, marked, labeled,
+                and in apparent good order. For hazardous materials, the shipper certifies compliance
+                with applicable transportation regulations and has supplied required shipping papers.
+              </p>
+
+              <Field label="EXCEPTIONS / VISIBLE DAMAGE / COUNT DISCREPANCY AT PICKUP">
+                <Textarea value={form.pickupExceptions} onChange={(e) => updateField("pickupExceptions", e.target.value)} className="min-h-28" />
+              </Field>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="SHIPPER SIGNATURE / TYPED NAME">
+                  <Input value={form.shipperTypedName} onChange={(e) => updateField("shipperTypedName", e.target.value)} />
+                </Field>
+                <Field label="DATE / TIME">
+                  <Input type="datetime-local" value={form.shipperDateTime} onChange={(e) => updateField("shipperDateTime", e.target.value)} />
+                </Field>
+                <Field label="TITLE">
+                  <Input value={form.shipperTitle} onChange={(e) => updateField("shipperTitle", e.target.value)} />
+                </Field>
+              </div>
+
+              <SignatureField
+                label="Signature"
+                value={form.shipperSignature}
+                onChange={(val) => updateField("shipperSignature", val)}
               />
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={item.hm}
-                  onCheckedChange={(c) => setItem(item.id, "hm", c === true)}
-                  id={`hm-mobile-${item.id}`}
-                />
-                <Label htmlFor={`hm-mobile-${item.id}`} className="text-xs font-normal">
-                  Hazardous Material
-                </Label>
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Carrier Receipt</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-slate-700">
+                CARRIER RECEIPT: Carrier acknowledges receipt and custody of the freight in apparent
+                good order except as written above. Driver confirms the carrier, driver, tractor,
+                trailer, seal, and shipment information shown on this BOL.
+              </p>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="DRIVER SIGNATURE / TYPED NAME">
+                  <Input value={form.driverTypedName} onChange={(e) => updateField("driverTypedName", e.target.value)} />
+                </Field>
+                <Field label="DATE / TIME">
+                  <Input type="datetime-local" value={form.driverDateTime} onChange={(e) => updateField("driverDateTime", e.target.value)} />
+                </Field>
+                <Field label="SEAL NO. CONFIRMED">
+                  <Input value={form.sealConfirmed} onChange={(e) => updateField("sealConfirmed", e.target.value)} />
+                </Field>
               </div>
-            </div>
-          ))}
+
+              <SignatureField
+                label="Driver signature"
+                value={form.driverSignature}
+                onChange={(val) => updateField("driverSignature", val)}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Delivery Receipt / Proof of Delivery</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field label="DELIVERY EXCEPTIONS / SHORTAGE / OVER / DAMAGE / SEAL CONDITION">
+                <Textarea value={form.deliveryExceptions} onChange={(e) => updateField("deliveryExceptions", e.target.value)} className="min-h-28" />
+              </Field>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <Field label="CONSIGNEE SIGNATURE / TYPED NAME">
+                  <Input value={form.consigneeTypedName} onChange={(e) => updateField("consigneeTypedName", e.target.value)} />
+                </Field>
+                <Field label="DATE / TIME">
+                  <Input type="datetime-local" value={form.consigneeDateTime} onChange={(e) => updateField("consigneeDateTime", e.target.value)} />
+                </Field>
+                <Field label="TITLE">
+                  <Input value={form.consigneeTitle} onChange={(e) => updateField("consigneeTitle", e.target.value)} />
+                </Field>
+              </div>
+
+              <SignatureField
+                label="Consignee signature"
+                value={form.consigneeSignature}
+                onChange={(val) => updateField("consigneeSignature", val)}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-bold text-blue-900">Broker Status and Controlling Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-6 text-slate-700">
+                DJ&apos;s Freight Broker LLC is a property broker, not the motor carrier or warehouseman.
+                The motor carrier has exclusive custody, control, and responsibility for transportation,
+                loading review, securement, and delivery. This BOL does not change the load-specific
+                rate confirmation or any signed broker-carrier agreement. Cargo claims are governed by
+                applicable law and controlling contracts, including 49 U.S.C. 14706 when applicable.
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        <Button variant="outline" size="sm" className="mt-3" onClick={addItem}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
-          Add Line Item
-        </Button>
+        <div className="space-y-5">
+          <Card className={sectionClass}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold text-blue-900">BOL Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-9 w-12 items-center justify-center rounded-md bg-blue-900 text-xs font-bold text-white">
+                      DJFB
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wide text-slate-700">DJ&apos;S FREIGHT BROKER LLC</div>
+                      <div className="text-[10px] text-slate-500">Straight Bill of Lading</div>
+                    </div>
+                  </div>
+                  <div className="text-[10px] font-medium text-slate-500">Page 1 of 2</div>
+                </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-3">
-          <Field
-            label="Total Units"
-            value={data.totalUnits}
-            onChange={(v) => set("totalUnits", v)}
-            placeholder="Sum of units"
-          />
-          <Field
-            label="Total Weight"
-            value={data.totalWeight}
-            onChange={(v) => set("totalWeight", v)}
-            placeholder="Total lbs"
-          />
-          <Field
-            label="Declared Value (if any)"
-            value={data.declaredValue}
-            onChange={(v) => set("declaredValue", v)}
-            placeholder="$0.00"
-          />
-        </div>
-        <div className="mt-3 flex items-center gap-4">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Hazmat:
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={data.hazmat === "yes" ? "default" : "outline"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => set("hazmat", data.hazmat === "yes" ? "" : "yes")}
-            >
-              Yes
-            </Button>
-            <Button
-              type="button"
-              variant={data.hazmat === "no" ? "default" : "outline"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => set("hazmat", data.hazmat === "no" ? "" : "no")}
-            >
-              No
-            </Button>
-          </div>
-        </div>
-      </Section>
+                <div className="space-y-3 text-[11px] text-slate-700">
+                  <div className="grid grid-cols-2 gap-2">
+                    <FieldPreview label="Load No." value={form.loadNo} />
+                    <FieldPreview label="BOL No." value={form.bolNo} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FieldPreview label="Shipper" value={form.shipperName} />
+                    <FieldPreview label="Consignee" value={form.consigneeName} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FieldPreview label="Pickup" value={form.pickupAddress} />
+                    <FieldPreview label="Delivery" value={form.deliveryAddress} />
+                  </div>
+                  <div className="rounded-md border border-slate-200 bg-white p-2">
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">Freight summary</div>
+                    {freightItems.slice(0, 2).map((item) => (
+                      <div key={item.id} className="mb-1 flex justify-between gap-2 text-[10px]">
+                        <span>{item.commodity || "Commodity"}</span>
+                        <span>{item.weight || "0"} lb</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
-      {/* ── Special Instructions ── */}
-      <Section title="Special Instructions / Handling / Temperature / Securement">
-        <Textarea
-          value={data.specialInstructions}
-          onChange={(e) => set("specialInstructions", e.target.value)}
-          placeholder="Enter any special handling, temperature requirements, securement instructions, or other notes…"
-          rows={3}
-          className="text-sm"
-        />
-      </Section>
+              <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
+                <div className="font-semibold text-slate-700">Status</div>
+                <div className="mt-2">Load no: {form.loadNo || "Not set"}</div>
+                <div>BOL no: {form.bolNo || "Not set"}</div>
+                <div>Hazmat: {form.hazmat}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      {/* ── Carrier, Driver and Cargo Control ── */}
-      <Section title="Carrier, Driver and Cargo Control">
-        <div className="grid grid-cols-1 gap-x-4 gap-y-3 lg:grid-cols-3">
-          <Field
-            label="Carrier Legal Name"
-            value={data.carrierName}
-            onChange={(v) => set("carrierName", v)}
-            placeholder="Carrier LLC name"
-            className="lg:col-span-2"
-          />
-          <Field
-            label="Carrier MC / USDOT"
-            value={data.carrierMcUsdot}
-            onChange={(v) => set("carrierMcUsdot", v)}
-            placeholder="MC###### / USDOT######"
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Field
-            label="Driver Name"
-            value={data.driverName}
-            onChange={(v) => set("driverName", v)}
-            placeholder="Full name"
-          />
-          <Field
-            label="Driver Phone"
-            value={data.driverPhone}
-            onChange={(v) => set("driverPhone", v)}
-            placeholder="(###) ###-####"
-          />
-          <Field
-            label="Tractor / Trailer No."
-            value={data.tractorTrailerNo}
-            onChange={(v) => set("tractorTrailerNo", v)}
-            placeholder="Tractor# / Trailer#"
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-3">
-          <Field
-            label="Seal No."
-            value={data.sealNo}
-            onChange={(v) => set("sealNo", v)}
-            placeholder="Seal number"
-          />
-          <Field
-            label="Required Temp"
-            value={data.requiredTemp}
-            onChange={(v) => set("requiredTemp", v)}
-            placeholder="e.g. 34°F"
-          />
-          <Field
-            label="Actual Temp"
-            value={data.actualTemp}
-            onChange={(v) => set("actualTemp", v)}
-            placeholder="e.g. 35°F"
-          />
-        </div>
-        <div className="mt-3">
-          <Field
-            label="Tracking Link / Reference"
-            value={data.trackingLink}
-            onChange={(v) => set("trackingLink", v)}
-            placeholder="URL or tracking number"
-            className="max-w-lg"
-          />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-5">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="driverCounted"
-              checked={data.driverCounted}
-              onCheckedChange={(c) => set("driverCounted", c === true)}
-            />
-            <Label htmlFor="driverCounted" className="text-sm font-normal">
-              Driver counted freight
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="slc" checked={data.slc} onCheckedChange={(c) => set("slc", c === true)} />
-            <Label htmlFor="slc" className="text-sm font-normal">
-              Shipper load and count (SLC)
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="sealVerified"
-              checked={data.sealVerified}
-              onCheckedChange={(c) => set("sealVerified", c === true)}
-            />
-            <Label htmlFor="sealVerified" className="text-sm font-normal">
-              Seal verified at pickup
-            </Label>
-          </div>
-        </div>
-      </Section>
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <label className="block space-y-1.5 text-left">
+      <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+        {label}
+      </span>
+      {children}
+      {error ? <span className="text-xs text-red-600">{error}</span> : null}
+    </label>
+  );
+}
 
-      {/* ── Pickup Certifications ── */}
-      <Section title="Pickup Certifications and Exceptions">
-        <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-          <span className="font-semibold">SHIPPER CERTIFICATION:</span> The freight is properly
-          described, packaged, marked, labeled, and in apparent good order. For hazardous materials,
-          the shipper certifies compliance with applicable transportation regulations and has
-          supplied required shipping papers.
-        </p>
-        <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          Exceptions / Visible Damage / Count Discrepancy at Pickup
-        </Label>
-        <Textarea
-          value={data.pickupExceptions}
-          onChange={(e) => set("pickupExceptions", e.target.value)}
-          placeholder="Note any exceptions, visible damage, or count discrepancies observed at pickup…"
-          rows={2}
-          className="mt-1 text-sm"
-        />
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-3">
-          <Field
-            label="Shipper Signature / Typed Name"
-            value={data.shipperSignature}
-            onChange={(v) => set("shipperSignature", v)}
-            placeholder="Full name"
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <Field
-              label="Date"
-              type="date"
-              value={data.shipperDate}
-              onChange={(v) => set("shipperDate", v)}
-            />
-            <Field
-              label="Time"
-              type="time"
-              value={data.shipperTime}
-              onChange={(v) => set("shipperTime", v)}
-            />
-          </div>
-          <Field
-            label="Title"
-            value={data.shipperTitle}
-            onChange={(v) => set("shipperTitle", v)}
-            placeholder="Job title"
-          />
-        </div>
-      </Section>
+function FieldPreview({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-2">
+      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-[10px] text-slate-700">{value || "—"}</div>
+    </div>
+  );
+}
 
-      {/* ── Carrier Receipt ── */}
-      <Section title="Carrier Receipt">
-        <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-          <span className="font-semibold">CARRIER RECEIPT:</span> Carrier acknowledges receipt and
-          custody of the freight in apparent good order except as written above. Driver confirms the
-          carrier, driver, tractor, trailer, seal, and shipment information shown on this BOL.
-        </p>
-        <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-3">
-          <Field
-            label="Driver Signature / Typed Name"
-            value={data.driverSignature}
-            onChange={(v) => set("driverSignature", v)}
-            placeholder="Full name"
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <Field
-              label="Date"
-              type="date"
-              value={data.driverDate}
-              onChange={(v) => set("driverDate", v)}
-            />
-            <Field
-              label="Time"
-              type="time"
-              value={data.driverTime}
-              onChange={(v) => set("driverTime", v)}
-            />
-          </div>
-          <Field
-            label="Seal No. Confirmed"
-            value={data.sealNoConfirmed}
-            onChange={(v) => set("sealNoConfirmed", v)}
-            placeholder="Seal number"
-          />
-        </div>
-      </Section>
+function SignatureField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
 
-      {/* ── Delivery Receipt / Proof of Delivery ── */}
-      <Section title="Delivery Receipt / Proof of Delivery">
-        <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          Delivery Exceptions / Shortage / Over / Damage / Seal Condition
-        </Label>
-        <Textarea
-          value={data.deliveryExceptions}
-          onChange={(e) => set("deliveryExceptions", e.target.value)}
-          placeholder="Note any exceptions, shortage, overage, damage, or seal condition at delivery…"
-          rows={2}
-          className="mt-1 text-sm"
-        />
-        <div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-3">
-          <Field
-            label="Consignee Signature / Typed Name"
-            value={data.consigneeSignature}
-            onChange={(v) => set("consigneeSignature", v)}
-            placeholder="Full name"
-          />
-          <div className="grid grid-cols-2 gap-2">
-            <Field
-              label="Date"
-              type="date"
-              value={data.consigneeDate}
-              onChange={(v) => set("consigneeDate", v)}
-            />
-            <Field
-              label="Time"
-              type="time"
-              value={data.consigneeTime}
-              onChange={(v) => set("consigneeTime", v)}
-            />
-          </div>
-          <Field
-            label="Title"
-            value={data.consigneeTitle}
-            onChange={(v) => set("consigneeTitle", v)}
-            placeholder="Job title"
-          />
-        </div>
-      </Section>
+  const startDraw = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      {/* ── Sticky Bottom Action ── */}
-      <div className="sticky bottom-4 z-10 flex justify-end gap-3 pt-2">
-        <Button onClick={handleGenerate} size="lg">
-          <FileText className="mr-2 h-4 w-4" />
-          Generate PDF
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 0.1, y + 0.1);
+    ctx.stroke();
+    setIsDrawing(true);
+  };
+
+  const continueDraw = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.clientY - rect.top) * (canvas.height / rect.height);
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDraw = () => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (canvas) {
+      onChange(canvas.toDataURL("image/png"));
+    }
+    setIsDrawing(false);
+  };
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onChange("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+          {label}
+        </span>
+        <Button type="button" variant="ghost" size="sm" onClick={clearSignature}>
+          Clear
         </Button>
       </div>
+      <canvas
+        ref={canvasRef}
+        width={320}
+        height={120}
+        onPointerDown={startDraw}
+        onPointerMove={continueDraw}
+        onPointerUp={stopDraw}
+        onPointerLeave={stopDraw}
+        className="w-full rounded-md border border-slate-300 bg-white"
+      />
+      {value ? <img src={value} alt={label} className="h-12 rounded border border-slate-200 bg-white" /> : null}
     </div>
   );
 }
