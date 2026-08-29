@@ -61,8 +61,7 @@ function money(n: number) {
   return `$${n.toFixed(2)}`;
 }
 
-const sectionClass =
-  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)] dark:border-slate-700 dark:bg-slate-900/85 dark:text-slate-100";
+const sectionClass = "app-surface-card";
 
 // ---------- Component ----------
 
@@ -496,7 +495,7 @@ function CustomerInvoicePage() {
         description="Prepare billing details, review the live summary, and export a polished invoice PDF for customer delivery."
       />
 
-      <div className="sticky top-0 z-20 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:border-slate-700 dark:bg-slate-950/80">
+      <div className="sticky top-0 z-20 rounded-[26px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)]/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-[var(--color-doc-surface)]/80">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {hasErrors ? (
             <Alert variant="destructive" className="sm:flex-1">
@@ -505,16 +504,16 @@ function CustomerInvoicePage() {
               <AlertDescription>{Object.values(errors).filter(Boolean).join(" ")}</AlertDescription>
             </Alert>
           ) : (
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-                <span className="size-2 rounded-full bg-emerald-500" />
+            <div className="flex items-center gap-2 text-sm text-[var(--color-doc-text-muted)]">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-doc-success-soft)] px-2.5 py-1 text-[var(--color-success)]">
+                <span className="size-2 rounded-full bg-[var(--color-success)]" />
                 Invoice ready to export
               </span>
             </div>
           )}
           <Button
             onClick={generatePDF}
-            className="shrink-0 bg-slate-900 text-white shadow-sm hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+            className="app-button-primary shrink-0 shadow-sm"
           >
             <FileDown className="size-4" />
             Generate PDF
@@ -523,9 +522,9 @@ function CustomerInvoicePage() {
       </div>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-          <CardTitle className="flex items-center gap-2 text-base text-blue-950 dark:text-blue-100">
-            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900 dark:bg-blue-950/50 dark:text-blue-200">
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-[var(--color-doc-text)]">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-[var(--color-doc-brand-soft)] text-[var(--color-brand)]">
               <ReceiptText className="size-4" />
             </span>
             Invoice Information
@@ -548,8 +547,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-          <CardTitle className="text-base text-blue-950 dark:text-blue-100">Bill To</CardTitle>
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
+          <CardTitle className="text-base text-[var(--color-doc-text)]">Bill To</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
           <Field label="Customer / Company" required error={errors.customerCompany}>
@@ -575,16 +574,16 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-base text-blue-950 dark:text-blue-100">
+            <CardTitle className="text-base text-[var(--color-doc-text)]">
               Load / Service Details
             </CardTitle>
             <Button
               size="sm"
               variant="outline"
               onClick={addRow}
-              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="app-button-secondary border"
             >
               <Plus className="size-4" />
               Add Row
@@ -592,11 +591,11 @@ function CustomerInvoicePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
-          {errors.loads ? <p className="text-xs text-red-600">{errors.loads}</p> : null}
+          {errors.loads ? <p className="text-xs text-[var(--color-danger)]">{errors.loads}</p> : null}
           {loads.map((row) => (
             <div
               key={row.id}
-              className="grid grid-cols-1 gap-2 rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/60 sm:grid-cols-7"
+              className="grid grid-cols-1 gap-2 rounded-md border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] p-3 sm:grid-cols-7"
             >
               <Input
                 placeholder="Load No."
@@ -653,8 +652,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-          <CardTitle className="text-base text-blue-950 dark:text-blue-100">Totals</CardTitle>
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
+          <CardTitle className="text-base text-[var(--color-doc-text)]">Totals</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -674,12 +673,12 @@ function CustomerInvoicePage() {
             </Field>
           </div>
           <Separator />
-          <div className="flex flex-col gap-1 text-sm text-slate-600 dark:text-slate-300">
-            <div className="flex justify-between text-muted-foreground dark:text-slate-400">
+          <div className="flex flex-col gap-1 text-sm text-[var(--color-doc-text-muted)]">
+            <div className="flex justify-between text-[var(--color-doc-text-subtle)]">
               <span>Subtotal</span>
               <span>{money(subtotal)}</span>
             </div>
-            <div className="flex justify-between text-base font-semibold text-slate-900 dark:text-slate-100">
+            <div className="flex justify-between text-base font-semibold text-[var(--color-doc-text)]">
               <span>Total Amount Due</span>
               <span>{money(total)}</span>
             </div>
@@ -688,8 +687,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-          <CardTitle className="text-base text-blue-950 dark:text-blue-100">
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
+          <CardTitle className="text-base text-[var(--color-doc-text)]">
             Notes / Special Instructions
           </CardTitle>
         </CardHeader>
@@ -699,8 +698,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-          <CardTitle className="text-base text-blue-950 dark:text-blue-100">
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
+          <CardTitle className="text-base text-[var(--color-doc-text)]">
             Supporting Documents and Certification
           </CardTitle>
         </CardHeader>
@@ -742,8 +741,8 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="border-b border-slate-100 pb-3">
-          <CardTitle className="text-base text-blue-950">Prepared / Approved / Status</CardTitle>
+        <CardHeader className="border-b border-[var(--color-doc-border)] pb-3">
+          <CardTitle className="text-base text-[var(--color-doc-text)]">Prepared / Approved / Status</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3">
           <Field label="Prepared By">
@@ -781,12 +780,12 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground dark:text-slate-300">
+      <Label className="text-xs text-[var(--color-doc-text-muted)]">
         {label}
-        {required ? <span className="ml-0.5 text-red-500">*</span> : null}
+        {required ? <span className="ml-0.5 text-[var(--color-danger)]">*</span> : null}
       </Label>
       {children}
-      {error ? <p className="text-xs text-red-600">{error}</p> : null}
+      {error ? <p className="text-xs text-[var(--color-danger)]">{error}</p> : null}
     </div>
   );
 }
@@ -805,7 +804,7 @@ function CheckField({
       <Checkbox
         checked={checked}
         onCheckedChange={(v) => onChange(Boolean(v))}
-        className="dark:border-slate-600"
+        className="border-[var(--color-doc-border)]"
       />
       {label}
     </label>
