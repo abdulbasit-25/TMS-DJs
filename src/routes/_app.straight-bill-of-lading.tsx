@@ -234,7 +234,11 @@ function StraightBillOfLadingPage() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.6);
         doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", leftX + 92, topY + 27);
-        doc.text("(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com", leftX + 92, topY + 38);
+        doc.text(
+          "(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com",
+          leftX + 92,
+          topY + 38,
+        );
 
         doc.setDrawColor(180, 20, 20);
         doc.setLineWidth(1.2);
@@ -247,12 +251,9 @@ function StraightBillOfLadingPage() {
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.3);
-        doc.text(
-          `DJFB-BL-001 | Revision 1.0 | Effective August 4, 2026`,
-          pageWidth - margin,
-          78,
-          { align: "right" },
-        );
+        doc.text(`DJFB-BL-001 | Revision 1.0 | Effective August 4, 2026`, pageWidth - margin, 78, {
+          align: "right",
+        });
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.1);
@@ -264,9 +265,14 @@ function StraightBillOfLadingPage() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7.4);
         doc.text("FMCSA PROPERTY BROKER | MC 1551655 | USDOT 4079462", margin, pageHeight - 18);
-        doc.text("CONTROLLED TEMPLATE | Verify current revision", pageWidth - margin, pageHeight - 18, {
-          align: "right",
-        });
+        doc.text(
+          "CONTROLLED TEMPLATE | Verify current revision",
+          pageWidth - margin,
+          pageHeight - 18,
+          {
+            align: "right",
+          },
+        );
       };
 
       const drawField = (
@@ -317,7 +323,14 @@ function StraightBillOfLadingPage() {
         doc.text(label, x + 6, y + 12);
       };
 
-      const drawLongBox = (x: number, y: number, width: number, height: number, label: string, value: string) => {
+      const drawLongBox = (
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        label: string,
+        value: string,
+      ) => {
         doc.setDrawColor(151, 171, 193);
         doc.setFillColor(248, 250, 252);
         doc.roundedRect(x, y, width, height, 0, 0, "FD");
@@ -353,47 +366,113 @@ function StraightBillOfLadingPage() {
         "CUSTOMER PO / REFERENCE",
         form.customerReference,
       );
-      drawField(margin + (contentWidth / 4) * 3 + 6, y, contentWidth / 4 - 12, 28, "DATE ISSUED", form.dateIssued);
+      drawField(
+        margin + (contentWidth / 4) * 3 + 6,
+        y,
+        contentWidth / 4 - 12,
+        28,
+        "DATE ISSUED",
+        form.dateIssued,
+      );
       y += 38;
 
-      drawField(margin, y, contentWidth / 3 - 8, 28, "PICKUP DATE / TIME / TIME ZONE", `${form.pickupDate} ${form.pickupTime} ${form.pickupTimezone}`);
-      drawField(margin + contentWidth / 3, y, contentWidth / 3 - 8, 28, "DELIVERY DATE / TIME / TIME ZONE", `${form.deliveryDate} ${form.deliveryTime} ${form.deliveryTimezone}`);
-      drawField(margin + (contentWidth / 3) * 2 + 8, y, contentWidth / 3 - 16, 28, "EQUIPMENT TYPE", form.equipmentType);
+      drawField(
+        margin,
+        y,
+        contentWidth / 3 - 8,
+        28,
+        "PICKUP DATE / TIME / TIME ZONE",
+        `${form.pickupDate} ${form.pickupTime} ${form.pickupTimezone}`,
+      );
+      drawField(
+        margin + contentWidth / 3,
+        y,
+        contentWidth / 3 - 8,
+        28,
+        "DELIVERY DATE / TIME / TIME ZONE",
+        `${form.deliveryDate} ${form.deliveryTime} ${form.deliveryTimezone}`,
+      );
+      drawField(
+        margin + (contentWidth / 3) * 2 + 8,
+        y,
+        contentWidth / 3 - 16,
+        28,
+        "EQUIPMENT TYPE",
+        form.equipmentType,
+      );
       y += 42;
 
       doc.setFont("helvetica", "italic");
       doc.setTextColor(90, 96, 103);
       doc.setFontSize(8.5);
-      doc.text("DJ's Freight Broker LLC acts solely as a property broker", pageWidth - margin, y + 4, {
-        align: "right",
-      });
+      doc.text(
+        "DJ's Freight Broker LLC acts solely as a property broker",
+        pageWidth - margin,
+        y + 4,
+        {
+          align: "right",
+        },
+      );
 
       y += 12;
       drawSectionHeading("ORIGIN / SHIPPER", margin, y, contentWidth);
       y += 24;
       drawField(margin, y, contentWidth / 2 - 8, 28, "SHIPPER NAME", form.shipperName);
-      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "CONTACT / PHONE", form.shipperContact);
+      drawField(
+        margin + contentWidth / 2 + 8,
+        y,
+        contentWidth / 2 - 16,
+        28,
+        "CONTACT / PHONE",
+        form.shipperContact,
+      );
       y += 38;
       drawField(margin, y, contentWidth / 2 - 8, 28, "PICKUP ADDRESS", form.pickupAddress);
-      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "DOCK / APPOINTMENT NO.", form.pickupDock);
+      drawField(
+        margin + contentWidth / 2 + 8,
+        y,
+        contentWidth / 2 - 16,
+        28,
+        "DOCK / APPOINTMENT NO.",
+        form.pickupDock,
+      );
       y += 46;
 
       drawSectionHeading("DESTINATION / CONSIGNEE", margin, y, contentWidth);
       y += 24;
       drawField(margin, y, contentWidth / 2 - 8, 28, "CONSIGNEE NAME", form.consigneeName);
-      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "CONTACT / PHONE", form.consigneeContact);
+      drawField(
+        margin + contentWidth / 2 + 8,
+        y,
+        contentWidth / 2 - 16,
+        28,
+        "CONTACT / PHONE",
+        form.consigneeContact,
+      );
       y += 38;
       drawField(margin, y, contentWidth / 2 - 8, 28, "DELIVERY ADDRESS", form.deliveryAddress);
-      drawField(margin + contentWidth / 2 + 8, y, contentWidth / 2 - 16, 28, "DOCK / APPOINTMENT NO.", form.deliveryDock);
+      drawField(
+        margin + contentWidth / 2 + 8,
+        y,
+        contentWidth / 2 - 16,
+        28,
+        "DOCK / APPOINTMENT NO.",
+        form.deliveryDock,
+      );
       y += 46;
 
       drawSectionHeading("FREIGHT DESCRIPTION", margin, y, contentWidth);
       doc.setTextColor(90, 96, 103);
       doc.setFont("helvetica", "italic");
       doc.setFontSize(7.3);
-      doc.text("Shipper must identify hazardous materials and special handling needs", pageWidth - margin, y + 12, {
-        align: "right",
-      });
+      doc.text(
+        "Shipper must identify hazardous materials and special handling needs",
+        pageWidth - margin,
+        y + 12,
+        {
+          align: "right",
+        },
+      );
       y += 22;
 
       const freightTableY = y;
@@ -425,14 +504,7 @@ function StraightBillOfLadingPage() {
       let currentY = freightTableY + 18;
       freightItems.forEach((row) => {
         x = margin;
-        const rowValues = [
-          row.hm,
-          row.units,
-          row.pkg,
-          row.commodity,
-          row.nmfcClass,
-          row.weight,
-        ];
+        const rowValues = [row.hm, row.units, row.pkg, row.commodity, row.nmfcClass, row.weight];
         rowValues.forEach((value, idx) => {
           doc.setDrawColor(151, 171, 193);
           doc.rect(x, currentY, headerWidths[idx], rowHeight, "S");
@@ -467,7 +539,14 @@ function StraightBillOfLadingPage() {
       doc.text("Hazmat - No", margin + 466, y + 8);
       y += 16;
 
-      drawLongBox(margin, y, contentWidth, 72, "SPECIAL INSTRUCTIONS / HANDLING / TEMPERATURE / SECUREMENT", form.specialInstructions);
+      drawLongBox(
+        margin,
+        y,
+        contentWidth,
+        72,
+        "SPECIAL INSTRUCTIONS / HANDLING / TEMPERATURE / SECUREMENT",
+        form.specialInstructions,
+      );
       y += 90;
 
       drawFooter();
@@ -479,15 +558,50 @@ function StraightBillOfLadingPage() {
       drawSectionHeading("CARRIER, DRIVER AND CARGO CONTROL", margin, y2, contentWidth);
       y2 += 22;
       drawField(margin, y2, contentWidth / 2 - 8, 28, "CARRIER LEGAL NAME", form.carrierLegalName);
-      drawField(margin + contentWidth / 2 + 8, y2, contentWidth / 2 - 16, 28, "CARRIER MC / USDOT", form.carrierMcUsdot);
+      drawField(
+        margin + contentWidth / 2 + 8,
+        y2,
+        contentWidth / 2 - 16,
+        28,
+        "CARRIER MC / USDOT",
+        form.carrierMcUsdot,
+      );
       y2 += 38;
       drawField(margin, y2, contentWidth / 3 - 8, 28, "DRIVER NAME", form.driverName);
-      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DRIVER PHONE", form.driverPhone);
-      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TRACTOR / TRAILER NO.", form.tractorTrailerNo);
+      drawField(
+        margin + contentWidth / 3,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "DRIVER PHONE",
+        form.driverPhone,
+      );
+      drawField(
+        margin + (contentWidth / 3) * 2 + 8,
+        y2,
+        contentWidth / 3 - 16,
+        28,
+        "TRACTOR / TRAILER NO.",
+        form.tractorTrailerNo,
+      );
       y2 += 38;
       drawField(margin, y2, contentWidth / 3 - 8, 28, "SEAL NO.", form.sealNo);
-      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "REQUIRED / ACTUAL TEMP", `${form.sealRequired}`);
-      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TRACKING LINK / REFERENCE", form.trackingLink);
+      drawField(
+        margin + contentWidth / 3,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "REQUIRED / ACTUAL TEMP",
+        `${form.sealRequired}`,
+      );
+      drawField(
+        margin + (contentWidth / 3) * 2 + 8,
+        y2,
+        contentWidth / 3 - 16,
+        28,
+        "TRACKING LINK / REFERENCE",
+        form.trackingLink,
+      );
       y2 += 46;
 
       doc.setFont("helvetica", "normal");
@@ -511,11 +625,39 @@ function StraightBillOfLadingPage() {
       const certLines = doc.splitTextToSize(certText, contentWidth - 12);
       doc.text(certLines, margin + 6, y2 + 12);
       y2 += 28;
-      drawLongBox(margin, y2, contentWidth, 52, "EXCEPTIONS / VISIBLE DAMAGE / COUNT DISCREPANCY AT PICKUP", form.pickupExceptions);
+      drawLongBox(
+        margin,
+        y2,
+        contentWidth,
+        52,
+        "EXCEPTIONS / VISIBLE DAMAGE / COUNT DISCREPANCY AT PICKUP",
+        form.pickupExceptions,
+      );
       y2 += 70;
-      drawField(margin, y2, contentWidth / 3 - 8, 28, "SHIPPER SIGNATURE / TYPED NAME", form.shipperTypedName);
-      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DATE / TIME", form.shipperDateTime);
-      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TITLE", form.shipperTitle);
+      drawField(
+        margin,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "SHIPPER SIGNATURE / TYPED NAME",
+        form.shipperTypedName,
+      );
+      drawField(
+        margin + contentWidth / 3,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "DATE / TIME",
+        form.shipperDateTime,
+      );
+      drawField(
+        margin + (contentWidth / 3) * 2 + 8,
+        y2,
+        contentWidth / 3 - 16,
+        28,
+        "TITLE",
+        form.shipperTitle,
+      );
       if (form.shipperSignature) {
         try {
           doc.addImage(form.shipperSignature, "PNG", margin + 8, y2 + 30, 150, 32);
@@ -530,9 +672,30 @@ function StraightBillOfLadingPage() {
       const carrierLines = doc.splitTextToSize(carrierReceiptText, contentWidth - 8);
       doc.text(carrierLines, margin + 6, y2 + 6);
       y2 += 18;
-      drawField(margin, y2, contentWidth / 3 - 8, 28, "DRIVER SIGNATURE / TYPED NAME", form.driverTypedName);
-      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DATE / TIME", form.driverDateTime);
-      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "SEAL NO. CONFIRMED", form.sealConfirmed);
+      drawField(
+        margin,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "DRIVER SIGNATURE / TYPED NAME",
+        form.driverTypedName,
+      );
+      drawField(
+        margin + contentWidth / 3,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "DATE / TIME",
+        form.driverDateTime,
+      );
+      drawField(
+        margin + (contentWidth / 3) * 2 + 8,
+        y2,
+        contentWidth / 3 - 16,
+        28,
+        "SEAL NO. CONFIRMED",
+        form.sealConfirmed,
+      );
       if (form.driverSignature) {
         try {
           doc.addImage(form.driverSignature, "PNG", margin + 8, y2 + 32, 150, 32);
@@ -544,11 +707,39 @@ function StraightBillOfLadingPage() {
 
       drawSectionHeading("DELIVERY RECEIPT / PROOF OF DELIVERY", margin, y2, contentWidth);
       y2 += 24;
-      drawLongBox(margin, y2, contentWidth, 52, "DELIVERY EXCEPTIONS / SHORTAGE / OVER / DAMAGE / SEAL CONDITION", form.deliveryExceptions);
+      drawLongBox(
+        margin,
+        y2,
+        contentWidth,
+        52,
+        "DELIVERY EXCEPTIONS / SHORTAGE / OVER / DAMAGE / SEAL CONDITION",
+        form.deliveryExceptions,
+      );
       y2 += 70;
-      drawField(margin, y2, contentWidth / 3 - 8, 28, "CONSIGNEE SIGNATURE / TYPED NAME", form.consigneeTypedName);
-      drawField(margin + contentWidth / 3, y2, contentWidth / 3 - 8, 28, "DATE / TIME", form.consigneeDateTime);
-      drawField(margin + (contentWidth / 3) * 2 + 8, y2, contentWidth / 3 - 16, 28, "TITLE", form.consigneeTitle);
+      drawField(
+        margin,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "CONSIGNEE SIGNATURE / TYPED NAME",
+        form.consigneeTypedName,
+      );
+      drawField(
+        margin + contentWidth / 3,
+        y2,
+        contentWidth / 3 - 8,
+        28,
+        "DATE / TIME",
+        form.consigneeDateTime,
+      );
+      drawField(
+        margin + (contentWidth / 3) * 2 + 8,
+        y2,
+        contentWidth / 3 - 16,
+        28,
+        "TITLE",
+        form.consigneeTitle,
+      );
       if (form.consigneeSignature) {
         try {
           doc.addImage(form.consigneeSignature, "PNG", margin + 8, y2 + 32, 150, 32);
@@ -594,7 +785,11 @@ function StraightBillOfLadingPage() {
         <Button type="button" variant="outline" onClick={() => setForm(initialState)}>
           Reset
         </Button>
-        <Button type="button" variant="outline" onClick={() => setFreightItems(initialFreightItems)}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setFreightItems(initialFreightItems)}
+        >
           Clear freight rows
         </Button>
         <Button type="button" onClick={generatePDF} disabled={isGenerating}>
@@ -607,41 +802,81 @@ function StraightBillOfLadingPage() {
         <div className="space-y-5">
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Shipment Identification</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Shipment Identification
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Field label="DJFB LOAD NO." error={errors.loadNo}>
-                  <Input value={form.loadNo} onChange={(e) => updateField("loadNo", e.target.value)} />
+                  <Input
+                    value={form.loadNo}
+                    onChange={(e) => updateField("loadNo", e.target.value)}
+                  />
                 </Field>
                 <Field label="BOL NO." error={errors.bolNo}>
-                  <Input value={form.bolNo} onChange={(e) => updateField("bolNo", e.target.value)} />
+                  <Input
+                    value={form.bolNo}
+                    onChange={(e) => updateField("bolNo", e.target.value)}
+                  />
                 </Field>
                 <Field label="CUSTOMER PO / REFERENCE">
-                  <Input value={form.customerReference} onChange={(e) => updateField("customerReference", e.target.value)} />
+                  <Input
+                    value={form.customerReference}
+                    onChange={(e) => updateField("customerReference", e.target.value)}
+                  />
                 </Field>
                 <Field label="DATE ISSUED" error={errors.dateIssued}>
-                  <Input type="date" value={form.dateIssued} onChange={(e) => updateField("dateIssued", e.target.value)} />
+                  <Input
+                    type="date"
+                    value={form.dateIssued}
+                    onChange={(e) => updateField("dateIssued", e.target.value)}
+                  />
                 </Field>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="PICKUP DATE / TIME / TIME ZONE">
                   <div className="grid gap-2 sm:grid-cols-3">
-                    <Input type="date" value={form.pickupDate} onChange={(e) => updateField("pickupDate", e.target.value)} />
-                    <Input type="time" value={form.pickupTime} onChange={(e) => updateField("pickupTime", e.target.value)} />
-                    <Input value={form.pickupTimezone} onChange={(e) => updateField("pickupTimezone", e.target.value)} />
+                    <Input
+                      type="date"
+                      value={form.pickupDate}
+                      onChange={(e) => updateField("pickupDate", e.target.value)}
+                    />
+                    <Input
+                      type="time"
+                      value={form.pickupTime}
+                      onChange={(e) => updateField("pickupTime", e.target.value)}
+                    />
+                    <Input
+                      value={form.pickupTimezone}
+                      onChange={(e) => updateField("pickupTimezone", e.target.value)}
+                    />
                   </div>
                 </Field>
                 <Field label="DELIVERY DATE / TIME / TIME ZONE">
                   <div className="grid gap-2 sm:grid-cols-3">
-                    <Input type="date" value={form.deliveryDate} onChange={(e) => updateField("deliveryDate", e.target.value)} />
-                    <Input type="time" value={form.deliveryTime} onChange={(e) => updateField("deliveryTime", e.target.value)} />
-                    <Input value={form.deliveryTimezone} onChange={(e) => updateField("deliveryTimezone", e.target.value)} />
+                    <Input
+                      type="date"
+                      value={form.deliveryDate}
+                      onChange={(e) => updateField("deliveryDate", e.target.value)}
+                    />
+                    <Input
+                      type="time"
+                      value={form.deliveryTime}
+                      onChange={(e) => updateField("deliveryTime", e.target.value)}
+                    />
+                    <Input
+                      value={form.deliveryTimezone}
+                      onChange={(e) => updateField("deliveryTimezone", e.target.value)}
+                    />
                   </div>
                 </Field>
                 <Field label="EQUIPMENT TYPE">
-                  <Input value={form.equipmentType} onChange={(e) => updateField("equipmentType", e.target.value)} />
+                  <Input
+                    value={form.equipmentType}
+                    onChange={(e) => updateField("equipmentType", e.target.value)}
+                  />
                 </Field>
               </div>
 
@@ -658,18 +893,31 @@ function StraightBillOfLadingPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="SHIPPER NAME" error={errors.shipperName}>
-                  <Input value={form.shipperName} onChange={(e) => updateField("shipperName", e.target.value)} />
+                  <Input
+                    value={form.shipperName}
+                    onChange={(e) => updateField("shipperName", e.target.value)}
+                  />
                 </Field>
                 <Field label="CONTACT / PHONE">
-                  <Input value={form.shipperContact} onChange={(e) => updateField("shipperContact", e.target.value)} />
+                  <Input
+                    value={form.shipperContact}
+                    onChange={(e) => updateField("shipperContact", e.target.value)}
+                  />
                 </Field>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="PICKUP ADDRESS">
-                  <Textarea value={form.pickupAddress} onChange={(e) => updateField("pickupAddress", e.target.value)} className="min-h-20" />
+                  <Textarea
+                    value={form.pickupAddress}
+                    onChange={(e) => updateField("pickupAddress", e.target.value)}
+                    className="min-h-20"
+                  />
                 </Field>
                 <Field label="DOCK / APPOINTMENT NO.">
-                  <Input value={form.pickupDock} onChange={(e) => updateField("pickupDock", e.target.value)} />
+                  <Input
+                    value={form.pickupDock}
+                    onChange={(e) => updateField("pickupDock", e.target.value)}
+                  />
                 </Field>
               </div>
             </CardContent>
@@ -677,23 +925,38 @@ function StraightBillOfLadingPage() {
 
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Destination / Consignee</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Destination / Consignee
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="CONSIGNEE NAME" error={errors.consigneeName}>
-                  <Input value={form.consigneeName} onChange={(e) => updateField("consigneeName", e.target.value)} />
+                  <Input
+                    value={form.consigneeName}
+                    onChange={(e) => updateField("consigneeName", e.target.value)}
+                  />
                 </Field>
                 <Field label="CONTACT / PHONE">
-                  <Input value={form.consigneeContact} onChange={(e) => updateField("consigneeContact", e.target.value)} />
+                  <Input
+                    value={form.consigneeContact}
+                    onChange={(e) => updateField("consigneeContact", e.target.value)}
+                  />
                 </Field>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="DELIVERY ADDRESS">
-                  <Textarea value={form.deliveryAddress} onChange={(e) => updateField("deliveryAddress", e.target.value)} className="min-h-20" />
+                  <Textarea
+                    value={form.deliveryAddress}
+                    onChange={(e) => updateField("deliveryAddress", e.target.value)}
+                    className="min-h-20"
+                  />
                 </Field>
                 <Field label="DOCK / APPOINTMENT NO.">
-                  <Input value={form.deliveryDock} onChange={(e) => updateField("deliveryDock", e.target.value)} />
+                  <Input
+                    value={form.deliveryDock}
+                    onChange={(e) => updateField("deliveryDock", e.target.value)}
+                  />
                 </Field>
               </div>
             </CardContent>
@@ -702,7 +965,9 @@ function StraightBillOfLadingPage() {
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-3">
-                <CardTitle className="text-lg font-bold text-blue-900">Freight Description</CardTitle>
+                <CardTitle className="text-lg font-bold text-blue-900">
+                  Freight Description
+                </CardTitle>
                 <Button type="button" variant="outline" size="sm" onClick={addFreightRow}>
                   <Plus className="mr-2 size-4" /> Add row
                 </Button>
@@ -721,14 +986,40 @@ function StraightBillOfLadingPage() {
                   </div>
 
                   {freightItems.map((item) => (
-                    <div key={item.id} className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_28px] items-start gap-2">
-                      <Input value={item.hm} onChange={(e) => onFreightChange(item.id, "hm", e.target.value)} />
-                      <Input value={item.units} onChange={(e) => onFreightChange(item.id, "units", e.target.value)} />
-                      <Input value={item.pkg} onChange={(e) => onFreightChange(item.id, "pkg", e.target.value)} />
-                      <Input value={item.commodity} onChange={(e) => onFreightChange(item.id, "commodity", e.target.value)} />
-                      <Input value={item.nmfcClass} onChange={(e) => onFreightChange(item.id, "nmfcClass", e.target.value)} />
-                      <Input value={item.weight} onChange={(e) => onFreightChange(item.id, "weight", e.target.value)} />
-                      <Button variant="ghost" size="icon" onClick={() => removeFreightRow(item.id)} aria-label="Remove row">
+                    <div
+                      key={item.id}
+                      className="grid grid-cols-[46px_52px_60px_1.7fr_0.8fr_88px_28px] items-start gap-2"
+                    >
+                      <Input
+                        value={item.hm}
+                        onChange={(e) => onFreightChange(item.id, "hm", e.target.value)}
+                      />
+                      <Input
+                        value={item.units}
+                        onChange={(e) => onFreightChange(item.id, "units", e.target.value)}
+                      />
+                      <Input
+                        value={item.pkg}
+                        onChange={(e) => onFreightChange(item.id, "pkg", e.target.value)}
+                      />
+                      <Input
+                        value={item.commodity}
+                        onChange={(e) => onFreightChange(item.id, "commodity", e.target.value)}
+                      />
+                      <Input
+                        value={item.nmfcClass}
+                        onChange={(e) => onFreightChange(item.id, "nmfcClass", e.target.value)}
+                      />
+                      <Input
+                        value={item.weight}
+                        onChange={(e) => onFreightChange(item.id, "weight", e.target.value)}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFreightRow(item.id)}
+                        aria-label="Remove row"
+                      >
                         <Trash2 className="size-4 text-red-500" />
                       </Button>
                     </div>
@@ -750,11 +1041,17 @@ function StraightBillOfLadingPage() {
 
               <div className="flex flex-wrap items-center gap-6 pt-1">
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Checkbox checked={form.hazmat === "Yes"} onCheckedChange={() => updateField("hazmat", "Yes")} />
+                  <Checkbox
+                    checked={form.hazmat === "Yes"}
+                    onCheckedChange={() => updateField("hazmat", "Yes")}
+                  />
                   Hazmat - Yes
                 </label>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Checkbox checked={form.hazmat === "No"} onCheckedChange={() => updateField("hazmat", "No")} />
+                  <Checkbox
+                    checked={form.hazmat === "No"}
+                    onCheckedChange={() => updateField("hazmat", "No")}
+                  />
                   Hazmat - No
                 </label>
               </div>
@@ -767,64 +1064,109 @@ function StraightBillOfLadingPage() {
 
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Special Instructions</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Special Instructions
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Field label="SPECIAL INSTRUCTIONS / HANDLING / TEMPERATURE / SECUREMENT">
-                <Textarea value={form.specialInstructions} onChange={(e) => updateField("specialInstructions", e.target.value)} className="min-h-28" />
+                <Textarea
+                  value={form.specialInstructions}
+                  onChange={(e) => updateField("specialInstructions", e.target.value)}
+                  className="min-h-28"
+                />
               </Field>
             </CardContent>
           </Card>
 
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Carrier, Driver and Cargo Control</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Carrier, Driver and Cargo Control
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="CARRIER LEGAL NAME">
-                  <Input value={form.carrierLegalName} onChange={(e) => updateField("carrierLegalName", e.target.value)} />
+                  <Input
+                    value={form.carrierLegalName}
+                    onChange={(e) => updateField("carrierLegalName", e.target.value)}
+                  />
                 </Field>
                 <Field label="CARRIER MC / USDOT">
-                  <Input value={form.carrierMcUsdot} onChange={(e) => updateField("carrierMcUsdot", e.target.value)} />
+                  <Input
+                    value={form.carrierMcUsdot}
+                    onChange={(e) => updateField("carrierMcUsdot", e.target.value)}
+                  />
                 </Field>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="DRIVER NAME">
-                  <Input value={form.driverName} onChange={(e) => updateField("driverName", e.target.value)} />
+                  <Input
+                    value={form.driverName}
+                    onChange={(e) => updateField("driverName", e.target.value)}
+                  />
                 </Field>
                 <Field label="DRIVER PHONE">
-                  <Input value={form.driverPhone} onChange={(e) => updateField("driverPhone", e.target.value)} />
+                  <Input
+                    value={form.driverPhone}
+                    onChange={(e) => updateField("driverPhone", e.target.value)}
+                  />
                 </Field>
                 <Field label="TRACTOR / TRAILER NO.">
-                  <Input value={form.tractorTrailerNo} onChange={(e) => updateField("tractorTrailerNo", e.target.value)} />
+                  <Input
+                    value={form.tractorTrailerNo}
+                    onChange={(e) => updateField("tractorTrailerNo", e.target.value)}
+                  />
                 </Field>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="SEAL NO.">
-                  <Input value={form.sealNo} onChange={(e) => updateField("sealNo", e.target.value)} />
+                  <Input
+                    value={form.sealNo}
+                    onChange={(e) => updateField("sealNo", e.target.value)}
+                  />
                 </Field>
                 <Field label="REQUIRED / ACTUAL TEMP">
-                  <Input value={form.sealRequired} onChange={(e) => updateField("sealRequired", e.target.value)} />
+                  <Input
+                    value={form.sealRequired}
+                    onChange={(e) => updateField("sealRequired", e.target.value)}
+                  />
                 </Field>
                 <Field label="TRACKING LINK / REFERENCE">
-                  <Input value={form.trackingLink} onChange={(e) => updateField("trackingLink", e.target.value)} />
+                  <Input
+                    value={form.trackingLink}
+                    onChange={(e) => updateField("trackingLink", e.target.value)}
+                  />
                 </Field>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Checkbox checked={form.driverCountedFreight} onCheckedChange={(checked) => updateField("driverCountedFreight", checked === true)} />
+                  <Checkbox
+                    checked={form.driverCountedFreight}
+                    onCheckedChange={(checked) =>
+                      updateField("driverCountedFreight", checked === true)
+                    }
+                  />
                   Driver counted freight
                 </label>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Checkbox checked={form.shipperLoadAndCount} onCheckedChange={(checked) => updateField("shipperLoadAndCount", checked === true)} />
+                  <Checkbox
+                    checked={form.shipperLoadAndCount}
+                    onCheckedChange={(checked) =>
+                      updateField("shipperLoadAndCount", checked === true)
+                    }
+                  />
                   Shipper load and count (SLC)
                 </label>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <Checkbox checked={form.sealVerified} onCheckedChange={(checked) => updateField("sealVerified", checked === true)} />
+                  <Checkbox
+                    checked={form.sealVerified}
+                    onCheckedChange={(checked) => updateField("sealVerified", checked === true)}
+                  />
                   Seal verified at pickup
                 </label>
               </div>
@@ -833,28 +1175,45 @@ function StraightBillOfLadingPage() {
 
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Pickup Certifications and Exceptions</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Pickup Certifications and Exceptions
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-slate-700">
                 SHIPPER CERTIFICATION: The freight is properly described, packaged, marked, labeled,
-                and in apparent good order. For hazardous materials, the shipper certifies compliance
-                with applicable transportation regulations and has supplied required shipping papers.
+                and in apparent good order. For hazardous materials, the shipper certifies
+                compliance with applicable transportation regulations and has supplied required
+                shipping papers.
               </p>
 
               <Field label="EXCEPTIONS / VISIBLE DAMAGE / COUNT DISCREPANCY AT PICKUP">
-                <Textarea value={form.pickupExceptions} onChange={(e) => updateField("pickupExceptions", e.target.value)} className="min-h-28" />
+                <Textarea
+                  value={form.pickupExceptions}
+                  onChange={(e) => updateField("pickupExceptions", e.target.value)}
+                  className="min-h-28"
+                />
               </Field>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="SHIPPER SIGNATURE / TYPED NAME">
-                  <Input value={form.shipperTypedName} onChange={(e) => updateField("shipperTypedName", e.target.value)} />
+                  <Input
+                    value={form.shipperTypedName}
+                    onChange={(e) => updateField("shipperTypedName", e.target.value)}
+                  />
                 </Field>
                 <Field label="DATE / TIME">
-                  <Input type="datetime-local" value={form.shipperDateTime} onChange={(e) => updateField("shipperDateTime", e.target.value)} />
+                  <Input
+                    type="datetime-local"
+                    value={form.shipperDateTime}
+                    onChange={(e) => updateField("shipperDateTime", e.target.value)}
+                  />
                 </Field>
                 <Field label="TITLE">
-                  <Input value={form.shipperTitle} onChange={(e) => updateField("shipperTitle", e.target.value)} />
+                  <Input
+                    value={form.shipperTitle}
+                    onChange={(e) => updateField("shipperTitle", e.target.value)}
+                  />
                 </Field>
               </div>
 
@@ -879,13 +1238,23 @@ function StraightBillOfLadingPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="DRIVER SIGNATURE / TYPED NAME">
-                  <Input value={form.driverTypedName} onChange={(e) => updateField("driverTypedName", e.target.value)} />
+                  <Input
+                    value={form.driverTypedName}
+                    onChange={(e) => updateField("driverTypedName", e.target.value)}
+                  />
                 </Field>
                 <Field label="DATE / TIME">
-                  <Input type="datetime-local" value={form.driverDateTime} onChange={(e) => updateField("driverDateTime", e.target.value)} />
+                  <Input
+                    type="datetime-local"
+                    value={form.driverDateTime}
+                    onChange={(e) => updateField("driverDateTime", e.target.value)}
+                  />
                 </Field>
                 <Field label="SEAL NO. CONFIRMED">
-                  <Input value={form.sealConfirmed} onChange={(e) => updateField("sealConfirmed", e.target.value)} />
+                  <Input
+                    value={form.sealConfirmed}
+                    onChange={(e) => updateField("sealConfirmed", e.target.value)}
+                  />
                 </Field>
               </div>
 
@@ -899,22 +1268,38 @@ function StraightBillOfLadingPage() {
 
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Delivery Receipt / Proof of Delivery</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Delivery Receipt / Proof of Delivery
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Field label="DELIVERY EXCEPTIONS / SHORTAGE / OVER / DAMAGE / SEAL CONDITION">
-                <Textarea value={form.deliveryExceptions} onChange={(e) => updateField("deliveryExceptions", e.target.value)} className="min-h-28" />
+                <Textarea
+                  value={form.deliveryExceptions}
+                  onChange={(e) => updateField("deliveryExceptions", e.target.value)}
+                  className="min-h-28"
+                />
               </Field>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <Field label="CONSIGNEE SIGNATURE / TYPED NAME">
-                  <Input value={form.consigneeTypedName} onChange={(e) => updateField("consigneeTypedName", e.target.value)} />
+                  <Input
+                    value={form.consigneeTypedName}
+                    onChange={(e) => updateField("consigneeTypedName", e.target.value)}
+                  />
                 </Field>
                 <Field label="DATE / TIME">
-                  <Input type="datetime-local" value={form.consigneeDateTime} onChange={(e) => updateField("consigneeDateTime", e.target.value)} />
+                  <Input
+                    type="datetime-local"
+                    value={form.consigneeDateTime}
+                    onChange={(e) => updateField("consigneeDateTime", e.target.value)}
+                  />
                 </Field>
                 <Field label="TITLE">
-                  <Input value={form.consigneeTitle} onChange={(e) => updateField("consigneeTitle", e.target.value)} />
+                  <Input
+                    value={form.consigneeTitle}
+                    onChange={(e) => updateField("consigneeTitle", e.target.value)}
+                  />
                 </Field>
               </div>
 
@@ -928,15 +1313,18 @@ function StraightBillOfLadingPage() {
 
           <Card className={sectionClass}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-bold text-blue-900">Broker Status and Controlling Documents</CardTitle>
+              <CardTitle className="text-lg font-bold text-blue-900">
+                Broker Status and Controlling Documents
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-6 text-slate-700">
-                DJ&apos;s Freight Broker LLC is a property broker, not the motor carrier or warehouseman.
-                The motor carrier has exclusive custody, control, and responsibility for transportation,
-                loading review, securement, and delivery. This BOL does not change the load-specific
-                rate confirmation or any signed broker-carrier agreement. Cargo claims are governed by
-                applicable law and controlling contracts, including 49 U.S.C. 14706 when applicable.
+                DJ&apos;s Freight Broker LLC is a property broker, not the motor carrier or
+                warehouseman. The motor carrier has exclusive custody, control, and responsibility
+                for transportation, loading review, securement, and delivery. This BOL does not
+                change the load-specific rate confirmation or any signed broker-carrier agreement.
+                Cargo claims are governed by applicable law and controlling contracts, including 49
+                U.S.C. 14706 when applicable.
               </p>
             </CardContent>
           </Card>
@@ -955,7 +1343,9 @@ function StraightBillOfLadingPage() {
                       DJFB
                     </div>
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wide text-slate-700">DJ&apos;S FREIGHT BROKER LLC</div>
+                      <div className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                        DJ&apos;S FREIGHT BROKER LLC
+                      </div>
                       <div className="text-[10px] text-slate-500">Straight Bill of Lading</div>
                     </div>
                   </div>
@@ -976,7 +1366,9 @@ function StraightBillOfLadingPage() {
                     <FieldPreview label="Delivery" value={form.deliveryAddress} />
                   </div>
                   <div className="rounded-md border border-slate-200 bg-white p-2">
-                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">Freight summary</div>
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                      Freight summary
+                    </div>
                     {freightItems.slice(0, 2).map((item) => (
                       <div key={item.id} className="mb-1 flex justify-between gap-2 text-[10px]">
                         <span>{item.commodity || "Commodity"}</span>
@@ -1001,7 +1393,15 @@ function StraightBillOfLadingPage() {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block space-y-1.5 text-left">
       <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
@@ -1016,7 +1416,9 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 function FieldPreview({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-slate-200 bg-white p-2">
-      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
       <div className="text-[10px] text-slate-700">{value || "—"}</div>
     </div>
   );
@@ -1106,7 +1508,9 @@ function SignatureField({
         onPointerLeave={stopDraw}
         className="w-full rounded-md border border-slate-300 bg-white"
       />
-      {value ? <img src={value} alt={label} className="h-12 rounded border border-slate-200 bg-white" /> : null}
+      {value ? (
+        <img src={value} alt={label} className="h-12 rounded border border-slate-200 bg-white" />
+      ) : null}
     </div>
   );
 }
