@@ -584,20 +584,20 @@ function SidebarBrand({
       )}
       {!collapsed && (
         <div className="flex min-w-0 items-center gap-3">
-          <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-[11px] font-bold text-primary-foreground shadow-sm shadow-primary/20 ring-1 ring-white/10">
+          {/* <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary/70 text-[11px] font-bold text-primary-foreground shadow-sm shadow-primary/20 ring-1 ring-white/10">
             {companyName
               .split(" ")
               .map((w) => w[0])
               .join("")
               .slice(0, 2)
               .toUpperCase() || "TMS"}
-          </div>
+          </div> */}
           <div className="min-w-0">
             <div className="truncate text-sm font-bold tracking-tight text-sidebar-foreground">
               {companyName}
             </div>
             <div className="truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">
-              Agent Portal
+              Agent Portal hii
             </div>
           </div>
         </div>
