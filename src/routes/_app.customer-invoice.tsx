@@ -577,7 +577,9 @@ function CustomerInvoicePage() {
       <Card className={sectionClass}>
         <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-base text-blue-950 dark:text-blue-100">Load / Service Details</CardTitle>
+            <CardTitle className="text-base text-blue-950 dark:text-blue-100">
+              Load / Service Details
+            </CardTitle>
             <Button
               size="sm"
               variant="outline"
@@ -687,7 +689,9 @@ function CustomerInvoicePage() {
 
       <Card className={sectionClass}>
         <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-800">
-          <CardTitle className="text-base text-blue-950 dark:text-blue-100">Notes / Special Instructions</CardTitle>
+          <CardTitle className="text-base text-blue-950 dark:text-blue-100">
+            Notes / Special Instructions
+          </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
           <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -798,7 +802,11 @@ function CheckField({
 }) {
   return (
     <label className="flex items-center gap-2 text-sm">
-      <Checkbox checked={checked} onCheckedChange={(v) => onChange(Boolean(v))} className="dark:border-slate-600" />
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(v) => onChange(Boolean(v))}
+        className="dark:border-slate-600"
+      />
       {label}
     </label>
   );
