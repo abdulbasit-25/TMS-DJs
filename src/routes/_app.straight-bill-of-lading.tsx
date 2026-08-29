@@ -86,8 +86,8 @@ const createFreightItem = (): FreightItem => ({
 });
 
 const initialState: BOLFormState = {
-  loadNo: "DJFB-LOAD-2048",
-  bolNo: "DJFB-BL-001",
+  loadNo: "LOAD-2048",
+  bolNo: "BL-001",
   customerReference: "PO-11842",
   dateIssued: "2026-08-04",
   pickupDate: "2026-08-05",
@@ -227,7 +227,7 @@ function StraightBillOfLadingPage() {
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(22);
-        doc.text("DJFB", leftX + 13, topY + 22);
+        doc.text("BROKER", leftX + 13, topY + 22);
 
         doc.setTextColor(26, 56, 86);
         doc.setFont("helvetica", "bold");
@@ -237,11 +237,7 @@ function StraightBillOfLadingPage() {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.6);
         doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", leftX + 92, topY + 27);
-        doc.text(
-          "(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com",
-          leftX + 92,
-          topY + 38,
-        );
+        doc.text("(682) 552-3169 | info@company.com | company.com", leftX + 92, topY + 38);
 
         doc.setDrawColor(180, 20, 20);
         doc.setLineWidth(1.2);
@@ -254,7 +250,7 @@ function StraightBillOfLadingPage() {
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.3);
-        doc.text(`DJFB-BL-001 | Revision 1.0 | Effective August 4, 2026`, pageWidth - margin, 78, {
+        doc.text(`BL-001 | Revision 1.0 | Effective August 4, 2026`, pageWidth - margin, 78, {
           align: "right",
         });
 
@@ -359,7 +355,7 @@ function StraightBillOfLadingPage() {
       drawSectionHeading("SHIPMENT IDENTIFICATION", margin, y, contentWidth);
       y += 24;
 
-      drawField(margin, y, contentWidth / 4 - 6, 28, "DJFB LOAD NO.", form.loadNo);
+      drawField(margin, y, contentWidth / 4 - 6, 28, "LOAD NO.", form.loadNo);
       drawField(margin + contentWidth / 4, y, contentWidth / 4 - 6, 28, "BOL NO.", form.bolNo);
       drawField(
         margin + (contentWidth / 4) * 2,
@@ -762,7 +758,7 @@ function StraightBillOfLadingPage() {
 
       drawFooter();
 
-      doc.save("DJFB-BL-001-Bill-of-Lading.pdf");
+      doc.save("Bill_of_Lading.pdf");
     } catch (error) {
       console.error(error);
       alert("PDF generation failed. Please check the form values and try again.");
@@ -775,7 +771,7 @@ function StraightBillOfLadingPage() {
     <div className="space-y-5">
       <PageHeader
         title="Straight Bill of Lading"
-        description="DJFB-BL-001 document workflow with preview and PDF generation."
+        description="Bill of lading document workflow with preview and PDF generation."
       />
 
       <div className="flex flex-wrap items-center justify-end gap-3">
@@ -805,7 +801,7 @@ function StraightBillOfLadingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <Field label="DJFB LOAD NO." error={errors.loadNo}>
+                <Field label="LOAD NO." error={errors.loadNo}>
                   <Input
                     value={form.loadNo}
                     onChange={(e) => updateField("loadNo", e.target.value)}
@@ -1337,7 +1333,7 @@ function StraightBillOfLadingPage() {
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-9 w-12 items-center justify-center rounded-md bg-blue-900 text-xs font-bold text-white">
-                      DJFB
+                      BOL
                     </div>
                     <div>
                       <div className="text-xs font-bold uppercase tracking-wide text-slate-700">
