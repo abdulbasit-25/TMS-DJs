@@ -61,7 +61,8 @@ function money(n: number) {
   return `$${n.toFixed(2)}`;
 }
 
-const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
+const sectionClass =
+  "rounded-[22px] border border-slate-200 bg-white/95 text-card-foreground shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition-all duration-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.08)]";
 
 // ---------- Component ----------
 
@@ -137,13 +138,12 @@ function CustomerInvoicePage() {
   function generatePDF() {
     if (!validate()) return;
 
-    // ----- Palette -----
-    const NAVY: [number, number, number] = [21, 38, 61];
-    const GOLD: [number, number, number] = [173, 138, 84];
-    const BORDER: [number, number, number] = [214, 219, 226];
-    const TEXT: [number, number, number] = [26, 32, 40];
-    const MUTED: [number, number, number] = [110, 118, 128];
-    const TINT: [number, number, number] = [241, 244, 248];
+    const NAVY: [number, number, number] = [12, 28, 47];
+    const DARK: [number, number, number] = [21, 38, 61];
+    const BORDER: [number, number, number] = [203, 213, 225];
+    const TEXT: [number, number, number] = [15, 23, 42];
+    const MUTED: [number, number, number] = [89, 100, 112];
+    const TINT: [number, number, number] = [236, 242, 248];
 
     const doc = new jsPDF({ unit: "pt", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -153,43 +153,39 @@ function CustomerInvoicePage() {
     const footerTop = pageHeight - 34;
     let y = 0;
 
-    // Header/footer are redrawn on every page (including continuation pages), and
-    // the page number is reserved here but stamped only once, in a final pass —
-    // previously it was drawn here AND again after generation, so the two numbers
-    // overlapped into unreadable stacked text.
     const drawHeader = (continued: boolean) => {
       doc.setFillColor(...NAVY);
-      doc.roundedRect(margin, 26, 70, 30, 4, 4, "F");
+      doc.roundedRect(margin, 22, 96, 40, 5, 5, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.text("BROKER", margin + 11, 46);
+      doc.setFontSize(21);
+      doc.text("BROKER", margin + 14, 47);
 
-      doc.setTextColor(...NAVY);
+      doc.setTextColor(...DARK);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(12.5);
-      doc.text(companyDisplayName, margin + 88, 38);
+      doc.setFontSize(15);
+      doc.text(companyDisplayName, margin + 118, 36);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.7);
+      doc.setFontSize(8.2);
       doc.setTextColor(...MUTED);
-      doc.text(COMPANY.address, margin + 88, 49);
-      doc.text(COMPANY.contact, margin + 88, 59);
+      doc.text(COMPANY.address, margin + 118, 49);
+      doc.text(COMPANY.contact, margin + 118, 60);
 
-      doc.setDrawColor(...GOLD);
-      doc.setLineWidth(1.3);
-      doc.line(margin, 70, pageWidth - margin, 70);
+      doc.setDrawColor(...BORDER);
+      doc.setLineWidth(0.8);
+      doc.line(margin, 68, pageWidth - margin, 68);
 
-      doc.setTextColor(...NAVY);
+      doc.setTextColor(...TEXT);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14.5);
-      doc.text(continued ? "CUSTOMER INVOICE (CONTINUED)" : "CUSTOMER INVOICE", margin, 90);
+      doc.setFontSize(18);
+      doc.text(continued ? "CUSTOMER INVOICE (CONTINUED)" : "CUSTOMER INVOICE", margin, 86);
 
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.3);
+      doc.setFontSize(8.1);
       doc.setTextColor(...MUTED);
-      doc.text(invoiceNo, pageWidth - margin, 82, { align: "right" });
+      doc.text(invoiceNo, pageWidth - margin, 86, { align: "right" });
 
-      y = 106;
+      y = 104;
     };
 
     const drawFooter = () => {
@@ -215,16 +211,13 @@ function CustomerInvoicePage() {
 
     const sectionHeader = (title: string) => {
       ensureSpace(30);
-      doc.setFillColor(...NAVY);
-      doc.rect(margin, y, contentWidth, 20, "F");
-      doc.setDrawColor(...GOLD);
-      doc.setLineWidth(1.2);
-      doc.line(margin, y + 20, margin + contentWidth, y + 20);
-      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(...TINT);
+      doc.roundedRect(margin, y, contentWidth, 18, 2, 2, "F");
+      doc.setTextColor(...TEXT);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text(title.toUpperCase(), margin + 8, y + 14, { charSpace: 0.5 });
-      y += 30;
+      doc.setFontSize(10.6);
+      doc.text(title.toUpperCase(), margin + 7, y + 12, { charSpace: 0.4 });
+      y += 26;
     };
 
     // Every box below fills white explicitly (never inherits a leftover fill
@@ -238,13 +231,13 @@ function CustomerInvoicePage() {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(6.4);
       doc.setTextColor(...MUTED);
-      doc.text(lbl.toUpperCase(), x + 7, boxY + 13, { charSpace: 0.4 });
+      doc.text(lbl.toUpperCase(), x + 7, boxY + 12, { charSpace: 0.4 });
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.6);
+      doc.setFontSize(8.4);
       doc.setTextColor(...TEXT);
-      const maxLines = Math.max(1, Math.floor((h - 21) / 9.5));
+      const maxLines = Math.max(1, Math.floor((h - 20) / 9.5));
       const lines = doc.splitTextToSize(val || "—", w - 14);
-      doc.text(lines.slice(0, maxLines), x + 7, boxY + 24);
+      doc.text(lines.slice(0, maxLines), x + 7, boxY + 23);
     };
 
     const fieldRow = (fields: { label: string; value: string; w: number }[], h = 36) => {
@@ -500,33 +493,45 @@ function CustomerInvoicePage() {
     <div className="space-y-5">
       <PageHeader
         title="Customer Invoice"
-        description="Fill in load and billing details, then export a print-ready invoice PDF."
+        description="Prepare billing details, review the live summary, and export a polished invoice PDF for customer delivery."
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {hasErrors ? (
-          <Alert variant="destructive" className="sm:flex-1">
-            <AlertCircle className="size-4" />
-            <AlertTitle>Missing required fields</AlertTitle>
-            <AlertDescription>{Object.values(errors).filter(Boolean).join(" ")}</AlertDescription>
-          </Alert>
-        ) : (
-          <div />
-        )}
-        <Button onClick={generatePDF} className="shrink-0">
-          <FileDown className="size-4" />
-          Generate PDF
-        </Button>
+      <div className="sticky top-0 z-20 rounded-[26px] border border-slate-200 bg-white/90 px-4 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur supports-[backdrop-filter]:bg-white/80">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {hasErrors ? (
+            <Alert variant="destructive" className="sm:flex-1">
+              <AlertCircle className="size-4" />
+              <AlertTitle>Missing required fields</AlertTitle>
+              <AlertDescription>{Object.values(errors).filter(Boolean).join(" ")}</AlertDescription>
+            </Alert>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                <span className="size-2 rounded-full bg-emerald-500" />
+                Invoice ready to export
+              </span>
+            </div>
+          )}
+          <Button
+            onClick={generatePDF}
+            className="shrink-0 bg-slate-900 text-white shadow-sm hover:bg-slate-800"
+          >
+            <FileDown className="size-4" />
+            Generate PDF
+          </Button>
+        </div>
       </div>
 
       <Card className={sectionClass}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ReceiptText className="size-4 text-slate-500" />
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-blue-950">
+            <span className="flex size-7 items-center justify-center rounded-lg bg-blue-50 text-blue-900">
+              <ReceiptText className="size-4" />
+            </span>
             Invoice Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Invoice No." required error={errors.invoiceNo}>
             <Input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} />
           </Field>
@@ -543,10 +548,10 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader>
-          <CardTitle className="text-base">Bill To</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="text-base text-blue-950">Bill To</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
           <Field label="Customer / Company" required error={errors.customerCompany}>
             <Input value={customerCompany} onChange={(e) => setCustomerCompany(e.target.value)} />
           </Field>
@@ -570,14 +575,21 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Load / Service Details</CardTitle>
-          <Button size="sm" variant="outline" onClick={addRow}>
-            <Plus className="size-4" />
-            Add Row
-          </Button>
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="text-base text-blue-950">Load / Service Details</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={addRow}
+              className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            >
+              <Plus className="size-4" />
+              Add Row
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 pt-4">
           {errors.loads ? <p className="text-xs text-red-600">{errors.loads}</p> : null}
           {loads.map((row) => (
             <div
@@ -639,10 +651,10 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader>
-          <CardTitle className="text-base">Totals</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="text-base text-blue-950">Totals</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 pt-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Approved Accessorials">
               <Input
@@ -674,19 +686,19 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader>
-          <CardTitle className="text-base">Notes / Special Instructions</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="text-base text-blue-950">Notes / Special Instructions</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </CardContent>
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader>
-          <CardTitle className="text-base">Supporting Documents and Certification</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="text-base text-blue-950">Supporting Documents and Certification</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-6">
+        <CardContent className="flex flex-wrap gap-6 pt-4">
           <CheckField
             label="Rate confirmation"
             checked={docs.rateConfirmation}
@@ -724,10 +736,10 @@ function CustomerInvoicePage() {
       </Card>
 
       <Card className={sectionClass}>
-        <CardHeader>
-          <CardTitle className="text-base">Prepared / Approved / Status</CardTitle>
+        <CardHeader className="border-b border-slate-100 pb-3">
+          <CardTitle className="text-base text-blue-950">Prepared / Approved / Status</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <CardContent className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-3">
           <Field label="Prepared By">
             <Input value={preparedBy} onChange={(e) => setPreparedBy(e.target.value)} />
           </Field>
