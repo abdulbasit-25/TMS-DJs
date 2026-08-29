@@ -2,7 +2,7 @@
    Global styles — Tailwind v4 + shadcn/ui contract
    ----------------------------------------------------------------------------
    Token layering:
-     1. Palette      — static ramps (teal, gold, slate, ivory, …), theme-agnostic
+     1. Palette      — static ramps (navy, plum, oatmeal, ink, …), theme-agnostic
      2. Semantic     — per-theme runtime tokens (bg-*, text-*, brand, on-*, …)
      3. shadcn       — shared bridge from semantic tokens to the shadcn/ui
                        variable contract (only values may change, never names)
@@ -75,7 +75,8 @@
 
   /* ===== App semantic tokens as utilities =====
      bg-app, bg-surface, bg-surface-2, bg-cta, text-on-cta,
-     text-nav, bg-nav-active, text-nav-active-fg, bg-primary-hover, text-error … */
+     text-nav, bg-nav-active, text-nav-active-fg, bg-primary-hover, text-error …
+     (replaces bg-[var(--color-bg-surface-2)]-style arbitrary values) */
   --color-app: var(--color-bg-app);
   --color-surface: var(--color-bg-surface);
   --color-surface-2: var(--color-bg-surface-2);
@@ -97,71 +98,70 @@
 :root {
   --radius: 0.5rem;
 
-  /* Primary — Teal (rich, warm-tinted ocean green — confident, not startup-blue) */
-  --teal-50: #edf7f6;
-  --teal-100: #d2edeb;
-  --teal-200: #a7d9d5;
-  --teal-300: #72c0ba;
-  --teal-400: #48a39d;
-  --teal-500: #2d8782;
-  --teal-600: #236c68;
-  --teal-700: #1c5653;
-  --teal-800: #164442;
-  --teal-900: #113635;
-  --teal-950: #09201f;
+  /* Primary — Navy (deep ink-blue shell, not startup blue) */
+  --navy-50: #eaf0f7;
+  --navy-100: #ccdaea;
+  --navy-200: #9ab4d2;
+  --navy-300: #6690b9;
+  --navy-400: #3d6d9c;
+  --navy-500: #24507c;
+  --navy-600: #1b3c5e;
+  --navy-700: #142c45;
+  --navy-800: #0e1f31;
+  --navy-900: #09141f;
+  --navy-950: #050b12;
 
-  /* Accent / CTA — Gold (warm metallic, luxury highlight) */
-  --gold-50: #faf7f0;
-  --gold-100: #f0e6cf;
-  --gold-200: #e2cca0;
-  --gold-300: #d4b170;
-  --gold-400: #c89a48;
-  --gold-500: #b58535;
-  --gold-600: #966c2b;
-  --gold-700: #775323;
-  --gold-800: #5a3d1b;
-  --gold-900: #3e2914;
+  /* Accent / CTA — Plum (rich wine, jewel-tone highlight) */
+  --plum-50: #f6edf1;
+  --plum-100: #e9d2de;
+  --plum-200: #d2a7be;
+  --plum-300: #b87a9c;
+  --plum-400: #98527c;
+  --plum-500: #7a3a62;
+  --plum-600: #602c4d;
+  --plum-700: #48213a;
+  --plum-800: #321728;
+  --plum-900: #1e0e18;
 
-  /* Neutrals — Warm Slate (dark theme surfaces; charcoal with subtle amber undertone) */
-  --slate-50: #f0eeeb;
-  --slate-100: #d9d5cf;
-  --slate-200: #bfb9b0;
-  --slate-300: #a29b90;
-  --slate-400: #857e74;
-  --slate-500: #6d6760;
-  --slate-600: #57524c;
-  --slate-700: #43403b;
-  --slate-800: #302e2a;
-  --slate-850: #272522;
-  --slate-900: #1e1c1a;
-  --slate-950: #131211;
+  /* Neutrals — Oatmeal/Beige (warm parchment; light theme surfaces + text) */
+  --oatmeal-25: #fbf8f2;
+  --oatmeal-50: #f6f0e3;
+  --oatmeal-100: #ede2c9;
+  --oatmeal-200: #e0cfa8;
+  --oatmeal-300: #cfb884;
+  --oatmeal-400: #b99c61;
+  --oatmeal-500: #9c7f49;
+  --oatmeal-600: #7d6538;
+  --oatmeal-700: #5f4c2a;
+  --oatmeal-800: #40331c;
+  --oatmeal-900: #241c0f;
 
-  /* Neutrals — Ivory (light theme surfaces; warm parchment with golden undertone) */
-  --ivory-25: #fefdfb;
-  --ivory-50: #f9f6f0;
-  --ivory-100: #f0ebe0;
-  --ivory-200: #e3d9c4;
-  --ivory-300: #d4c4a3;
-  --ivory-400: #c2ac82;
-  --ivory-500: #a8914f;
-  --ivory-600: #8a7640;
-  --ivory-700: #6b5c32;
-  --ivory-800: #4d4224;
-  --ivory-900: #312a16;
+  /* Neutrals — Ink (cool navy-charcoal; dark theme surfaces) */
+  --ink-100: #d6dae1;
+  --ink-200: #b7bec9;
+  --ink-300: #929baa;
+  --ink-400: #6e7889;
+  --ink-500: #4f5868;
+  --ink-600: #3a4150;
+  --ink-700: #2a303c;
+  --ink-800: #1e232c;
+  --ink-850: #171b22;
+  --ink-900: #10141a;
+  --ink-950: #0a0d11;
 
-  /* Status — Sage / Amber / Coral / Cerulean */
-  --sage-400: #8aaa7e;
-  --sage-500: #6f8e64;
-  --sage-600: #5a754f;
-  --amber-400: #d4a23c;
-  --amber-500: #bb8a2e;
-  --amber-600: #a07424;
-  --coral-400: #c76d60;
-  --coral-500: #ab5246;
-  --coral-600: #923b30;
-  --cerulean-400: #7b9ab8;
-  --cerulean-500: #6382a0;
-  --cerulean-600: #4f6b82;
+  /* Status — Moss / Ochre / Brick / Steel */
+  --moss-400: #8fae7a;
+  --moss-500: #729159;
+  --moss-600: #5c7a49;
+  --ochre-400: #d9a55a;
+  --ochre-500: #c08a3e;
+  --ochre-600: #a97429;
+  --brick-400: #c97364;
+  --brick-500: #ac5445;
+  --brick-600: #96392c;
+  --steel-400: #7c93a8;
+  --steel-500: #647e96;
+  --steel-600: #4f6b82;
 }
 
 /* ============================================================================
@@ -172,54 +172,54 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-bg-app: var(--slate-950);
-  --color-bg-sidebar: var(--slate-900);
-  --color-bg-surface: var(--slate-850);
-  --color-bg-surface-2: var(--slate-800);
-  --color-bg-surface-hover: color-mix(in oklab, var(--slate-100) 6%, var(--color-bg-surface));
-  --color-border: var(--slate-700);
-  --color-border-subtle: var(--slate-800);
-  --color-overlay: color-mix(in oklab, var(--slate-950) 72%, transparent);
+  --color-bg-app: var(--ink-950);
+  --color-bg-sidebar: var(--ink-900);
+  --color-bg-surface: var(--ink-850);
+  --color-bg-surface-2: var(--ink-800);
+  --color-bg-surface-hover: color-mix(in oklab, var(--ink-100) 6%, var(--color-bg-surface));
+  --color-border: var(--ink-700);
+  --color-border-subtle: var(--ink-800);
+  --color-overlay: color-mix(in oklab, var(--ink-950) 72%, transparent);
 
-  --color-text-primary: #f0ebe2;
-  --color-text-secondary: var(--slate-300);
-  --color-text-muted: var(--slate-400);
-  --color-text-disabled: var(--slate-600);
+  --color-text-primary: #f4efe6;
+  --color-text-secondary: var(--ink-300);
+  --color-text-muted: var(--ink-400);
+  --color-text-disabled: var(--ink-600);
 
-  --color-brand: var(--teal-500);
-  --color-brand-hover: var(--teal-400);
-  --color-cta-bg: var(--gold-500);
-  --color-cta-bg-hover: var(--gold-400);
-  /* Dark text on gold in dark mode — the "gold foil" luxury effect.
-     gold-500/slate-950 ≈ 6.0:1 — passes AA. */
-  --color-cta-text: var(--slate-950);
+  --color-brand: var(--navy-400);
+  --color-brand-hover: var(--navy-300);
+  --color-cta-bg: var(--plum-500);
+  --color-cta-bg-hover: var(--plum-400);
 
-  /* Status: light tints on dark bg, dark ink text for contrast.
-     sage-400/slate-950 ≈ 7.9:1 · amber-400/slate-950 ≈ 8.8:1 ·
-     coral-400/slate-950 ≈ 5.7:1 · cerulean-400/slate-950 ≈ 6.1:1 — all pass AA. */
-  --color-success: var(--sage-400);
-  --color-warning: var(--amber-400);
-  --color-danger: var(--coral-400);
-  --color-info: var(--cerulean-400);
-  --color-on-success: var(--slate-950);
-  --color-on-warning: var(--slate-950);
-  --color-on-danger: var(--slate-950);
-  --color-on-info: var(--slate-950);
+  /* Status colors double as SOLID badge/button backgrounds. Light tints in
+     dark mode, so the paired on-* text must be dark ink:
+     moss-400/ink-950 ≈ 7.9:1 · ochre-400/ink-950 ≈ 8.8:1 ·
+     brick-400/ink-950 ≈ 5.7:1 · steel-400/ink-950 ≈ 6.1:1 — all pass AA. */
+  --color-success: var(--moss-400);
+  --color-warning: var(--ochre-400);
+  --color-danger: var(--brick-400);
+  --color-info: var(--steel-400);
+  --color-on-success: var(--ink-950);
+  --color-on-warning: var(--ink-950);
+  --color-on-danger: var(--ink-950);
+  --color-on-info: var(--ink-950);
 
-  /* Nav active: teal tint over sidebar bg */
-  --color-nav-active-bg: color-mix(in oklab, var(--teal-500) 18%, var(--color-bg-sidebar));
-  --color-nav-active-text: var(--teal-300);
-  --color-nav-text: var(--slate-300);
-  --color-nav-text-hover: #f0ebe2;
+  /* Nav active state: color-mix tint of brand over sidebar bg, so it always
+     stays visibly distinct from the sidebar regardless of exact bg value. */
+  --color-nav-active-bg: color-mix(in oklab, var(--navy-400) 18%, var(--color-bg-sidebar));
+  --color-nav-active-text: var(--navy-200);
+  --color-nav-text: var(--ink-300);
+  --color-nav-text-hover: #f4efe6;
 
-  /* Link: lighter teal for text readability — teal-300/slate-950 ≈ 9:1 */
-  --color-link: var(--teal-300);
-  --color-link-hover: var(--teal-200);
+  /* Link gets its own token (navy-300, ~5.8:1 on ink-950) — separate from
+     --color-brand (navy-400, ~3.6:1) which is tuned for button fills. */
+  --color-link: var(--navy-300);
+  --color-link-hover: var(--navy-200);
 
-  /* Document/form surface tokens */
-  --color-doc-surface: color-mix(in oklab, var(--color-bg-surface) 88%, var(--slate-950));
-  --color-doc-surface-strong: color-mix(in oklab, var(--color-bg-surface) 72%, var(--slate-950));
-  --color-doc-surface-muted: color-mix(in oklab, var(--color-bg-surface) 80%, var(--slate-800));
+  /* Document/form surface tokens used by premium BOL/invoice screens */
+  --color-doc-surface: color-mix(in oklab, var(--color-bg-surface) 88%, var(--ink-950));
+  --color-doc-surface-strong: color-mix(in oklab, var(--color-bg-surface) 72%, var(--ink-950));
+  --color-doc-surface-muted: color-mix(in oklab, var(--color-bg-surface) 80%, var(--ink-800));
   --color-doc-border: var(--color-border);
   --color-doc-text: var(--color-text-primary);
   --color-doc-text-secondary: var(--color-text-secondary);
@@ -237,50 +237,49 @@
 .light {
   color-scheme: light;
 
-  --color-bg-app: var(--ivory-25);
+  --color-bg-app: var(--oatmeal-25);
   --color-bg-sidebar: #ffffff;
   --color-bg-surface: #ffffff;
-  --color-bg-surface-2: var(--ivory-50);
-  --color-bg-surface-hover: color-mix(in oklab, var(--slate-900) 4%, var(--color-bg-surface));
-  --color-border: var(--ivory-200);
-  --color-border-subtle: var(--ivory-100);
-  --color-overlay: color-mix(in oklab, var(--slate-950) 45%, transparent);
+  --color-bg-surface-2: var(--oatmeal-50);
+  --color-bg-surface-hover: color-mix(in oklab, var(--navy-900) 4%, var(--color-bg-surface));
+  --color-border: var(--oatmeal-200);
+  --color-border-subtle: var(--oatmeal-100);
+  --color-overlay: color-mix(in oklab, var(--navy-950) 45%, transparent);
 
-  --color-text-primary: var(--slate-900);
-  --color-text-secondary: var(--slate-600);
-  --color-text-muted: var(--slate-500);
-  --color-text-disabled: var(--ivory-400);
+  --color-text-primary: var(--navy-900);
+  --color-text-secondary: var(--navy-600);
+  --color-text-muted: var(--oatmeal-600);
+  --color-text-disabled: var(--oatmeal-400);
 
-  --color-brand: var(--teal-700);
-  --color-brand-hover: var(--teal-800);
-  --color-cta-bg: var(--gold-600);
-  --color-cta-bg-hover: var(--gold-700);
-  /* White text on dark gold in light mode — gold-600/white ≈ 5.25:1, passes AA. */
-  --color-cta-text: #ffffff;
+  --color-brand: var(--navy-600);
+  --color-brand-hover: var(--navy-700);
+  --color-cta-bg: var(--plum-500);
+  --color-cta-bg-hover: var(--plum-600);
 
   /* Darker steps so white foreground on solid badges/buttons clears AA:
-     sage-600/white ≈ 4.8:1 · coral-600/white ≈ 7.2:1 · cerulean-600/white ≈ 5.6:1.
-     Exception: amber-600/white ≈ 4.0:1 (fails), so warning keeps dark text. */
-  --color-success: var(--sage-600);
-  --color-warning: var(--amber-600);
-  --color-danger: var(--coral-600);
-  --color-info: var(--cerulean-600);
+     moss-600/white ≈ 4.8:1 · brick-600/white ≈ 7.2:1 · steel-600/white ≈ 5.6:1.
+     Exception: ochre-600/white is only 4.03:1 (fails AA), so warning keeps
+     dark text in both themes (ochre-600/navy-900 ≈ 4.61:1). */
+  --color-success: var(--moss-600);
+  --color-warning: var(--ochre-600);
+  --color-danger: var(--brick-600);
+  --color-info: var(--steel-600);
   --color-on-success: #ffffff;
-  --color-on-warning: var(--slate-900);
+  --color-on-warning: var(--navy-900);
   --color-on-danger: #ffffff;
   --color-on-info: #ffffff;
 
-  --color-nav-active-bg: color-mix(in oklab, var(--teal-700) 8%, var(--color-bg-sidebar));
-  --color-nav-active-text: var(--teal-700);
-  --color-nav-text: var(--slate-500);
-  --color-nav-text-hover: var(--slate-900);
+  --color-nav-active-bg: color-mix(in oklab, var(--navy-600) 8%, var(--color-bg-sidebar));
+  --color-nav-active-text: var(--navy-600);
+  --color-nav-text: var(--navy-500);
+  --color-nav-text-hover: var(--navy-900);
 
   --color-link: var(--color-brand);
   --color-link-hover: var(--color-brand-hover);
 
   --color-doc-surface: #ffffff;
-  --color-doc-surface-strong: var(--ivory-50);
-  --color-doc-surface-muted: var(--ivory-25);
+  --color-doc-surface-strong: var(--oatmeal-50);
+  --color-doc-surface-muted: var(--oatmeal-25);
   --color-doc-border: var(--color-border);
   --color-doc-text: var(--color-text-primary);
   --color-doc-text-secondary: var(--color-text-secondary);
@@ -334,6 +333,8 @@
   --sidebar-border: var(--color-border);
   --sidebar-ring: var(--color-brand);
 
+  --color-cta-text: #ffffff;
+
   /* Functional aliases used elsewhere in app code */
   --color-bg-primary: var(--color-bg-app);
   --color-bg-secondary: var(--color-bg-surface-2);
@@ -348,7 +349,7 @@
    ========================================================================== */
 @layer components {
   .app-surface-card {
-    @apply rounded-[22px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_10px_24px_rgba(30,28,26,0.08)];
+    @apply rounded-[22px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_10px_24px_rgba(15,23,42,0.06)];
   }
 
   .app-surface-subtle {
@@ -356,7 +357,7 @@
   }
 
   .app-button-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition-colors hover:bg-[var(--color-brand-hover)] disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-cta-text)] shadow-sm transition-colors hover:bg-[var(--color-brand-hover)] disabled:opacity-60;
   }
 
   .app-button-secondary {
@@ -406,7 +407,8 @@
   scrollbar-color: var(--border) transparent;
 }
 
-/* Grid overlay — uses currentColor so it adapts to the containing panel */
+/* Grid overlay — uses currentColor so it adapts to whatever text color the
+   containing panel has (white-on-dark panel, navy-on-light panel, etc.). */
 .theme-grid-pattern {
   background-image:
     linear-gradient(currentColor 1px, transparent 1px),
@@ -414,7 +416,7 @@
   background-size: 28px 28px;
 }
 
-/* Animated route line */
+/* Animated route line — one definition. -14 matches the 6+8 dash period. */
 .dj-route-line {
   animation: dj-route-dash 1.2s linear infinite;
 }
@@ -425,7 +427,8 @@
   }
 }
 
-/* Respect reduced motion globally */
+/* Respect reduced motion globally (covers the route line too). Note: this
+   also freezes spinners — acceptable tradeoff for an internal TMS tool. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -436,7 +439,70 @@
     scroll-behavior: auto !important;
   }
 }
+/* Floating notification chip */
+@keyframes dj-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-float {
+  animation: dj-float 5s ease-in-out infinite;
+}
 
+/* Load card progress bar grows in on mount */
+@keyframes dj-progress-grow {
+  from {
+    width: 0%;
+  }
+}
+.dj-load-progress {
+  animation: dj-progress-grow 1.1s 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+/* Error shake — blanket reduced-motion rule already disables this */
+@keyframes dj-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
+}
+.dj-shake {
+  animation: dj-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Film-grain texture for the brand panel (kills gradient banding) */
+.dj-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+/* Autofill: stop Chrome from painting its default cream background over
+   themed inputs (the classic dark-mode login blight) */
+@layer base {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--foreground);
+    -webkit-box-shadow: 0 0 0 1000px var(--card) inset;
+    caret-color: var(--foreground);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
 /* Floating notification chip */
 @keyframes dj-float {
   0%,
@@ -461,7 +527,7 @@
   animation: dj-progress-grow 1.1s 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-/* Error shake */
+/* Error alert shake */
 @keyframes dj-shake {
   10%,
   90% {
