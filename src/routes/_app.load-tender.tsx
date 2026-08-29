@@ -254,6 +254,14 @@ function LoadTenderPage() {
 
     setIsGenerating(true);
     try {
+      // ----- Palette — shared with Customer Invoice / Carrier Rate Confirmation
+      // so all three generated documents read as one consistent brand system. -----
+      const NAVY: [number, number, number] = [21, 38, 61];
+      const GOLD: [number, number, number] = [173, 138, 84];
+      const BORDER: [number, number, number] = [190, 197, 208];
+      const TEXT: [number, number, number] = [26, 32, 40];
+      const MUTED: [number, number, number] = [110, 118, 128];
+
       const doc = new jsPDF({ unit: "pt", format: "letter" });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
@@ -262,55 +270,66 @@ function LoadTenderPage() {
       const safeBottom = pageHeight - 54;
 
       const drawHeader = (title: string) => {
-        doc.setFillColor(24, 47, 70);
-        doc.roundedRect(margin, 24, 70, 34, 4, 4, "F");
+        doc.setFillColor(...NAVY);
+        doc.roundedRect(margin, 26, 68, 30, 4, 4, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text("BROKER", margin + 13, 46);
+        doc.setFontSize(13);
+        doc.text("BROKER", margin + 10, 46);
 
-        doc.setTextColor(24, 47, 70);
+        doc.setTextColor(...NAVY);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        doc.text(portalCompanyName, margin + 94, 39);
+        doc.setFontSize(12.5);
+        doc.text(portalCompanyName, margin + 84, 38);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.text(BROKER_ADDRESS, margin + 94, 51);
-        doc.text(`${BROKER_PHONE} | ${BROKER_EMAIL} | ${BROKER_WEBSITE}`, margin + 94, 63);
+        doc.setFontSize(7.7);
+        doc.setTextColor(...MUTED);
+        doc.text(BROKER_ADDRESS, margin + 84, 49);
+        doc.text(`${BROKER_PHONE} | ${BROKER_EMAIL} | ${BROKER_WEBSITE}`, margin + 84, 59);
 
-        doc.setDrawColor(180, 20, 20);
-        doc.setLineWidth(1);
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(1.3);
         doc.line(margin, 70, pageWidth - margin, 70);
 
-        doc.setTextColor(20, 40, 58);
+        // Title and its metadata now sit on separate lines. Previously both were
+        // drawn on the same y=90 baseline — the left-aligned title and the
+        // right-aligned "LT-001 | Rev 1.0 | Effective ..." text overlapped
+        // whenever a long continuation title ("... (CONTINUED)") ran past the
+        // horizontal midpoint of the page.
+        doc.setTextColor(...NAVY);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(17);
+        doc.setFontSize(14.5);
         doc.text(title, margin, 90);
+
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.3);
+        doc.setFontSize(7.3);
+        doc.setTextColor(...MUTED);
         doc.text(
-          `${form.tenderNo || "LT"} | ${DOCUMENT_REVISION} | Effective ${formatDateOnly(
+          `${form.tenderNo || "LT"}  |  ${DOCUMENT_REVISION}  |  Effective ${formatDateOnly(
             form.tenderedDateTime,
           )}`,
           pageWidth - margin,
-          90,
+          104,
           { align: "right" },
         );
       };
 
       const drawFooter = () => {
-        doc.setTextColor(38, 50, 62);
+        doc.setDrawColor(...BORDER);
+        doc.setLineWidth(0.6);
+        doc.line(margin, pageHeight - 26, pageWidth - margin, pageHeight - 26);
+        doc.setTextColor(...MUTED);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7.2);
         doc.text(
           `CONFIDENTIAL CARRIER RATE DOCUMENT | ${BROKER_MC_NUMBER} | ${BROKER_USDOT_NUMBER}`,
           margin,
-          pageHeight - 18,
+          pageHeight - 16,
         );
         doc.text(
           "CONTROLLED TEMPLATE | Verify current revision",
           pageWidth - margin,
-          pageHeight - 18,
+          pageHeight - 16,
           { align: "right" },
         );
       };
@@ -326,9 +345,7 @@ function LoadTenderPage() {
       };
 
       // Auto-inserts a continuation page instead of letting content run off
-      // the bottom of the page (the previous version had no such guard, so
-      // longer free-text fields like Material Carrier Requirements could
-      // silently overflow past the footer).
+      // the bottom of the page.
       const ensureSpace = (currentY: number, neededHeight: number, continuationTitle: string) => {
         if (currentY + neededHeight > safeBottom) {
           return newPage(continuationTitle);
@@ -336,50 +353,79 @@ function LoadTenderPage() {
         return currentY;
       };
 
+      // Fill color is set explicitly on every box so it never inherits
+      // whatever color a previous section (or the header's navy logo badge)
+      // last left active — that leak previously turned any field box drawn
+      // right after a page break into an unreadable dark-navy-on-dark box.
+      // Labels now wrap instead of running past the box edge into the next
+      // field, and the number of value lines shown scales with the actual
+      // space left in the box instead of a flat 2-line cap.
       const drawField = (
         x: number,
         y: number,
         w: number,
         h: number,
-        label: string,
+        labelText: string,
         value: string,
       ) => {
-        doc.setDrawColor(150, 168, 184);
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(...BORDER);
+        doc.setLineWidth(0.75);
         doc.roundedRect(x, y, w, h, 2, 2, "FD");
+
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.1);
-        doc.setTextColor(40, 52, 62);
-        doc.text(label, x + 5, y + 12);
-        doc.setTextColor(20, 23, 30);
+        doc.setFontSize(6.5);
+        doc.setTextColor(...MUTED);
+        const labelLines = doc.splitTextToSize(labelText.toUpperCase(), w - 10);
+        doc.text(labelLines, x + 5, y + 10, { charSpace: 0.2 });
+
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.2);
-        const text = doc.splitTextToSize(value || "-", w - 12);
-        const startY = y + 22;
-        for (let i = 0; i < Math.min(2, text.length); i += 1) {
-          doc.text(text[i] || "", x + 5, startY + i * 10);
-        }
+        doc.setTextColor(...TEXT);
+        const valueStartY = y + 10 + labelLines.length * 7.5;
+        const maxLines = Math.max(1, Math.floor((y + h - valueStartY) / 10));
+        const lines = doc.splitTextToSize(value || "—", w - 10);
+        doc.text(lines.slice(0, maxLines), x + 5, valueStartY);
       };
 
-      const drawChecklist = (x: number, y: number, checked: boolean, label: string) => {
-        doc.setDrawColor(100, 110, 124);
-        doc.rect(x, y, 10, 10);
+      const drawChecklist = (x: number, y: number, checked: boolean, labelText: string) => {
+        doc.setDrawColor(...NAVY);
+        doc.setLineWidth(0.9);
+        doc.setFillColor(checked ? NAVY[0] : 255, checked ? NAVY[1] : 255, checked ? NAVY[2] : 255);
+        doc.roundedRect(x, y, 10, 10, 1.5, 1.5, "FD");
         if (checked) {
-          doc.line(x + 2, y + 2, x + 4, y + 7);
-          doc.line(x + 4, y + 7, x + 8, y + 2);
+          doc.setDrawColor(255, 255, 255);
+          doc.setLineWidth(1.2);
+          doc.line(x + 2, y + 5, x + 4.2, y + 7.4);
+          doc.line(x + 4.2, y + 7.4, x + 8, y + 1.5);
         }
-        doc.setTextColor(20, 30, 42);
+        doc.setTextColor(...TEXT);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.2);
-        doc.text(label, x + 18, y + 8);
+        doc.text(labelText, x + 15, y + 8);
       };
 
-      const drawSectionHeading = (label: string, x: number, y: number, width: number) => {
-        doc.setFillColor(228, 235, 242);
+      const drawSectionHeading = (labelText: string, x: number, y: number, width: number) => {
+        doc.setFillColor(...NAVY);
         doc.rect(x, y, width, 18, "F");
-        doc.setTextColor(24, 47, 70);
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(1.1);
+        doc.line(x, y + 18, x + width, y + 18);
+        doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.text(label, x + 6, y + 12);
+        doc.setFontSize(9);
+        doc.text(labelText.toUpperCase(), x + 6, y + 12.5, { charSpace: 0.4 });
+      };
+
+      // Height now grows with the actual text instead of a fixed value with a
+      // hardcoded 6-line cap — the latter silently dropped most of the default
+      // "Material Carrier Requirements" boilerplate, which runs well past 6
+      // lines at this width.
+      const measureLongBox = (w: number, value: string, minH: number) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.1);
+        const lines = doc.splitTextToSize(value || "", w - 10);
+        return { lines, h: Math.max(minH, 24 + lines.length * 9.5) };
       };
 
       const drawLongBox = (
@@ -387,38 +433,38 @@ function LoadTenderPage() {
         y: number,
         w: number,
         h: number,
-        label: string,
-        value: string,
+        labelText: string,
+        lines: string[],
       ) => {
-        doc.setDrawColor(150, 168, 184);
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(...BORDER);
+        doc.setLineWidth(0.75);
         doc.roundedRect(x, y, w, h, 2, 2, "FD");
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.2);
-        doc.setTextColor(45, 55, 70);
-        doc.text(label, x + 5, y + 12);
+        doc.setFontSize(6.8);
+        doc.setTextColor(...MUTED);
+        doc.text(labelText.toUpperCase(), x + 5, y + 12, { charSpace: 0.3 });
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.1);
-        doc.setTextColor(20, 23, 30);
-        const lines = doc.splitTextToSize(value || "", w - 12);
-        for (let i = 0; i < Math.min(6, lines.length); i += 1) {
-          doc.text(lines[i] || "", x + 5, y + 24 + i * 9);
-        }
+        doc.setTextColor(...TEXT);
+        doc.text(lines, x + 5, y + 24);
       };
 
       drawHeader("LOAD TENDER - PRELIMINARY OFFER");
-      doc.setTextColor(64, 72, 82);
+      doc.setTextColor(...NAVY);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text("NOT AN AUTHORIZATION TO PICK UP", margin, 118);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.2);
+      doc.setTextColor(...TEXT);
       const authText = `This tender is a preliminary offer only. Carrier is not authorized to dispatch, enter a facility, or pick up freight until ${portalCompanyName} issues a signed carrier rate confirmation and the carrier accepts it.`;
       const authLines = doc.splitTextToSize(authText, contentWidth - 8);
       doc.text(authLines, margin, 130);
 
-      let y = 150;
+      let y = 130 + authLines.length * 10 + 10;
       drawSectionHeading("LOAD DETAILS", margin, y, contentWidth);
-      y += 22;
+      y += 24;
 
       drawField(margin, y, contentWidth / 4 - 6, 32, "LOAD NO.", form.loadNo);
       drawField(
@@ -463,11 +509,14 @@ function LoadTenderPage() {
         form.weightPieces,
       );
       y += 44;
+      // These three labels are long relative to a third-width column, so the
+      // boxes are a touch taller (40 instead of 32) to give the wrapped label
+      // room without crowding out the value.
       drawField(
         margin,
         y,
         contentWidth / 3 - 8,
-        32,
+        40,
         "DECLARED CARGO VALUE",
         form.declaredCargoValue,
       );
@@ -475,7 +524,7 @@ function LoadTenderPage() {
         margin + contentWidth / 3,
         y,
         contentWidth / 3 - 8,
-        32,
+        40,
         "TRAILER SIZE / TYPE / AGE / SPECIAL EQUIPMENT",
         form.trailerSpec,
       );
@@ -483,15 +532,15 @@ function LoadTenderPage() {
         margin + (contentWidth / 3) * 2 + 8,
         y,
         contentWidth / 3 - 16,
-        32,
+        40,
         "TEMPERATURE / TARPS / STRAPS / SECUREMENT",
         form.tempSecurement,
       );
-      y += 46;
+      y += 54;
 
       y = ensureSpace(y, 108, "LOAD TENDER - PRELIMINARY OFFER (CONTINUED)");
       drawSectionHeading("PICKUP STOP", margin, y, contentWidth);
-      y += 22;
+      y += 24;
       drawField(margin, y, contentWidth / 2 - 8, 32, "FACILITY / SHIPPER", form.shipperFacility);
       drawField(
         margin + contentWidth / 2 + 8,
@@ -509,7 +558,7 @@ function LoadTenderPage() {
 
       y = ensureSpace(y, 116, "LOAD TENDER - PRELIMINARY OFFER (CONTINUED)");
       drawSectionHeading("DELIVERY STOP", margin, y, contentWidth);
-      y += 22;
+      y += 24;
       drawField(
         margin,
         y,
@@ -534,7 +583,7 @@ function LoadTenderPage() {
 
       y = ensureSpace(y, 84, "LOAD TENDER - PRELIMINARY OFFER (CONTINUED)");
       drawSectionHeading("EQUIPMENT AND SERVICE REQUIREMENTS", margin, y, contentWidth);
-      y += 24;
+      y += 26;
       const equipmentRows: Array<[string, boolean]> = [
         ["Dry van", form.equipmentDryVan],
         ["Reefer", form.equipmentReefer],
@@ -544,9 +593,9 @@ function LoadTenderPage() {
         ["Other", form.equipmentOther],
       ];
       let rowX = margin;
-      equipmentRows.forEach(([label, checked]) => {
-        drawChecklist(rowX, y, checked, label);
-        rowX += 120;
+      equipmentRows.forEach(([labelText, checked]) => {
+        drawChecklist(rowX, y, checked, labelText);
+        rowX += 90;
       });
       y += 20;
       drawChecklist(margin, y, form.driverAssist, "Driver assist");
@@ -559,7 +608,7 @@ function LoadTenderPage() {
 
       y = ensureSpace(y, 100, "LOAD TENDER - PRELIMINARY OFFER (CONTINUED)");
       drawSectionHeading("PROPOSED RATE", margin, y, contentWidth);
-      y += 22;
+      y += 24;
       drawField(margin, y, contentWidth / 5 - 8, 28, "LINEHAUL", form.linehaul);
       drawField(
         margin + contentWidth / 5,
@@ -596,7 +645,17 @@ function LoadTenderPage() {
         form.paymentTerms,
       );
       y += 38;
-      drawLongBox(margin, y, contentWidth, 54, "RATE NOTES / INCLUDED CHARGES", form.rateNotes);
+
+      const rateNotesMeasure = measureLongBox(contentWidth, form.rateNotes, 44);
+      y = ensureSpace(y, rateNotesMeasure.h + 6, "LOAD TENDER - PRELIMINARY OFFER (CONTINUED)");
+      drawLongBox(
+        margin,
+        y,
+        contentWidth,
+        rateNotesMeasure.h,
+        "RATE NOTES / INCLUDED CHARGES",
+        rateNotesMeasure.lines,
+      );
       drawFooter();
 
       // ---------------------------------------------------------------- //
@@ -604,7 +663,7 @@ function LoadTenderPage() {
       // ---------------------------------------------------------------- //
       let y2 = newPage("LOAD TENDER - CARRIER ACCEPTANCE");
       drawSectionHeading("CARRIER, DRIVER AND EQUIPMENT INFORMATION", margin, y2, contentWidth);
-      y2 += 22;
+      y2 += 24;
       drawField(margin, y2, contentWidth / 2 - 8, 28, "CARRIER LEGAL NAME", form.carrierLegalName);
       drawField(
         margin + contentWidth / 2 + 8,
@@ -655,25 +714,27 @@ function LoadTenderPage() {
         form.materialCarrierRequirements ||
         `Maintain active FMCSA authority and all required cargo, auto, and general liability insurance through final delivery. Activate approved GPS tracking before pickup and keep it active through delivery; do not handle tracking while driving. Do not rebroker, transfer, cross-dock, or substitute the driver, tractor, or trailer without ${portalCompanyName} prior written approval. Report arrival, loaded status, departure, delays, incidents, cargo exceptions, and delivery immediately to operations. Confirm seal number and cargo condition at pickup and delivery. Do not break a seal except as legally required or authorized in writing. Obtain written pre-approval for accessorials and submit signed receipts, in/out times, invoice, signed BOL, and POD.`;
 
-      y2 = ensureSpace(y2, 130, "LOAD TENDER - CARRIER ACCEPTANCE (CONTINUED)");
+      const materialMeasure = measureLongBox(contentWidth, materialRequirementsText, 90);
+      y2 = ensureSpace(y2, materialMeasure.h + 10, "LOAD TENDER - CARRIER ACCEPTANCE (CONTINUED)");
       drawLongBox(
         margin,
         y2,
         contentWidth,
-        120,
+        materialMeasure.h,
         "MATERIAL CARRIER REQUIREMENTS",
-        materialRequirementsText,
+        materialMeasure.lines,
       );
-      y2 += 130;
+      y2 += materialMeasure.h + 12;
 
       y2 = ensureSpace(y2, 100, "LOAD TENDER - CARRIER ACCEPTANCE (CONTINUED)");
-      doc.setTextColor(35, 45, 60);
+      doc.setTextColor(...NAVY);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       doc.text("CARRIER ACKNOWLEDGMENT", margin, y2);
       y2 += 10;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.2);
+      doc.setTextColor(...TEXT);
       const ackText =
         "Carrier confirms the information above is accurate, accepts this preliminary tender subject to the final rate confirmation, and understands that acceptance does not authorize pickup before the final rate confirmation is issued and accepted.";
       const ackLines = doc.splitTextToSize(ackText, contentWidth - 10);
@@ -714,7 +775,7 @@ function LoadTenderPage() {
         y2,
         contentWidth,
       );
-      y2 += 22;
+      y2 += 24;
       const checks: Array<[string, boolean]> = [
         ["Authority active", form.authorityActive],
         ["COI verified", form.coiVerified],
@@ -726,10 +787,10 @@ function LoadTenderPage() {
         ["Fraud checks cleared", form.fraudChecksCleared],
       ];
       let checkX = margin;
-      checks.forEach(([label, checked], index) => {
-        drawChecklist(checkX, y2 + (index % 4) * 18, checked, label);
+      checks.forEach(([labelText, checked], index) => {
+        drawChecklist(checkX, y2 + (index % 4) * 18, checked, labelText);
         if (index % 4 === 3) {
-          checkX += 170;
+          checkX += 190;
         }
       });
       y2 += 80;
@@ -759,10 +820,12 @@ function LoadTenderPage() {
       const totalPages = doc.internal.getNumberOfPages();
       for (let p = 1; p <= totalPages; p += 1) {
         doc.setPage(p);
-        doc.setTextColor(90, 96, 103);
+        doc.setTextColor(...MUTED);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.1);
-        doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, 102, { align: "right" });
+        doc.setFontSize(8);
+        doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, pageHeight - 40, {
+          align: "right",
+        });
       }
 
       doc.save(`${form.tenderNo || "Load_Tender"}.pdf`);
@@ -1279,7 +1342,7 @@ function LoadTenderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-red-600/70 bg-slate-900 px-4 py-3">
+                <div className="border-b border-amber-500/60 bg-slate-900 px-4 py-3">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-bold uppercase tracking-wide text-white">
                       {portalCompanyName}
@@ -1395,7 +1458,7 @@ function ToggleChip({
 }) {
   const activeClass =
     tone === "warning"
-      ? "border-red-600 bg-red-600 text-white"
+      ? "border-amber-600 bg-amber-600 text-white"
       : "border-slate-800 bg-slate-800 text-white";
 
   return (
