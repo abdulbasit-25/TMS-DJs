@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/page-header";
+import { usePortalSettings } from "@/hooks/use-portal-settings";
 import { FileDown } from "lucide-react";
 
 export const Route = createFileRoute("/_app/carrier-rate-confirmation")({
@@ -113,6 +114,8 @@ const initialState: RateFormState = {
 const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
 
 function CarrierRateConfirmationPage() {
+  const { companyName } = usePortalSettings();
+  const portalCompanyName = companyName?.trim() || "TMS Freight Portal";
   const [form, setForm] = useState<RateFormState>(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = useState(false);
@@ -154,7 +157,7 @@ function CarrierRateConfirmationPage() {
         doc.setTextColor(24, 47, 70);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text("DJ'S FREIGHT BROKER LLC", margin + 94, 39);
+        doc.text(portalCompanyName, margin + 94, 39);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", margin + 94, 51);
@@ -470,8 +473,8 @@ function CarrierRateConfirmationPage() {
       drawHeader(3, "CARRIER TERMS - LEGAL, DOCUMENTS & ACCEPTANCE");
       let y3 = 120;
       const legalText =
-        "8. INDEMNITY AND RECOVERY OF LOSS To the fullest extent permitted by law, Carrier will defend, indemnify, and hold harmless DJ's Freight Broker LLC, the customer, and their personnel from claims, fines, penalties, liabilities, cargo loss, property damage, bodily injury, costs, and reasonable attorney fees arising from Carrier's or its personnel's acts, omissions, breach, regulatory violation, identity misrepresentation, unauthorized rebrokering, or unauthorized transfer. DJ's may offset documented amounts owed by Carrier against freight charges when permitted by law and controlling agreements. 9. BROKER ROLE; INDEPENDENT CONTRACTOR DJ's is a licensed property broker arranging transportation and is not the motor carrier, driver, employer, or warehouseman. Carrier is an independent contractor with exclusive control over its personnel and safe operation. Nothing in this rate confirmation creates an employment, agency, partnership, or joint-venture relationship. 10. CONTROLLING DOCUMENTS; NO UNILATERAL CHANGES This rate confirmation supplements the signed broker-carrier agreement. Load-specific rates, stops, dates, cargo, equipment, and special instructions in this document control for this load; the broker-carrier agreement controls general legal terms if a conflict exists. Carrier tariffs, invoices, BOL language, stamps, portals, or other unilateral terms do not amend DJ's obligations unless DJ's expressly agrees in writing. 11. ACCEPTANCE; ELECTRONIC RECORDS Carrier accepts this rate confirmation by signature, electronic acceptance, written confirmation, dispatch, or pickup after receiving it. Electronic signatures and records are enforceable to the same extent as originals. Carrier must notify DJ's in writing before pickup of any disagreement; silence followed by performance constitutes acceptance. 12. GOVERNING LAW; SEVERABILITY; NO WAIVER Except where federal law controls, Texas law applies, and venue lies in state or federal courts in Tarrant County, Texas. If any provision is unenforceable, it will be narrowed or severed without affecting the remainder. A waiver must be in writing and applies only to that instance.";
-      doc.setTextColor(20, 24, 30);
+        " 8. INDEMNITY AND RECOVERY OF LOSS To the fullest extent permitted by law, Carrier will defend, indemnify, and hold harmless , the customer, and their personnel from claims, fines, penalties, liabilities, cargo loss, property damage, bodily injury, costs, and reasonable attorney fees arising from Carrier's or its personnel's acts, omissions, breach, regulatory violation, identity misrepresentation, unauthorized rebrokering, or unauthorized transfer. DJ's may offset documented amounts owed by Carrier against freight charges when permitted by law and controlling agreements. 9. BROKER ROLE; INDEPENDENT CONTRACTOR DJ's is a licensed property broker arranging transportation and is not the motor carrier, driver, employer, or warehouseman. Carrier is an independent contractor with exclusive control over its personnel and safe operation. Nothing in this rate confirmation creates an employment, agency, partnership, or joint-venture relationship. 10. CONTROLLING DOCUMENTS; NO UNILATERAL CHANGES This rate confirmation supplements the signed broker-carrier agreement. Load-specific rates, stops, dates, cargo, equipment, and special instructions in this document control for this load; the broker-carrier agreement controls general legal terms if a conflict exists. Carrier tariffs, invoices, BOL language, stamps, portals, or other unilateral terms do not amend DJ's obligations unless DJ's expressly agrees in writing. 11. ACCEPTANCE; ELECTRONIC RECORDS Carrier accepts this rate confirmation by signature, electronic acceptance, written confirmation, dispatch, or pickup after receiving it. Electronic signatures and records are enforceable to the same extent as originals. Carrier must notify DJ's in writing before pickup of any disagreement; silence followed by performance constitutes acceptance. 12. GOVERNING LAW; SEVERABILITY; NO WAIVER Except where federal law controls, Texas law applies, and venue lies in state or federal courts in Tarrant County, Texas. If any term is unenforceable, the remaining obligations remain enforceable. No waiver or course of dealing excuses a breach unless signed in writing by DJ's. 13. SIGNATURES AND VALIDATION By accepting this confirmation, Carrier confirms the rate, terms, and supporting load information, and authorizes DJ's to rely on the information provided for freight tendering and payment processing.";
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7.7);
       doc.text(doc.splitTextToSize(legalText, contentWidth - 8), margin, y3);
