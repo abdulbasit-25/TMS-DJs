@@ -37,7 +37,6 @@ import { Route as AppOnboardingRouteImport } from './routes/_app.onboarding'
 import { Route as AppQuotesRouteImport } from './routes/_app.quotes'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
-import { Route as AppStraightBillOfLadingRouteImport } from './routes/_app.straight-bill-of-lading'
 import { Route as AppTeamsRouteImport } from './routes/_app.teams'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
 import { Route as AppAdminDataDeletionRouteImport } from './routes/_app.admin.data-deletion'
@@ -182,11 +181,6 @@ const AppSearchRoute = AppSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AppRoute,
 } as any)
-const AppStraightBillOfLadingRoute = AppStraightBillOfLadingRouteImport.update({
-  id: '/straight-bill-of-lading',
-  path: '/straight-bill-of-lading',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppTeamsRoute = AppTeamsRouteImport.update({
   id: '/teams',
   path: '/teams',
@@ -231,7 +225,6 @@ export interface FileRoutesByFullPath {
   '/quotes': typeof AppQuotesRoute
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
-  '/straight-bill-of-lading': typeof AppStraightBillOfLadingRoute
   '/teams': typeof AppTeamsRoute
   '/users': typeof AppUsersRoute
   '/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -264,7 +257,6 @@ export interface FileRoutesByTo {
   '/quotes': typeof AppQuotesRoute
   '/reports': typeof AppReportsRoute
   '/search': typeof AppSearchRoute
-  '/straight-bill-of-lading': typeof AppStraightBillOfLadingRoute
   '/teams': typeof AppTeamsRoute
   '/users': typeof AppUsersRoute
   '/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -299,7 +291,6 @@ export interface FileRoutesById {
   '/_app/quotes': typeof AppQuotesRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/search': typeof AppSearchRoute
-  '/_app/straight-bill-of-lading': typeof AppStraightBillOfLadingRoute
   '/_app/teams': typeof AppTeamsRoute
   '/_app/users': typeof AppUsersRoute
   '/_app/admin/data-deletion': typeof AppAdminDataDeletionRoute
@@ -334,7 +325,6 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/reports'
     | '/search'
-    | '/straight-bill-of-lading'
     | '/teams'
     | '/users'
     | '/admin/data-deletion'
@@ -367,7 +357,6 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/reports'
     | '/search'
-    | '/straight-bill-of-lading'
     | '/teams'
     | '/users'
     | '/admin/data-deletion'
@@ -401,7 +390,6 @@ export interface FileRouteTypes {
     | '/_app/quotes'
     | '/_app/reports'
     | '/_app/search'
-    | '/_app/straight-bill-of-lading'
     | '/_app/teams'
     | '/_app/users'
     | '/_app/admin/data-deletion'
@@ -615,13 +603,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/straight-bill-of-lading': {
-      id: '/_app/straight-bill-of-lading'
-      path: '/straight-bill-of-lading'
-      fullPath: '/straight-bill-of-lading'
-      preLoaderRoute: typeof AppStraightBillOfLadingRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/teams': {
       id: '/_app/teams'
       path: '/teams'
@@ -680,7 +661,6 @@ interface AppRouteChildren {
   AppQuotesRoute: typeof AppQuotesRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSearchRoute: typeof AppSearchRoute
-  AppStraightBillOfLadingRoute: typeof AppStraightBillOfLadingRoute
   AppTeamsRoute: typeof AppTeamsRoute
   AppUsersRoute: typeof AppUsersRoute
 }
@@ -707,7 +687,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppQuotesRoute: AppQuotesRoute,
   AppReportsRoute: AppReportsRoute,
   AppSearchRoute: AppSearchRoute,
-  AppStraightBillOfLadingRoute: AppStraightBillOfLadingRoute,
   AppTeamsRoute: AppTeamsRoute,
   AppUsersRoute: AppUsersRoute,
 }
