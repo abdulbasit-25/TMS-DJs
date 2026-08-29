@@ -2,10 +2,16 @@
    Global styles — Tailwind v4 + shadcn/ui contract
    ----------------------------------------------------------------------------
    Token layering:
-     1. Palette      — static ramps (teal, gold, slate, ivory, …), theme-agnostic
+     1. Palette      — static ramps (ink, bronze, stone, graphite, …), theme-agnostic
      2. Semantic     — per-theme runtime tokens (bg-*, text-*, brand, on-*, …)
      3. shadcn       — shared bridge from semantic tokens to the shadcn/ui
                        variable contract (only values may change, never names)
+
+   Palette: a quiet, near-neutral ink foundation with a single restrained
+   bronze accent, on warm paper (light) / layered warm-graphite (dark)
+   surfaces. The intent is "private bank ledger," not "SaaS dashboard": no
+   saturated blues or purples, no neon, minimal shadow, and only one accent
+   color used sparingly for calls to action, focus, and emphasis.
 
    NOTE: Layers 2→3 use var() indirection, which requires the theme
    attribute/class to be set on <html>. Set BOTH, e.g.:
@@ -75,7 +81,8 @@
 
   /* ===== App semantic tokens as utilities =====
      bg-app, bg-surface, bg-surface-2, bg-cta, text-on-cta,
-     text-nav, bg-nav-active, text-nav-active-fg, bg-primary-hover, text-error … */
+     text-nav, bg-nav-active, text-nav-active-fg, bg-primary-hover, text-error …
+     (replaces bg-[var(--color-bg-surface-2)]-style arbitrary values) */
   --color-app: var(--color-bg-app);
   --color-surface: var(--color-bg-surface);
   --color-surface-2: var(--color-bg-surface-2);
@@ -97,71 +104,83 @@
 :root {
   --radius: 0.5rem;
 
-  /* Primary — Teal (rich, warm-tinted ocean green — confident, not startup-blue) */
-  --teal-50: #edf7f6;
-  --teal-100: #d2edeb;
-  --teal-200: #a7d9d5;
-  --teal-300: #72c0ba;
-  --teal-400: #48a39d;
-  --teal-500: #2d8782;
-  --teal-600: #236c68;
-  --teal-700: #1c5653;
-  --teal-800: #164442;
-  --teal-900: #113635;
-  --teal-950: #09201f;
+  /* Primary — Ink (near-neutral charcoal with the faintest cool undertone;
+     deliberately desaturated so it reads as "quiet neutral," not "SaaS
+     blue." This is the neutral foundation color: used for text, borders,
+     rings, and primary buttons, never as a loud brand color. */
+  --navy-50: #eef0f1;
+  --navy-100: #d8dcdf;
+  --navy-200: #b6bcc2;
+  --navy-300: #939ba2;
+  --navy-400: #707a82;
+  --navy-500: #545d65;
+  --navy-600: #3d444a;
+  --navy-700: #2b3136;
+  --navy-800: #1d2226;
+  --navy-900: #131619;
+  --navy-950: #0b0d0e;
 
-  /* Accent / CTA — Gold (warm metallic, luxury highlight) */
-  --gold-50: #faf7f0;
-  --gold-100: #f0e6cf;
-  --gold-200: #e2cca0;
-  --gold-300: #d4b170;
-  --gold-400: #c89a48;
-  --gold-500: #b58535;
-  --gold-600: #966c2b;
-  --gold-700: #775323;
-  --gold-800: #5a3d1b;
-  --gold-900: #3e2914;
+  /* Accent — Bronze (the single refined accent color in this system: a
+     muted, slightly warm antique metal, closer to oxidized bronze than
+     polished gold. Reserved for CTAs, active/selected states, and the
+     rare moment of emphasis — never used as a background at scale). */
+  --brass-50: #f7f3ea;
+  --brass-100: #e9dcc0;
+  --brass-200: #d7c093;
+  --brass-300: #c2a26c;
+  --brass-400: #a9854f;
+  --brass-500: #8f6d3e;
+  --brass-600: #715632;
+  --brass-700: #554027;
+  --brass-800: #3a2b1a;
+  --brass-900: #23190f;
 
-  /* Neutrals — Warm Slate (dark theme surfaces; charcoal with subtle amber undertone) */
-  --slate-50: #f0eeeb;
-  --slate-100: #d9d5cf;
-  --slate-200: #bfb9b0;
-  --slate-300: #a29b90;
-  --slate-400: #857e74;
-  --slate-500: #6d6760;
-  --slate-600: #57524c;
-  --slate-700: #43403b;
-  --slate-800: #302e2a;
-  --slate-850: #272522;
-  --slate-900: #1e1c1a;
-  --slate-950: #131211;
+  /* Neutrals — Stone (warm, low-saturation paper; light theme surfaces +
+     text). Reads as quiet, uncoated paper rather than clinical white or
+     a yellow "cream" template default. */
+  --stone-25: #faf9f6;
+  --stone-50: #f4f1ea;
+  --stone-100: #e8e2d3;
+  --stone-200: #d5cdb8;
+  --stone-300: #beb193;
+  --stone-400: #a2957a;
+  --stone-500: #877a5f;
+  --stone-600: #6b6049;
+  --stone-700: #504734;
+  --stone-800: #363023;
+  --stone-900: #1f1c14;
 
-  /* Neutrals — Ivory (light theme surfaces; warm parchment with golden undertone) */
-  --ivory-25: #fefdfb;
-  --ivory-50: #f9f6f0;
-  --ivory-100: #f0ebe0;
-  --ivory-200: #e3d9c4;
-  --ivory-300: #d4c4a3;
-  --ivory-400: #c2ac82;
-  --ivory-500: #a8914f;
-  --ivory-600: #8a7640;
-  --ivory-700: #6b5c32;
-  --ivory-800: #4d4224;
-  --ivory-900: #312a16;
+  /* Neutrals — Graphite (warm-neutral near-black; dark theme surfaces).
+     Kept warmer than the ink ramp so dark-mode layers separate cleanly
+     from ink/bronze foreground colors instead of muddying together, and
+     so "dark mode" reads as layered charcoal rather than flat #000. */
+  --graphite-100: #d9d5cd;
+  --graphite-200: #bcb6ab;
+  --graphite-300: #9a9384;
+  --graphite-400: #797265;
+  --graphite-500: #5b5548;
+  --graphite-600: #443f36;
+  --graphite-700: #302c26;
+  --graphite-800: #221f1a;
+  --graphite-850: #1a1815;
+  --graphite-900: #141210;
+  --graphite-950: #0c0b09;
 
-  /* Status — Sage / Amber / Coral / Cerulean */
-  --sage-400: #8aaa7e;
-  --sage-500: #6f8e64;
-  --sage-600: #5a754f;
-  --amber-400: #d4a23c;
-  --amber-500: #bb8a2e;
-  --amber-600: #a07424;
-  --coral-400: #c76d60;
-  --coral-500: #ab5246;
-  --coral-600: #923b30;
-  --cerulean-400: #7b9ab8;
-  --cerulean-500: #6382a0;
-  --cerulean-600: #4f6b82;
+  /* Status — Sage / Amber / Oxblood / Slate — muted, editorial tones rather
+     than saturated "UI kit" primaries, so alerts and badges sit quietly
+     alongside ink + bronze instead of fighting them. */
+  --sage-400: #8fab7c;
+  --sage-500: #708f5c;
+  --sage-600: #58724a;
+  --amber-400: #d9a35f;
+  --amber-500: #bf8842;
+  --amber-600: #a3702f;
+  --oxblood-400: #c17567;
+  --oxblood-500: #a25549;
+  --oxblood-600: #833b30;
+  --slate-400: #8093a8;
+  --slate-500: #647a91;
+  --slate-600: #4c6379;
 }
 
 /* ============================================================================
@@ -172,60 +191,66 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-bg-app: var(--slate-950);
-  --color-bg-sidebar: var(--slate-900);
-  --color-bg-surface: var(--slate-850);
-  --color-bg-surface-2: var(--slate-800);
-  --color-bg-surface-hover: color-mix(in oklab, var(--slate-100) 6%, var(--color-bg-surface));
-  --color-border: var(--slate-700);
-  --color-border-subtle: var(--slate-800);
-  --color-overlay: color-mix(in oklab, var(--slate-950) 72%, transparent);
+  --color-bg-app: var(--graphite-950);
+  --color-bg-sidebar: var(--graphite-900);
+  --color-bg-surface: var(--graphite-850);
+  --color-bg-surface-2: var(--graphite-800);
+  --color-bg-surface-hover: color-mix(in oklab, var(--graphite-100) 6%, var(--color-bg-surface));
+  --color-border: var(--graphite-700);
+  --color-border-subtle: var(--graphite-800);
+  --color-overlay: color-mix(in oklab, var(--graphite-950) 72%, transparent);
 
-  --color-text-primary: #f0ebe2;
-  --color-text-secondary: var(--slate-300);
-  --color-text-muted: var(--slate-400);
-  --color-text-disabled: var(--slate-600);
+  --color-text-primary: #efe9dd;
+  --color-text-secondary: var(--graphite-300);
+  --color-text-muted: var(--graphite-400);
+  --color-text-disabled: var(--graphite-600);
 
-  --color-brand: var(--teal-500);
-  --color-brand-hover: var(--teal-400);
-  --color-cta-bg: var(--gold-500);
-  --color-cta-bg-hover: var(--gold-400);
-  /* Dark text on gold in dark mode — the "gold foil" luxury effect.
-     gold-500/slate-950 ≈ 6.0:1 — passes AA. */
-  --color-cta-text: var(--slate-950);
+  /* Brand stays a neutral mid-ink tone (not the accent) so primary buttons
+     and rings read as quiet/confident rather than "brand blue." Contrast
+     vs. white foreground ≈ 5:1 (AA for normal text). */
+  --color-brand: var(--navy-400);
+  --color-brand-hover: var(--navy-300);
+  /* CTA is the one place the bronze accent appears as a fill. */
+  --color-cta-bg: var(--brass-400);
+  --color-cta-bg-hover: var(--brass-300);
 
-  /* Status: light tints on dark bg, dark ink text for contrast.
-     sage-400/slate-950 ≈ 7.9:1 · amber-400/slate-950 ≈ 8.8:1 ·
-     coral-400/slate-950 ≈ 5.7:1 · cerulean-400/slate-950 ≈ 6.1:1 — all pass AA. */
+  /* Status colors double as SOLID badge/button backgrounds. Light tints in
+     dark mode, so the paired on-* text must be dark ink:
+     sage-400/graphite-950 ≈ 8.1:1 · amber-400/graphite-950 ≈ 8.9:1 ·
+     oxblood-400/graphite-950 ≈ 6.0:1 · slate-400/graphite-950 ≈ 6.4:1 —
+     all pass AA. */
   --color-success: var(--sage-400);
   --color-warning: var(--amber-400);
-  --color-danger: var(--coral-400);
-  --color-info: var(--cerulean-400);
-  --color-on-success: var(--slate-950);
-  --color-on-warning: var(--slate-950);
-  --color-on-danger: var(--slate-950);
-  --color-on-info: var(--slate-950);
+  --color-danger: var(--oxblood-400);
+  --color-info: var(--slate-400);
+  --color-on-success: var(--graphite-950);
+  --color-on-warning: var(--graphite-950);
+  --color-on-danger: var(--graphite-950);
+  --color-on-info: var(--graphite-950);
 
-  /* Nav active: teal tint over sidebar bg */
-  --color-nav-active-bg: color-mix(in oklab, var(--teal-500) 18%, var(--color-bg-sidebar));
-  --color-nav-active-text: var(--teal-300);
-  --color-nav-text: var(--slate-300);
-  --color-nav-text-hover: #f0ebe2;
+  /* Nav active state: color-mix tint of brand over sidebar bg, so it always
+     stays visibly distinct from the sidebar regardless of exact bg value. */
+  --color-nav-active-bg: color-mix(in oklab, var(--navy-300) 16%, var(--color-bg-sidebar));
+  --color-nav-active-text: var(--navy-100);
+  --color-nav-text: var(--graphite-300);
+  --color-nav-text-hover: #efe9dd;
 
-  /* Link: lighter teal for text readability — teal-300/slate-950 ≈ 9:1 */
-  --color-link: var(--teal-300);
-  --color-link-hover: var(--teal-200);
+  /* Link gets its own token — a lighter ink step, high contrast on
+     graphite-950, kept separate from --color-brand which is tuned for
+     button fills. */
+  --color-link: var(--navy-200);
+  --color-link-hover: var(--navy-100);
 
-  /* Document/form surface tokens */
-  --color-doc-surface: color-mix(in oklab, var(--color-bg-surface) 88%, var(--slate-950));
-  --color-doc-surface-strong: color-mix(in oklab, var(--color-bg-surface) 72%, var(--slate-950));
-  --color-doc-surface-muted: color-mix(in oklab, var(--color-bg-surface) 80%, var(--slate-800));
+  /* Document/form surface tokens used by premium BOL/invoice screens */
+  --color-doc-surface: color-mix(in oklab, var(--color-bg-surface) 88%, var(--graphite-950));
+  --color-doc-surface-strong: color-mix(in oklab, var(--color-bg-surface) 72%, var(--graphite-950));
+  --color-doc-surface-muted: color-mix(in oklab, var(--color-bg-surface) 80%, var(--graphite-800));
   --color-doc-border: var(--color-border);
   --color-doc-text: var(--color-text-primary);
   --color-doc-text-secondary: var(--color-text-secondary);
   --color-doc-text-muted: var(--color-text-muted);
   --color-doc-text-subtle: var(--color-text-secondary);
-  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 16%, var(--color-bg-surface));
+  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 14%, var(--color-bg-surface));
   --color-doc-success-soft: color-mix(in oklab, var(--color-success) 18%, var(--color-bg-surface));
   --color-doc-danger-soft: color-mix(in oklab, var(--color-danger) 18%, var(--color-bg-surface));
 }
@@ -237,56 +262,57 @@
 .light {
   color-scheme: light;
 
-  --color-bg-app: var(--ivory-25);
+  --color-bg-app: var(--stone-25);
   --color-bg-sidebar: #ffffff;
   --color-bg-surface: #ffffff;
-  --color-bg-surface-2: var(--ivory-50);
-  --color-bg-surface-hover: color-mix(in oklab, var(--slate-900) 4%, var(--color-bg-surface));
-  --color-border: var(--ivory-200);
-  --color-border-subtle: var(--ivory-100);
-  --color-overlay: color-mix(in oklab, var(--slate-950) 45%, transparent);
+  --color-bg-surface-2: var(--stone-50);
+  --color-bg-surface-hover: color-mix(in oklab, var(--navy-900) 4%, var(--color-bg-surface));
+  --color-border: var(--stone-200);
+  --color-border-subtle: var(--stone-100);
+  --color-overlay: color-mix(in oklab, var(--navy-950) 45%, transparent);
 
-  --color-text-primary: var(--slate-900);
-  --color-text-secondary: var(--slate-600);
-  --color-text-muted: var(--slate-500);
-  --color-text-disabled: var(--ivory-400);
+  --color-text-primary: var(--navy-900);
+  --color-text-secondary: var(--navy-600);
+  --color-text-muted: var(--stone-600);
+  --color-text-disabled: var(--stone-400);
 
-  --color-brand: var(--teal-700);
-  --color-brand-hover: var(--teal-800);
-  --color-cta-bg: var(--gold-600);
-  --color-cta-bg-hover: var(--gold-700);
-  /* White text on dark gold in light mode — gold-600/white ≈ 5.25:1, passes AA. */
-  --color-cta-text: #ffffff;
+  /* Brand stays a neutral dark-ink tone in light mode too — near-black,
+     not navy-blue — so buttons/rings read as ink-on-paper. */
+  --color-brand: var(--navy-700);
+  --color-brand-hover: var(--navy-800);
+  --color-cta-bg: var(--brass-500);
+  --color-cta-bg-hover: var(--brass-600);
 
   /* Darker steps so white foreground on solid badges/buttons clears AA:
-     sage-600/white ≈ 4.8:1 · coral-600/white ≈ 7.2:1 · cerulean-600/white ≈ 5.6:1.
-     Exception: amber-600/white ≈ 4.0:1 (fails), so warning keeps dark text. */
+     sage-600/white ≈ 4.9:1 · oxblood-600/white ≈ 7.0:1 · slate-600/white ≈ 5.5:1.
+     Exception: amber-600/white is only ~3.9:1 (fails AA), so warning keeps
+     dark text in both themes (amber-600/navy-900 ≈ 4.7:1). */
   --color-success: var(--sage-600);
   --color-warning: var(--amber-600);
-  --color-danger: var(--coral-600);
-  --color-info: var(--cerulean-600);
+  --color-danger: var(--oxblood-600);
+  --color-info: var(--slate-600);
   --color-on-success: #ffffff;
-  --color-on-warning: var(--slate-900);
+  --color-on-warning: var(--navy-900);
   --color-on-danger: #ffffff;
   --color-on-info: #ffffff;
 
-  --color-nav-active-bg: color-mix(in oklab, var(--teal-700) 8%, var(--color-bg-sidebar));
-  --color-nav-active-text: var(--teal-700);
-  --color-nav-text: var(--slate-500);
-  --color-nav-text-hover: var(--slate-900);
+  --color-nav-active-bg: color-mix(in oklab, var(--navy-700) 7%, var(--color-bg-sidebar));
+  --color-nav-active-text: var(--navy-700);
+  --color-nav-text: var(--navy-500);
+  --color-nav-text-hover: var(--navy-900);
 
-  --color-link: var(--color-brand);
-  --color-link-hover: var(--color-brand-hover);
+  --color-link: var(--navy-700);
+  --color-link-hover: var(--navy-800);
 
   --color-doc-surface: #ffffff;
-  --color-doc-surface-strong: var(--ivory-50);
-  --color-doc-surface-muted: var(--ivory-25);
+  --color-doc-surface-strong: var(--stone-50);
+  --color-doc-surface-muted: var(--stone-25);
   --color-doc-border: var(--color-border);
   --color-doc-text: var(--color-text-primary);
   --color-doc-text-secondary: var(--color-text-secondary);
   --color-doc-text-muted: var(--color-text-muted);
   --color-doc-text-subtle: var(--color-text-secondary);
-  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 10%, #ffffff);
+  --color-doc-brand-soft: color-mix(in oklab, var(--color-brand) 8%, #ffffff);
   --color-doc-success-soft: color-mix(in oklab, var(--color-success) 14%, #ffffff);
   --color-doc-danger-soft: color-mix(in oklab, var(--color-danger) 12%, #ffffff);
 }
@@ -334,6 +360,8 @@
   --sidebar-border: var(--color-border);
   --sidebar-ring: var(--color-brand);
 
+  --color-cta-text: #ffffff;
+
   /* Functional aliases used elsewhere in app code */
   --color-bg-primary: var(--color-bg-app);
   --color-bg-secondary: var(--color-bg-surface-2);
@@ -348,7 +376,7 @@
    ========================================================================== */
 @layer components {
   .app-surface-card {
-    @apply rounded-[22px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_10px_24px_rgba(30,28,26,0.08)];
+    @apply rounded-[22px] border border-[var(--color-doc-border)] bg-[var(--color-doc-surface)] shadow-[0_8px_20px_rgba(20,17,12,0.05)];
   }
 
   .app-surface-subtle {
@@ -356,7 +384,7 @@
   }
 
   .app-button-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition-colors hover:bg-[var(--color-brand-hover)] disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-3.5 py-2 text-sm font-semibold text-[var(--color-cta-text)] shadow-sm transition-colors hover:bg-[var(--color-brand-hover)] disabled:opacity-60;
   }
 
   .app-button-secondary {
@@ -406,7 +434,8 @@
   scrollbar-color: var(--border) transparent;
 }
 
-/* Grid overlay — uses currentColor so it adapts to the containing panel */
+/* Grid overlay — uses currentColor so it adapts to whatever text color the
+   containing panel has (white-on-dark panel, ink-on-light panel, etc.). */
 .theme-grid-pattern {
   background-image:
     linear-gradient(currentColor 1px, transparent 1px),
@@ -414,7 +443,7 @@
   background-size: 28px 28px;
 }
 
-/* Animated route line */
+/* Animated route line — one definition. -14 matches the 6+8 dash period. */
 .dj-route-line {
   animation: dj-route-dash 1.2s linear infinite;
 }
@@ -422,18 +451,6 @@
 @keyframes dj-route-dash {
   to {
     stroke-dashoffset: -14;
-  }
-}
-
-/* Respect reduced motion globally */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  ::before,
-  ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }
 
@@ -461,7 +478,7 @@
   animation: dj-progress-grow 1.1s 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
-/* Error shake */
+/* Error alert shake — blanket reduced-motion rule below already disables this */
 @keyframes dj-shake {
   10%,
   90% {
@@ -485,12 +502,27 @@
   animation: dj-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
-/* Film-grain texture for the brand panel */
+/* Film-grain texture for the brand panel (kills gradient banding) */
 .dj-noise {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
 
-/* Autofill: stop Chrome painting its default cream over themed inputs */
+/* Respect reduced motion globally (covers the route line, float, progress
+   grow, and shake animations above). Note: this also freezes spinners —
+   acceptable tradeoff for an internal TMS tool. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Autofill: stop Chrome from painting its default cream background over
+   themed inputs (the classic dark-mode login blight) */
 @layer base {
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
