@@ -1,4 +1,5 @@
-import { useState } from "react";
+// Requires: npm install jspdf
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
@@ -6,13 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PageHeader } from "@/components/page-header";
 import { usePortalSettings } from "@/hooks/use-portal-settings";
-import { FileDown } from "lucide-react";
+import {
+  FileDown,
+  IdCard,
+  MapPin,
+  MapPinCheck,
+  Package,
+  DollarSign,
+  ShieldCheck,
+  AlertCircle,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/carrier-rate-confirmation")({
   component: CarrierRateConfirmationPage,
 });
+
+// ---------- Types ----------
 
 type RateFormState = {
   loadNo: string;
@@ -111,7 +124,101 @@ const initialState: RateFormState = {
   driverEquipmentVerified: true,
 };
 
+const REQUIRED_FIELDS: { key: keyof RateFormState; label: string }[] = [
+  { key: "loadNo", label: "Load No." },
+  { key: "carrierLegalName", label: "Carrier Legal Name" },
+  { key: "commodityDescription", label: "Commodity / Description" },
+  { key: "pickupAddress", label: "Pickup Full Address" },
+  { key: "deliveryAddress", label: "Delivery Full Address" },
+  { key: "totalRate", label: "Total Rate" },
+];
+
+// Static legal boilerplate — kept out of component state since it never changes per-load.
+const TERMS_INTRO =
+  "Active GPS tracking is a material condition of this shipment. Tracking must be activated before pickup and remain active through delivery. Carrier shall not rebroker, transfer, cross-dock, or substitute a driver or equipment without DJ's prior written approval. Failure to comply is a material breach and may result in cancellation, nonpayment where legally permitted, indemnification, and recovery of resulting losses. Safety instruction: tracking setup and updates must be completed while safely parked, never while driving.";
+
+const TERMS_CLAUSES: { num: number; title: string; body: string }[] = [
+  {
+    num: 1,
+    title: "Authority, Identity and Insurance",
+    body: "Carrier warrants that its legal name, MC/USDOT number, dispatch contact, driver, tractor, and trailer information are accurate and match the carrier vetted by DJ's. Carrier will maintain active operating authority and all insurance required by law, the broker-carrier agreement, and this load through final delivery. Carrier must immediately disclose any authority, insurance, ownership, contact, or factoring change.",
+  },
+  {
+    num: 2,
+    title: "Exclusive Custody and No Substitution",
+    body: "Carrier retains exclusive possession, control, and use of the equipment and assumes full responsibility for the freight from pickup through delivery. No trip lease, interchange, subcontracting, team/driver change, trailer swap, cross-dock, transload, storage, or other transfer is permitted without DJ's prior written approval. Approval of a change does not release Carrier from responsibility.",
+  },
+  {
+    num: 3,
+    title: "Communication and Incident Reporting",
+    body: "Carrier must report arrival, loaded status, departure, location/status updates, delays, route deviations, OS&D, seal issues, accidents, theft, cargo exposure, temperature deviations, and delivery immediately. Emergencies must be reported to 911 first when appropriate, then to DJ's at (682) 552-3169. Carrier must preserve documents, photos, telematics, and other evidence relating to any incident.",
+  },
+  {
+    num: 4,
+    title: "Cargo, Seals and Securement",
+    body: "Carrier and driver must inspect the trailer and visible cargo condition, verify counts when allowed, confirm load distribution and securement, record the seal, and note exceptions on the BOL before leaving pickup. Carrier may not break or replace a seal except as legally required or with prior written authorization; any required seal break must be documented immediately.",
+  },
+  {
+    num: 5,
+    title: "Accessorials, Detention and Route Costs",
+    body: "The total rate is all-inclusive except items expressly listed on page 1 or later approved in writing by DJ's. Accessorials require prior written approval and supporting receipts. Detention requires timely arrival, immediate notice at the start of delay, signed facility in/out times, and the free-time/rate stated in the special instructions or controlling agreement. Tolls, permits, fuel, parking, and ordinary operating costs are included unless stated otherwise.",
+  },
+  {
+    num: 6,
+    title: "Documents and Payment",
+    body: "Payment is conditioned on receipt of a correct carrier invoice, this accepted rate confirmation, signed BOL, clean POD, and all required receipts and shipment records. Documents should be submitted promptly to info@djsfreightbroker.com unless DJ's provides another written billing address. Quick Pay, if offered, is subject to separate approval and fees. Carrier may not change payment or factoring instructions without verified written documentation.",
+  },
+  {
+    num: 7,
+    title: "Customer Service and Cargo Claims",
+    body: "Carrier will perform safely, lawfully, and on schedule and will cooperate with reasonable cargo-claim investigation. Carrier remains responsible for loss, damage, delay, contamination, and theft to the extent imposed by applicable law and controlling contracts. No notation by a driver or facility waives DJ's or the customer's rights.",
+  },
+  {
+    num: 8,
+    title: "Indemnity and Recovery of Loss",
+    body: "To the fullest extent permitted by law, Carrier will defend, indemnify, and hold harmless DJ's, the customer, and their personnel from claims, fines, penalties, liabilities, cargo loss, property damage, bodily injury, costs, and reasonable attorney fees arising from Carrier's or its personnel's acts, omissions, breach, regulatory violation, identity misrepresentation, unauthorized rebrokering, or unauthorized transfer. DJ's may offset documented amounts owed by Carrier against freight charges when permitted by law and controlling agreements.",
+  },
+  {
+    num: 9,
+    title: "Broker Role; Independent Contractor",
+    body: "DJ's is a licensed property broker arranging transportation and is not the motor carrier, driver, employer, or warehouseman. Carrier is an independent contractor with exclusive control over its personnel and safe operation. Nothing in this rate confirmation creates an employment, agency, partnership, or joint-venture relationship.",
+  },
+  {
+    num: 10,
+    title: "Controlling Documents; No Unilateral Changes",
+    body: "This rate confirmation supplements the signed broker-carrier agreement. Load-specific rates, stops, dates, cargo, equipment, and special instructions in this document control for this load; the broker-carrier agreement controls general legal terms if a conflict exists. Carrier tariffs, invoices, BOL language, stamps, portals, or other unilateral terms do not amend DJ's obligations unless DJ's expressly agrees in writing.",
+  },
+  {
+    num: 11,
+    title: "Acceptance; Electronic Records",
+    body: "Carrier accepts this rate confirmation by signature, electronic acceptance, written confirmation, dispatch, or pickup after receiving it. Electronic signatures and records are enforceable to the same extent as originals. Carrier must notify DJ's in writing before pickup of any disagreement; silence followed by performance constitutes acceptance.",
+  },
+  {
+    num: 12,
+    title: "Governing Law; Severability; No Waiver",
+    body: "Except where federal law controls, Texas law applies, and venue lies in state or federal courts in Tarrant County, Texas. If any term is unenforceable, the remaining obligations remain enforceable. No waiver or course of dealing excuses a breach unless signed in writing by DJ's.",
+  },
+  {
+    num: 13,
+    title: "Signatures and Validation",
+    body: "By accepting this confirmation, Carrier confirms the rate, terms, and supporting load information, and authorizes DJ's to rely on the information provided for freight tendering and payment processing.",
+  },
+];
+
+// ---------- Helpers ----------
+
+function parseCurrency(value: string): number {
+  const n = parseFloat(value.replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function money(n: number) {
+  return `$${n.toFixed(2)}`;
+}
+
 const sectionClass = "rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm";
+
+// ---------- Component ----------
 
 function CarrierRateConfirmationPage() {
   const { companyName } = usePortalSettings();
@@ -125,416 +232,401 @@ function CarrierRateConfirmationPage() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
+  const computedRateTotal = useMemo(
+    () =>
+      parseCurrency(form.linehaul) +
+      parseCurrency(form.fuel) +
+      parseCurrency(form.preApprovedAccessorial) +
+      parseCurrency(form.other),
+    [form.linehaul, form.fuel, form.preApprovedAccessorial, form.other],
+  );
+
   const validate = () => {
     const nextErrors: Record<string, string> = {};
-    if (!form.loadNo.trim()) nextErrors.loadNo = "Load number required.";
-    if (!form.carrierLegalName.trim()) nextErrors.carrierLegalName = "Carrier legal name required.";
-    if (!form.commodityDescription.trim()) nextErrors.commodityDescription = "Commodity required.";
-    if (!form.totalRate.trim()) nextErrors.totalRate = "Total rate required.";
+    REQUIRED_FIELDS.forEach(({ key, label }) => {
+      if (!form[key] || !String(form[key]).trim()) nextErrors[key] = `${label} is required.`;
+    });
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
 
   const generatePDF = () => {
     if (!validate()) return;
-
     setIsGenerating(true);
+
     try {
+      // ----- Palette -----
+      const NAVY: [number, number, number] = [21, 38, 61];
+      const GOLD: [number, number, number] = [173, 138, 84];
+      const BORDER: [number, number, number] = [214, 219, 226];
+      const TEXT: [number, number, number] = [26, 32, 40];
+      const MUTED: [number, number, number] = [110, 118, 128];
+
       const doc = new jsPDF({ unit: "pt", format: "letter" });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 36;
+      const margin = 40;
       const contentWidth = pageWidth - margin * 2;
+      const footerTop = pageHeight - 34;
+      let y = 0;
 
-      const drawHeader = (pageNumber: number, title: string) => {
-        doc.setFillColor(24, 47, 70);
-        doc.roundedRect(margin, 24, 70, 34, 4, 4, "F");
+      const drawHeader = (continued: boolean) => {
+        doc.setFillColor(...NAVY);
+        doc.roundedRect(margin, 26, 64, 30, 4, 4, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(22);
-        doc.text("BROKER", margin + 13, 46);
-
-        doc.setTextColor(24, 47, 70);
-        doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text(portalCompanyName, margin + 94, 39);
+        doc.text("DJFB", margin + 12, 46);
+
+        doc.setTextColor(...NAVY);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12.5);
+        doc.text(portalCompanyName, margin + 80, 38);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", margin + 94, 51);
+        doc.setFontSize(7.8);
+        doc.setTextColor(...MUTED);
+        doc.text("1209 N Saginaw Blvd., Suite G-194, Saginaw, TX 76179", margin + 80, 49);
         doc.text(
-          "(682) 552-3169 | info@djsfreightbroker.com | djsfreightbroker.com",
-          margin + 94,
-          63,
+          "(682) 552-3169  |  info@djsfreightbroker.com  |  djsfreightbroker.com",
+          margin + 80,
+          59,
         );
-        doc.setDrawColor(180, 20, 20);
-        doc.setLineWidth(1);
+
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(1.4);
         doc.line(margin, 70, pageWidth - margin, 70);
 
-        doc.setTextColor(20, 40, 58);
+        doc.setTextColor(...NAVY);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(17);
-        doc.text(title, margin, 90);
+        doc.setFontSize(14.5);
+        doc.text(
+          continued ? "CARRIER RATE CONFIRMATION (CONTINUED)" : "CARRIER RATE CONFIRMATION",
+          margin,
+          90,
+        );
+
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.3);
-        doc.text("RC-001 | Revision 1.0 | Effective August 4, 2026", pageWidth - margin, 90, {
+        doc.setFontSize(7.3);
+        doc.setTextColor(...MUTED);
+        doc.text("RC-001  |  Rev 1.0  |  Effective Aug 4, 2026", pageWidth - margin, 82, {
           align: "right",
         });
-        doc.setFontSize(8.1);
-        doc.text(`Page ${pageNumber} of 3`, pageWidth - margin, 102, { align: "right" });
+        // Page number stamped in a final pass once total page count is known.
+
+        y = 108;
       };
 
       const drawFooter = () => {
-        doc.setTextColor(38, 50, 62);
+        doc.setDrawColor(...BORDER);
+        doc.setLineWidth(0.6);
+        doc.line(margin, footerTop - 8, pageWidth - margin, footerTop - 8);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(7.2);
+        doc.setFontSize(7);
+        doc.setTextColor(...MUTED);
         doc.text(
-          "CONFIDENTIAL CARRIER RATE DOCUMENT | MC 1551655 | USDOT 4079462",
+          "CONFIDENTIAL CARRIER RATE DOCUMENT  |  MC 1551655  |  USDOT 4079462",
           margin,
-          pageHeight - 18,
+          footerTop,
         );
-        doc.text(
-          "CONTROLLED TEMPLATE | Verify current revision",
-          pageWidth - margin,
-          pageHeight - 18,
-          { align: "right" },
-        );
+        doc.text("CONTROLLED TEMPLATE — verify current revision", pageWidth - margin, footerTop, {
+          align: "right",
+        });
       };
 
-      const drawField = (
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        label: string,
-        value: string,
-      ) => {
-        doc.setDrawColor(150, 168, 184);
-        doc.roundedRect(x, y, w, h, 2, 2, "FD");
+      const ensureSpace = (h: number) => {
+        if (y + h > footerTop - 14) {
+          drawFooter();
+          doc.addPage();
+          drawHeader(true);
+        }
+      };
+
+      const sectionHeader = (title: string) => {
+        ensureSpace(30);
+        doc.setFillColor(...NAVY);
+        doc.rect(margin, y, contentWidth, 20, "F");
+        doc.setDrawColor(...GOLD);
+        doc.setLineWidth(1.2);
+        doc.line(margin, y + 20, margin + contentWidth, y + 20);
+        doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.2);
-        doc.setTextColor(40, 52, 62);
-        doc.text(label, x + 5, y + 12);
-        doc.setTextColor(20, 23, 30);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.1);
-        const lines = doc.splitTextToSize(value || "-", w - 12);
-        const startY = y + 24;
-        for (let i = 0; i < Math.min(2, lines.length); i += 1) {
-          doc.text(lines[i] || "", x + 5, startY + i * 10);
-        }
+        doc.setFontSize(9);
+        doc.text(title.toUpperCase(), margin + 8, y + 14, { charSpace: 0.5 });
+        y += 30;
       };
 
-      const drawLongBox = (
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        label: string,
-        value: string,
-      ) => {
-        doc.setDrawColor(150, 168, 184);
-        doc.roundedRect(x, y, w, h, 2, 2, "FD");
+      // Bordered field box with dynamic line capacity based on its own height — fixes
+      // both the fill-color leak (explicit white fill every time) and silent text
+      // clipping (line count now scales with box height instead of a hard cap of 2).
+      const fieldBox = (x: number, by: number, w: number, h: number, lbl: string, val: string) => {
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(...BORDER);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(x, by, w, h, 2, 2, "FD");
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(7.2);
-        doc.setTextColor(40, 52, 62);
-        doc.text(label, x + 5, y + 12);
+        doc.setFontSize(6.4);
+        doc.setTextColor(...MUTED);
+        doc.text(lbl.toUpperCase(), x + 7, by + 13, { charSpace: 0.4 });
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.1);
-        doc.setTextColor(20, 23, 30);
-        const lines = doc.splitTextToSize(value || "", w - 12);
-        for (let i = 0; i < Math.min(7, lines.length); i += 1) {
-          doc.text(lines[i] || "", x + 5, y + 24 + i * 9);
-        }
+        doc.setFontSize(8.6);
+        doc.setTextColor(...TEXT);
+        const maxLines = Math.max(1, Math.floor((h - 21) / 9.5));
+        const lines = doc.splitTextToSize(val || "—", w - 14);
+        doc.text(lines.slice(0, maxLines), x + 7, by + 24);
       };
 
-      const drawCheck = (x: number, y: number, checked: boolean, label: string) => {
-        doc.setDrawColor(100, 110, 124);
-        doc.rect(x, y, 10, 10);
-        if (checked) {
-          doc.line(x + 2, y + 2, x + 4, y + 7);
-          doc.line(x + 4, y + 7, x + 8, y + 2);
-        }
-        doc.setTextColor(20, 23, 30);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.1);
-        doc.text(label, x + 18, y + 8);
+      const fieldRow = (fields: { label: string; value: string; w: number }[], h = 36) => {
+        ensureSpace(h + 10);
+        let cx = margin;
+        fields.forEach((f) => {
+          fieldBox(cx, y, f.w, h, f.label, f.value);
+          cx += f.w + 8;
+        });
+        y += h + 10;
       };
 
-      drawHeader(1, "CARRIER RATE CONFIRMATION");
-      doc.setTextColor(60, 70, 80);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9.7);
-      doc.text(
-        "CONFIDENTIAL - RATE INFORMATION MAY NOT BE DISCLOSED EXCEPT AS REQUIRED BY LAW",
-        margin,
-        116,
-      );
-      let y = 132;
-      doc.setFillColor(228, 235, 242);
-      doc.rect(margin, y, contentWidth, 18, "F");
-      doc.setTextColor(24, 47, 70);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("LOAD AND CARRIER IDENTIFICATION", margin + 6, y + 12);
-      y += 22;
-      drawField(margin, y, contentWidth / 4 - 6, 32, "LOAD NO.", form.loadNo);
-      drawField(
-        margin + contentWidth / 4,
-        y,
-        contentWidth / 4 - 6,
-        32,
-        "CONFIRMATION DATE",
-        form.confirmationDate,
-      );
-      drawField(
-        margin + (contentWidth / 4) * 2,
-        y,
-        contentWidth / 4 - 6,
-        32,
-        "PO / REFERENCE",
-        form.poReference,
-      );
-      drawField(
-        margin + (contentWidth / 4) * 3 + 6,
-        y,
-        contentWidth / 4 - 12,
-        32,
-        "BROKER AGENT",
-        form.djfbAgent,
-      );
-      y += 42;
-      drawField(
-        margin,
-        y,
-        contentWidth / 2 - 8,
-        32,
-        "CARRIER LEGAL NAME (MUST MATCH FMCSA)",
-        form.carrierLegalName,
-      );
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        32,
-        "MC / USDOT",
-        form.carrierMcUsdot,
-      );
-      y += 42;
-      drawField(
-        margin,
-        y,
-        contentWidth / 2 - 8,
-        32,
-        "DISPATCHER / VERIFIED PHONE / EMAIL",
-        form.dispatcherContact,
-      );
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        32,
-        "FACTORING COMPANY (IF APPLICABLE)",
-        form.factoringCompany,
-      );
-      y += 42;
-      drawField(margin, y, contentWidth / 3 - 8, 32, "DRIVER NAME", form.driverName);
-      drawField(
-        margin + contentWidth / 3,
-        y,
-        contentWidth / 3 - 8,
-        32,
-        "DRIVER PHONE",
-        form.driverPhone,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y,
-        contentWidth / 3 - 16,
-        32,
-        "TRACTOR / TRAILER NO.",
-        form.tractorTrailerNo,
-      );
-      y += 52;
-      doc.setFillColor(228, 235, 242);
-      doc.rect(margin, y, contentWidth, 18, "F");
-      doc.setTextColor(24, 47, 70);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("PICKUP", margin + 6, y + 12);
-      y += 22;
-      drawField(margin, y, contentWidth / 2 - 8, 32, "FACILITY / SHIPPER", form.pickupFacility);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        32,
-        "CONTACT / PHONE / APPOINTMENT",
-        form.pickupContact,
-      );
-      y += 42;
-      drawField(margin, y, contentWidth, 32, "FULL ADDRESS", form.pickupAddress);
-      y += 40;
-      drawField(margin, y, contentWidth, 32, "DATE / TIME / TIME ZONE", form.pickupDateTime);
-      y += 52;
-      doc.setFillColor(228, 235, 242);
-      doc.rect(margin, y, contentWidth, 18, "F");
-      doc.setTextColor(24, 47, 70);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("DELIVERY", margin + 6, y + 12);
-      y += 22;
-      drawField(margin, y, contentWidth / 2 - 8, 32, "FACILITY / CONSIGNEE", form.deliveryFacility);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        32,
-        "CONTACT / PHONE / APPOINTMENT",
-        form.deliveryContact,
-      );
-      y += 42;
-      drawField(margin, y, contentWidth, 32, "FULL ADDRESS", form.deliveryAddress);
-      y += 40;
-      drawField(margin, y, contentWidth, 32, "DATE / TIME / TIME ZONE", form.deliveryDateTime);
-      y += 52;
-      doc.setFillColor(228, 235, 242);
-      doc.rect(margin, y, contentWidth, 18, "F");
-      doc.setTextColor(24, 47, 70);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("FREIGHT AND EQUIPMENT", margin + 6, y + 12);
-      y += 22;
-      drawField(
-        margin,
-        y,
-        contentWidth / 2 - 8,
-        32,
-        "COMMODITY / DESCRIPTION",
-        form.commodityDescription,
-      );
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        32,
-        "WEIGHT / PIECES",
-        form.weightPieces,
-      );
-      y += 42;
-      drawField(
-        margin,
-        y,
-        contentWidth / 3 - 8,
-        32,
-        "DECLARED CARGO VALUE",
-        form.declaredCargoValue,
-      );
-      drawField(
-        margin + contentWidth / 3,
-        y,
-        contentWidth / 3 - 8,
-        32,
-        "EQUIPMENT TYPE / SIZE",
-        form.equipmentType,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y,
-        contentWidth / 3 - 16,
-        32,
-        "TEMPERATURE / SECUREMENT",
-        form.temperatureSecurement,
-      );
-      y += 42;
-      drawField(margin, y, contentWidth / 2 - 8, 32, "SEAL / TRACKING REF.", form.sealTrackingRef);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        32,
-        "CONFIRMED RATE AND PAYMENT",
-        form.totalRate,
-      );
-      drawFooter();
-      doc.addPage();
+      // Auto-sized box for long free text — height grows with content instead of
+      // silently truncating at a fixed line count.
+      const longBox = (lbl: string, text: string, minLines = 2) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.6);
+        const lines = doc.splitTextToSize(text || "—", contentWidth - 14);
+        const lineCount = Math.max(lines.length, minLines);
+        const h = 24 + lineCount * 10.5;
+        ensureSpace(h + 10);
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(...BORDER);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, y, contentWidth, h, 2, 2, "FD");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.4);
+        doc.setTextColor(...MUTED);
+        doc.text(lbl.toUpperCase(), margin + 7, y + 13, { charSpace: 0.4 });
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.6);
+        doc.setTextColor(...TEXT);
+        doc.text(lines, margin + 7, y + 26);
+        y += h + 10;
+      };
 
-      drawHeader(2, "CARRIER TERMS - TRACKING, SECURITY & PERFORMANCE");
-      let y2 = 120;
-      const termsText =
-        "Active GPS tracking is a material condition of this shipment. Tracking must be activated before pickup and remain active through delivery. Carrier shall not rebroker, transfer, cross-dock, or substitute a driver or equipment without DJ's prior written approval. Failure to comply is a material breach and may result in cancellation, nonpayment where legally permitted, indemnification, and recovery of resulting losses. Safety instruction: tracking setup and updates must be completed while safely parked, never while driving. 1. AUTHORITY, IDENTITY AND INSURANCE Carrier warrants that its legal name, MC/USDOT number, dispatch contact, driver, tractor, and trailer information are accurate and match the carrier vetted by DJ's. Carrier will maintain active operating authority and all insurance required by law, the broker-carrier agreement, and this load through final delivery. Carrier must immediately disclose any authority, insurance, ownership, contact, or factoring change. 2. EXCLUSIVE CUSTODY AND NO SUBSTITUTION Carrier retains exclusive possession, control, and use of the equipment and assumes full responsibility for the freight from pickup through delivery. No trip lease, interchange, subcontracting, team/driver change, trailer swap, cross-dock, transload, storage, or other transfer is permitted without DJ's prior written approval. Approval of a change does not release Carrier from responsibility. 3. COMMUNICATION AND INCIDENT REPORTING Carrier must report arrival, loaded status, departure, location/status updates, delays, route deviations, OS&D, seal issues, accidents, theft, cargo exposure, temperature deviations, and delivery immediately. Emergencies must be reported to 911 first when appropriate, then to DJ's at (682) 552-3169. Carrier must preserve documents, photos, telematics, and other evidence relating to any incident. 4. CARGO, SEALS AND SECUREMENT Carrier and driver must inspect the trailer and visible cargo condition, verify counts when allowed, confirm load distribution and securement, record the seal, and note exceptions on the BOL before leaving pickup. Carrier may not break or replace a seal except as legally required or with prior written authorization; any required seal break must be documented immediately. 5. ACCESSORIALS, DETENTION AND ROUTE COSTS The total rate is all-inclusive except items expressly listed on page 1 or later approved in writing by DJ's. Accessorials require prior written approval and supporting receipts. Detention requires timely arrival, immediate notice at the start of delay, signed facility in/out times, and the free-time/rate stated in the special instructions or controlling agreement. Tolls, permits, fuel, parking, and ordinary operating costs are included unless stated otherwise. 6. DOCUMENTS AND PAYMENT Payment is conditioned on receipt of a correct carrier invoice, this accepted rate confirmation, signed BOL, clean POD, and all required receipts and shipment records. Documents should be submitted promptly to info@djsfreightbroker.com unless DJ's provides another written billing address. Quick Pay, if offered, is subject to separate approval and fees. Carrier may not change payment or factoring instructions without verified written documentation. 7. CUSTOMER SERVICE AND CARGO CLAIMS Carrier will perform safely, lawfully, and on schedule and will cooperate with reasonable cargo-claim investigation. Carrier remains responsible for loss, damage, delay, contamination, and theft to the extent imposed by applicable law and controlling contracts. No notation by a driver or facility waives DJ's or the customer's rights.";
-      const termLines = doc.splitTextToSize(termsText, contentWidth - 8);
-      doc.setTextColor(20, 24, 30);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.8);
-      doc.text(termLines, margin, y2);
-      drawFooter();
-      doc.addPage();
+      const checkRow = (items: [string, boolean][]) => {
+        ensureSpace(20);
+        let cx = margin;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.3);
+        items.forEach(([lbl, checked]) => {
+          doc.setDrawColor(...NAVY);
+          doc.setLineWidth(0.9);
+          doc.setFillColor(
+            checked ? NAVY[0] : 255,
+            checked ? NAVY[1] : 255,
+            checked ? NAVY[2] : 255,
+          );
+          doc.roundedRect(cx, y - 8, 10, 10, 1.5, 1.5, "FD");
+          if (checked) {
+            doc.setDrawColor(255, 255, 255);
+            doc.setLineWidth(1.3);
+            doc.line(cx + 2, y - 3, cx + 4.2, y - 0.6);
+            doc.line(cx + 4.2, y - 0.6, cx + 8, y - 7);
+          }
+          doc.setTextColor(...TEXT);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8.3);
+          doc.text(lbl, cx + 15, y);
+          cx += doc.getTextWidth(lbl) + 38;
+        });
+        y += 20;
+      };
 
-      drawHeader(3, "CARRIER TERMS - LEGAL, DOCUMENTS & ACCEPTANCE");
-      let y3 = 120;
-      const legalText =
-        " 8. INDEMNITY AND RECOVERY OF LOSS To the fullest extent permitted by law, Carrier will defend, indemnify, and hold harmless , the customer, and their personnel from claims, fines, penalties, liabilities, cargo loss, property damage, bodily injury, costs, and reasonable attorney fees arising from Carrier's or its personnel's acts, omissions, breach, regulatory violation, identity misrepresentation, unauthorized rebrokering, or unauthorized transfer. DJ's may offset documented amounts owed by Carrier against freight charges when permitted by law and controlling agreements. 9. BROKER ROLE; INDEPENDENT CONTRACTOR DJ's is a licensed property broker arranging transportation and is not the motor carrier, driver, employer, or warehouseman. Carrier is an independent contractor with exclusive control over its personnel and safe operation. Nothing in this rate confirmation creates an employment, agency, partnership, or joint-venture relationship. 10. CONTROLLING DOCUMENTS; NO UNILATERAL CHANGES This rate confirmation supplements the signed broker-carrier agreement. Load-specific rates, stops, dates, cargo, equipment, and special instructions in this document control for this load; the broker-carrier agreement controls general legal terms if a conflict exists. Carrier tariffs, invoices, BOL language, stamps, portals, or other unilateral terms do not amend DJ's obligations unless DJ's expressly agrees in writing. 11. ACCEPTANCE; ELECTRONIC RECORDS Carrier accepts this rate confirmation by signature, electronic acceptance, written confirmation, dispatch, or pickup after receiving it. Electronic signatures and records are enforceable to the same extent as originals. Carrier must notify DJ's in writing before pickup of any disagreement; silence followed by performance constitutes acceptance. 12. GOVERNING LAW; SEVERABILITY; NO WAIVER Except where federal law controls, Texas law applies, and venue lies in state or federal courts in Tarrant County, Texas. If any term is unenforceable, the remaining obligations remain enforceable. No waiver or course of dealing excuses a breach unless signed in writing by DJ's. 13. SIGNATURES AND VALIDATION By accepting this confirmation, Carrier confirms the rate, terms, and supporting load information, and authorizes DJ's to rely on the information provided for freight tendering and payment processing.";
+      const paragraph = (text: string, size = 7.8) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(size);
+        doc.setTextColor(...TEXT);
+        const lines = doc.splitTextToSize(text, contentWidth);
+        const lineH = size * 1.3;
+        lines.forEach((line: string) => {
+          ensureSpace(lineH + 2);
+          doc.text(line, margin, y);
+          y += lineH;
+        });
+        y += 4;
+      };
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.7);
-      doc.text(doc.splitTextToSize(legalText, contentWidth - 8), margin, y3);
-      y3 += 200;
-      drawLongBox(
-        margin,
-        y3,
-        contentWidth,
-        72,
-        "SPECIAL INSTRUCTIONS / STOP NOTES / DETENTION TERMS / CUSTOMER REQUIREMENTS",
+      const clause = (num: number, title: string, body: string) => {
+        ensureSpace(24);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.4);
+        doc.setTextColor(...NAVY);
+        doc.text(`${num}. ${title.toUpperCase()}`, margin, y);
+        y += 12;
+        paragraph(body);
+      };
+
+      // ---------- Page 1: load data ----------
+      drawHeader(false);
+
+      doc.setDrawColor(...GOLD);
+      doc.setLineWidth(1);
+      doc.roundedRect(margin, y, 330, 20, 3, 3, "D");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.4);
+      doc.setTextColor(...NAVY);
+      doc.text("CONFIDENTIAL — RATE INFORMATION PROTECTED BY LAW", margin + 10, y + 13, {
+        charSpace: 0.3,
+      });
+      y += 32;
+
+      sectionHeader("Load and Carrier Identification");
+      fieldRow([
+        { label: "Load No.", value: form.loadNo, w: contentWidth / 4 - 6 },
+        { label: "Confirmation Date", value: form.confirmationDate, w: contentWidth / 4 - 6 },
+        { label: "PO / Reference", value: form.poReference, w: contentWidth / 4 - 6 },
+        { label: "Broker Agent", value: form.djfbAgent, w: contentWidth / 4 - 6 },
+      ]);
+      fieldRow([
+        {
+          label: "Carrier Legal Name (must match FMCSA)",
+          value: form.carrierLegalName,
+          w: contentWidth / 2 - 4,
+        },
+        { label: "MC / USDOT", value: form.carrierMcUsdot, w: contentWidth / 2 - 4 },
+      ]);
+      fieldRow([
+        {
+          label: "Dispatcher / Verified Phone / Email",
+          value: form.dispatcherContact,
+          w: contentWidth / 2 - 4,
+        },
+        {
+          label: "Factoring Company (if applicable)",
+          value: form.factoringCompany,
+          w: contentWidth / 2 - 4,
+        },
+      ]);
+      fieldRow([
+        { label: "Driver Name", value: form.driverName, w: contentWidth / 3 - 6 },
+        { label: "Driver Phone", value: form.driverPhone, w: contentWidth / 3 - 6 },
+        { label: "Tractor / Trailer No.", value: form.tractorTrailerNo, w: contentWidth / 3 - 6 },
+      ]);
+
+      sectionHeader("Pickup");
+      fieldRow([
+        { label: "Facility / Shipper", value: form.pickupFacility, w: contentWidth / 2 - 4 },
+        {
+          label: "Contact / Phone / Appointment",
+          value: form.pickupContact,
+          w: contentWidth / 2 - 4,
+        },
+      ]);
+      fieldRow([{ label: "Full Address", value: form.pickupAddress, w: contentWidth }]);
+      fieldRow([{ label: "Date / Time / Time Zone", value: form.pickupDateTime, w: contentWidth }]);
+
+      sectionHeader("Delivery");
+      fieldRow([
+        { label: "Facility / Consignee", value: form.deliveryFacility, w: contentWidth / 2 - 4 },
+        {
+          label: "Contact / Phone / Appointment",
+          value: form.deliveryContact,
+          w: contentWidth / 2 - 4,
+        },
+      ]);
+      fieldRow([{ label: "Full Address", value: form.deliveryAddress, w: contentWidth }]);
+      fieldRow([
+        { label: "Date / Time / Time Zone", value: form.deliveryDateTime, w: contentWidth },
+      ]);
+
+      sectionHeader("Freight and Equipment");
+      fieldRow([
+        {
+          label: "Commodity / Description",
+          value: form.commodityDescription,
+          w: contentWidth / 2 - 4,
+        },
+        { label: "Weight / Pieces", value: form.weightPieces, w: contentWidth / 2 - 4 },
+      ]);
+      fieldRow([
+        { label: "Declared Cargo Value", value: form.declaredCargoValue, w: contentWidth / 3 - 6 },
+        { label: "Equipment Type / Size", value: form.equipmentType, w: contentWidth / 3 - 6 },
+        {
+          label: "Temperature / Securement",
+          value: form.temperatureSecurement,
+          w: contentWidth / 3 - 6,
+        },
+      ]);
+      fieldRow([{ label: "Seal / Tracking Ref.", value: form.sealTrackingRef, w: contentWidth }]);
+
+      sectionHeader("Confirmed Rate and Payment");
+      fieldRow([
+        { label: "Linehaul", value: form.linehaul, w: contentWidth / 5 - 6 },
+        { label: "Fuel", value: form.fuel, w: contentWidth / 5 - 6 },
+        {
+          label: "Pre-Approved Accessorial",
+          value: form.preApprovedAccessorial,
+          w: contentWidth / 5 - 6,
+        },
+        { label: "Other", value: form.other, w: contentWidth / 5 - 6 },
+        { label: "Total Rate", value: form.totalRate, w: contentWidth / 5 - 6 },
+      ]);
+      fieldRow([{ label: "Payment Terms", value: form.paymentTerms, w: contentWidth }]);
+      longBox("Rate Includes / Excludes", form.rateIncludesExcludes);
+
+      // ---------- Terms ----------
+      sectionHeader("Carrier Terms and Conditions");
+      paragraph(TERMS_INTRO);
+      TERMS_CLAUSES.forEach((c) => clause(c.num, c.title, c.body));
+
+      // ---------- Acceptance ----------
+      sectionHeader("Acceptance and Verification");
+      longBox(
+        "Special Instructions / Stop Notes / Detention Terms / Customer Requirements",
         form.specialInstructions,
+        3,
       );
-      y3 += 92;
-      drawField(margin, y3, contentWidth / 3 - 8, 28, "CARRIER INVOICE", "");
-      drawField(margin + contentWidth / 3, y3, contentWidth / 3 - 8, 28, "SIGNED BOL", "");
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y3,
-        contentWidth / 3 - 16,
-        28,
-        "CLEAN POD",
-        "",
-      );
-      y3 += 42;
-      drawField(
-        margin,
-        y3,
-        contentWidth / 2 - 8,
-        28,
-        "AUTHORIZATION AND ACCEPTANCE",
-        form.carrierSignatureName,
-      );
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y3,
-        contentWidth / 2 - 16,
-        28,
-        "BROKER SIGNATURE / TYPED NAME",
-        form.brokerSignatureName,
-      );
-      y3 += 42;
-      drawField(margin, y3, contentWidth / 2 - 8, 28, "DATE / TIME", form.carrierDateTime);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y3,
-        contentWidth / 2 - 16,
-        28,
-        "BROKER REPRESENTATIVE / TITLE",
-        form.brokerRepresentativeTitle,
-      );
-      y3 += 52;
-      drawCheck(margin, y3, form.authorityActive, "Authority active");
-      drawCheck(margin + 160, y3, form.coiVerified, "COI active / official");
-      drawCheck(margin + 330, y3, form.agreementAndW9, "Agreement + W-9");
-      y3 += 18;
-      drawCheck(margin, y3, form.phoneVerified, "Phone/email verified");
-      drawCheck(margin + 160, y3, form.driverEquipmentVerified, "Driver/equipment verified");
+      longBox("Other Required Documents / Submission Deadline", form.otherRequiredDocuments);
+      fieldRow([
+        {
+          label: "Authorization and Acceptance",
+          value: form.carrierSignatureName,
+          w: contentWidth / 2 - 4,
+        },
+        {
+          label: "Broker Signature / Typed Name",
+          value: form.brokerSignatureName,
+          w: contentWidth / 2 - 4,
+        },
+      ]);
+      fieldRow([
+        { label: "Date / Time", value: form.carrierDateTime, w: contentWidth / 2 - 4 },
+        {
+          label: "Broker Representative / Title",
+          value: form.brokerRepresentativeTitle,
+          w: contentWidth / 2 - 4,
+        },
+      ]);
+      checkRow([
+        ["Authority active", form.authorityActive],
+        ["COI active / official", form.coiVerified],
+        ["Agreement + W-9", form.agreementAndW9],
+      ]);
+      checkRow([
+        ["Phone/email verified", form.phoneVerified],
+        ["Driver/equipment verified", form.driverEquipmentVerified],
+      ]);
+
       drawFooter();
 
-      doc.save("Carrier_Rate_Confirmation.pdf");
+      // Stamp final page numbers now that the true page count is known — replaces
+      // the old hardcoded "Page X of 3", which broke as soon as content reflowed.
+      const totalPages = doc.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p += 1) {
+        doc.setPage(p);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.3);
+        doc.setTextColor(...MUTED);
+        doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, 94, { align: "right" });
+      }
+
+      doc.save(`Rate_Confirmation_${form.loadNo || "DJFB"}.pdf`);
     } catch (error) {
       console.error(error);
       alert(
@@ -545,6 +637,8 @@ function CarrierRateConfirmationPage() {
     }
   };
 
+  const hasErrors = Object.values(errors).some(Boolean);
+
   return (
     <div className="space-y-5">
       <PageHeader
@@ -552,8 +646,17 @@ function CarrierRateConfirmationPage() {
         description="Carrier pricing acceptance and legal terms."
       />
 
-      <div className="flex justify-end">
-        <Button type="button" onClick={generatePDF} disabled={isGenerating}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {hasErrors ? (
+          <Alert variant="destructive" className="sm:flex-1">
+            <AlertCircle className="size-4" />
+            <AlertTitle>Missing required fields</AlertTitle>
+            <AlertDescription>{Object.values(errors).filter(Boolean).join(" ")}</AlertDescription>
+          </Alert>
+        ) : (
+          <div />
+        )}
+        <Button type="button" onClick={generatePDF} disabled={isGenerating} className="shrink-0">
           <FileDown className="mr-2 size-4" />
           {isGenerating ? "Generating..." : "Generate PDF"}
         </Button>
@@ -561,33 +664,34 @@ function CarrierRateConfirmationPage() {
 
       <div className="space-y-5">
         <Card className={sectionClass}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold text-blue-900">
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <IdCard className="size-4 text-slate-500" />
+            <CardTitle className="text-lg font-bold text-slate-900">
               Load and Carrier Identification
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Field label="LOAD NO." error={errors.loadNo}>
+              <Field label="Load No." required error={errors.loadNo}>
                 <Input
                   value={form.loadNo}
                   onChange={(e) => updateField("loadNo", e.target.value)}
                 />
               </Field>
-              <Field label="CONFIRMATION DATE">
+              <Field label="Confirmation Date">
                 <Input
                   type="date"
                   value={form.confirmationDate}
                   onChange={(e) => updateField("confirmationDate", e.target.value)}
                 />
               </Field>
-              <Field label="PO / REFERENCE">
+              <Field label="PO / Reference">
                 <Input
                   value={form.poReference}
                   onChange={(e) => updateField("poReference", e.target.value)}
                 />
               </Field>
-              <Field label="BROKER AGENT">
+              <Field label="Broker Agent">
                 <Input
                   value={form.djfbAgent}
                   onChange={(e) => updateField("djfbAgent", e.target.value)}
@@ -595,7 +699,11 @@ function CarrierRateConfirmationPage() {
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="CARRIER LEGAL NAME (MUST MATCH FMCSA)" error={errors.carrierLegalName}>
+              <Field
+                label="Carrier Legal Name (must match FMCSA)"
+                required
+                error={errors.carrierLegalName}
+              >
                 <Input
                   value={form.carrierLegalName}
                   onChange={(e) => updateField("carrierLegalName", e.target.value)}
@@ -609,13 +717,13 @@ function CarrierRateConfirmationPage() {
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="DISPATCHER / VERIFIED PHONE / EMAIL">
+              <Field label="Dispatcher / Verified Phone / Email">
                 <Input
                   value={form.dispatcherContact}
                   onChange={(e) => updateField("dispatcherContact", e.target.value)}
                 />
               </Field>
-              <Field label="FACTORING COMPANY (IF APPLICABLE)">
+              <Field label="Factoring Company (if applicable)">
                 <Input
                   value={form.factoringCompany}
                   onChange={(e) => updateField("factoringCompany", e.target.value)}
@@ -623,19 +731,19 @@ function CarrierRateConfirmationPage() {
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <Field label="DRIVER NAME">
+              <Field label="Driver Name">
                 <Input
                   value={form.driverName}
                   onChange={(e) => updateField("driverName", e.target.value)}
                 />
               </Field>
-              <Field label="DRIVER PHONE">
+              <Field label="Driver Phone">
                 <Input
                   value={form.driverPhone}
                   onChange={(e) => updateField("driverPhone", e.target.value)}
                 />
               </Field>
-              <Field label="TRACTOR / TRAILER NO.">
+              <Field label="Tractor / Trailer No.">
                 <Input
                   value={form.tractorTrailerNo}
                   onChange={(e) => updateField("tractorTrailerNo", e.target.value)}
@@ -646,59 +754,69 @@ function CarrierRateConfirmationPage() {
         </Card>
 
         <Card className={sectionClass}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold text-blue-900">Pickup and Delivery</CardTitle>
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <MapPin className="size-4 text-slate-500" />
+            <CardTitle className="text-lg font-bold text-slate-900">Pickup</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="PICKUP FACILITY / SHIPPER">
+              <Field label="Facility / Shipper">
                 <Input
                   value={form.pickupFacility}
                   onChange={(e) => updateField("pickupFacility", e.target.value)}
                 />
               </Field>
-              <Field label="PICKUP CONTACT / PHONE / APPOINTMENT">
+              <Field label="Contact / Phone / Appointment">
                 <Input
                   value={form.pickupContact}
                   onChange={(e) => updateField("pickupContact", e.target.value)}
                 />
               </Field>
             </div>
-            <Field label="PICKUP FULL ADDRESS">
+            <Field label="Full Address" required error={errors.pickupAddress}>
               <Textarea
                 value={form.pickupAddress}
                 onChange={(e) => updateField("pickupAddress", e.target.value)}
                 className="min-h-20"
               />
             </Field>
-            <Field label="PICKUP DATE / TIME / TIME ZONE">
+            <Field label="Date / Time / Time Zone">
               <Input
                 value={form.pickupDateTime}
                 onChange={(e) => updateField("pickupDateTime", e.target.value)}
               />
             </Field>
+          </CardContent>
+        </Card>
+
+        <Card className={sectionClass}>
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <MapPinCheck className="size-4 text-slate-500" />
+            <CardTitle className="text-lg font-bold text-slate-900">Delivery</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="DELIVERY FACILITY / CONSIGNEE">
+              <Field label="Facility / Consignee">
                 <Input
                   value={form.deliveryFacility}
                   onChange={(e) => updateField("deliveryFacility", e.target.value)}
                 />
               </Field>
-              <Field label="DELIVERY CONTACT / PHONE / APPOINTMENT">
+              <Field label="Contact / Phone / Appointment">
                 <Input
                   value={form.deliveryContact}
                   onChange={(e) => updateField("deliveryContact", e.target.value)}
                 />
               </Field>
             </div>
-            <Field label="DELIVERY FULL ADDRESS">
+            <Field label="Full Address" required error={errors.deliveryAddress}>
               <Textarea
                 value={form.deliveryAddress}
                 onChange={(e) => updateField("deliveryAddress", e.target.value)}
                 className="min-h-20"
               />
             </Field>
-            <Field label="DELIVERY DATE / TIME / TIME ZONE">
+            <Field label="Date / Time / Time Zone">
               <Input
                 value={form.deliveryDateTime}
                 onChange={(e) => updateField("deliveryDateTime", e.target.value)}
@@ -708,19 +826,22 @@ function CarrierRateConfirmationPage() {
         </Card>
 
         <Card className={sectionClass}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold text-blue-900">Freight and Equipment</CardTitle>
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <Package className="size-4 text-slate-500" />
+            <CardTitle className="text-lg font-bold text-slate-900">
+              Freight and Equipment
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="COMMODITY / DESCRIPTION" error={errors.commodityDescription}>
+              <Field label="Commodity / Description" required error={errors.commodityDescription}>
                 <Textarea
                   value={form.commodityDescription}
                   onChange={(e) => updateField("commodityDescription", e.target.value)}
                   className="min-h-20"
                 />
               </Field>
-              <Field label="WEIGHT / PIECES">
+              <Field label="Weight / Pieces">
                 <Input
                   value={form.weightPieces}
                   onChange={(e) => updateField("weightPieces", e.target.value)}
@@ -728,26 +849,26 @@ function CarrierRateConfirmationPage() {
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <Field label="DECLARED CARGO VALUE">
+              <Field label="Declared Cargo Value">
                 <Input
                   value={form.declaredCargoValue}
                   onChange={(e) => updateField("declaredCargoValue", e.target.value)}
                 />
               </Field>
-              <Field label="EQUIPMENT TYPE / SIZE">
+              <Field label="Equipment Type / Size">
                 <Input
                   value={form.equipmentType}
                   onChange={(e) => updateField("equipmentType", e.target.value)}
                 />
               </Field>
-              <Field label="TEMPERATURE / SECUREMENT">
+              <Field label="Temperature / Securement">
                 <Input
                   value={form.temperatureSecurement}
                   onChange={(e) => updateField("temperatureSecurement", e.target.value)}
                 />
               </Field>
             </div>
-            <Field label="SEAL / TRACKING REF.">
+            <Field label="Seal / Tracking Ref.">
               <Input
                 value={form.sealTrackingRef}
                 onChange={(e) => updateField("sealTrackingRef", e.target.value)}
@@ -757,46 +878,53 @@ function CarrierRateConfirmationPage() {
         </Card>
 
         <Card className={sectionClass}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold text-blue-900">
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <DollarSign className="size-4 text-slate-500" />
+            <CardTitle className="text-lg font-bold text-slate-900">
               Confirmed Rate and Payment
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-5">
-              <Field label="LINEHAUL">
+              <Field label="Linehaul">
                 <Input
                   value={form.linehaul}
                   onChange={(e) => updateField("linehaul", e.target.value)}
                 />
               </Field>
-              <Field label="FUEL">
+              <Field label="Fuel">
                 <Input value={form.fuel} onChange={(e) => updateField("fuel", e.target.value)} />
               </Field>
-              <Field label="PRE-APPROVED ACCESSORIAL">
+              <Field label="Pre-Approved Accessorial">
                 <Input
                   value={form.preApprovedAccessorial}
                   onChange={(e) => updateField("preApprovedAccessorial", e.target.value)}
                 />
               </Field>
-              <Field label="OTHER">
+              <Field label="Other">
                 <Input value={form.other} onChange={(e) => updateField("other", e.target.value)} />
               </Field>
-              <Field label="TOTAL RATE" error={errors.totalRate}>
+              <Field label="Total Rate" required error={errors.totalRate}>
                 <Input
                   value={form.totalRate}
                   onChange={(e) => updateField("totalRate", e.target.value)}
                 />
               </Field>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Linehaul + Fuel + Accessorial + Other = {money(computedRateTotal)}
+              {Math.abs(computedRateTotal - parseCurrency(form.totalRate)) > 0.01
+                ? ` (doesn't match Total Rate — double-check before sending)`
+                : ""}
+            </p>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="PAYMENT TERMS">
+              <Field label="Payment Terms">
                 <Input
                   value={form.paymentTerms}
                   onChange={(e) => updateField("paymentTerms", e.target.value)}
                 />
               </Field>
-              <Field label="RATE INCLUDES / EXCLUDES">
+              <Field label="Rate Includes / Excludes">
                 <Textarea
                   value={form.rateIncludesExcludes}
                   onChange={(e) => updateField("rateIncludesExcludes", e.target.value)}
@@ -808,20 +936,21 @@ function CarrierRateConfirmationPage() {
         </Card>
 
         <Card className={sectionClass}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-bold text-blue-900">
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <ShieldCheck className="size-4 text-slate-500" />
+            <CardTitle className="text-lg font-bold text-slate-900">
               Acceptance and Verification
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Field label="SPECIAL INSTRUCTIONS / STOP NOTES / DETENTION TERMS / CUSTOMER REQUIREMENTS">
+            <Field label="Special Instructions / Stop Notes / Detention Terms / Customer Requirements">
               <Textarea
                 value={form.specialInstructions}
                 onChange={(e) => updateField("specialInstructions", e.target.value)}
                 className="min-h-28"
               />
             </Field>
-            <Field label="OTHER REQUIRED DOCUMENTS / SUBMISSION DEADLINE">
+            <Field label="Other Required Documents / Submission Deadline">
               <Textarea
                 value={form.otherRequiredDocuments}
                 onChange={(e) => updateField("otherRequiredDocuments", e.target.value)}
@@ -829,19 +958,19 @@ function CarrierRateConfirmationPage() {
               />
             </Field>
             <div className="grid gap-4 md:grid-cols-3">
-              <Field label="BROKER REPRESENTATIVE / TITLE">
+              <Field label="Broker Representative / Title">
                 <Input
                   value={form.brokerRepresentativeTitle}
                   onChange={(e) => updateField("brokerRepresentativeTitle", e.target.value)}
                 />
               </Field>
-              <Field label="BROKER SIGNATURE / TYPED NAME">
+              <Field label="Broker Signature / Typed Name">
                 <Input
                   value={form.brokerSignatureName}
                   onChange={(e) => updateField("brokerSignatureName", e.target.value)}
                 />
               </Field>
-              <Field label="DATE / TIME">
+              <Field label="Date / Time">
                 <Input
                   type="datetime-local"
                   value={form.brokerDateTime}
@@ -850,19 +979,19 @@ function CarrierRateConfirmationPage() {
               </Field>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              <Field label="CARRIER REPRESENTATIVE / TITLE">
+              <Field label="Carrier Representative / Title">
                 <Input
                   value={form.carrierRepresentativeTitle}
                   onChange={(e) => updateField("carrierRepresentativeTitle", e.target.value)}
                 />
               </Field>
-              <Field label="CARRIER SIGNATURE / TYPED NAME">
+              <Field label="Carrier Signature / Typed Name">
                 <Input
                   value={form.carrierSignatureName}
                   onChange={(e) => updateField("carrierSignatureName", e.target.value)}
                 />
               </Field>
-              <Field label="DATE / TIME">
+              <Field label="Date / Time">
                 <Input
                   type="datetime-local"
                   value={form.carrierDateTime}
@@ -900,16 +1029,25 @@ function CarrierRateConfirmationPage() {
           </CardContent>
         </Card>
       </div>
+
+      <div className="flex justify-end">
+        <Button type="button" onClick={generatePDF} disabled={isGenerating}>
+          <FileDown className="mr-2 size-4" />
+          {isGenerating ? "Generating..." : "Generate PDF"}
+        </Button>
+      </div>
     </div>
   );
 }
 
 function Field({
   label,
+  required,
   error,
   children,
 }: {
   label: string;
+  required?: boolean;
   error?: string;
   children: React.ReactNode;
 }) {
@@ -917,6 +1055,7 @@ function Field({
     <label className="block space-y-1.5 text-left">
       <span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
         {label}
+        {required ? <span className="ml-0.5 text-red-500">*</span> : null}
       </span>
       {children}
       {error ? <span className="text-xs text-red-600">{error}</span> : null}
