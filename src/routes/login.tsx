@@ -84,7 +84,7 @@ function LoginPage() {
     <AuthLayout>
       {/* Header */}
       <div className="mb-7">
-        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--plum-500)]/30 bg-[var(--plum-500)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-cta-bg)]">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-brand)]/20 bg-[var(--color-brand)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-brand)]">
           <span className="relative flex size-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60" />
             <span className="relative inline-flex size-1.5 rounded-full bg-current" />
@@ -178,7 +178,7 @@ function LoginPage() {
           type="submit"
           disabled={submitting}
           aria-busy={submitting}
-          className="group h-11 w-full bg-gradient-to-r from-[var(--plum-600)] to-[var(--plum-400)] text-white shadow-[0_8px_24px_color-mix(in_oklab,var(--plum-500)_30%,transparent)] transition-all hover:shadow-[0_10px_32px_color-mix(in_oklab,var(--plum-500)_40%,transparent)] hover:brightness-110 active:scale-[0.99]"
+          className="group h-11 w-full bg-[var(--color-cta-bg)] text-[var(--color-cta-text)] shadow-[0_8px_24px_color-mix(in_oklab,var(--color-cta-bg)_30%,transparent)] transition-all hover:bg-[var(--color-cta-bg-hover)] hover:shadow-[0_10px_32px_color-mix(in_oklab,var(--color-cta-bg)_40%,transparent)] active:scale-[0.99]"
         >
           {submitting ? (
             <>
