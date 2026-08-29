@@ -597,7 +597,7 @@ function SidebarBrand({
               {companyName}
             </div>
             <div className="truncate text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/50">
-              Agent Portal hii
+              Agent Portal
             </div>
           </div>
         </div>
