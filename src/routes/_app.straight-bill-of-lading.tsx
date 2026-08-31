@@ -284,602 +284,555 @@ function StraightBillOfLadingPage() {
       const doc = new jsPDF({ unit: "pt", format: "letter" });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 36;
+      const margin = 40;
       const contentWidth = pageWidth - margin * 2;
-      const safeBottom = pageHeight - 54;
+      const safeBottom = pageHeight - 56;
+      const contentTop = 138;
 
-      const drawHeader = (title: string) => {
-        const leftX = margin;
-        const topY = 24;
+      // ---------------------------------------------------------------- //
+      // Design system — a quiet, premium "ledger" aesthetic: serif titles,
+      // hairline rules instead of filled boxes, one restrained gold accent,
+      // generous whitespace. Helvetica carries the data, Times carries the
+      // title/legal voice.
+      // ---------------------------------------------------------------- //
+      const NAVY: [number, number, number] = [16, 30, 46];
+      const CHARCOAL: [number, number, number] = [32, 41, 51];
+      const MUTED: [number, number, number] = [107, 120, 137];
+      const HAIRLINE: [number, number, number] = [210, 216, 224];
+      const HAIRLINE_SOFT: [number, number, number] = [231, 234, 239];
+      const GOLD: [number, number, number] = [163, 130, 76];
+      const ZEBRA: [number, number, number] = [248, 248, 246];
+      const NOTICE_BG: [number, number, number] = [250, 248, 243];
+      const DANGER: [number, number, number] = [140, 32, 32];
 
-        doc.setFillColor(12, 28, 47);
-        doc.roundedRect(leftX, topY, 96, 40, 5, 5, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(21);
-        doc.text("BROKER", leftX + 15, topY + 25);
+      const setText = (c: [number, number, number]) => doc.setTextColor(c[0], c[1], c[2]);
+      const setDraw = (c: [number, number, number]) => doc.setDrawColor(c[0], c[1], c[2]);
+      const setFill = (c: [number, number, number]) => doc.setFillColor(c[0], c[1], c[2]);
 
-        doc.setTextColor(22, 49, 76);
-        doc.setFont("helvetica", "bold");
+      const initials =
+        portalCompanyName
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((w) => w[0]?.toUpperCase() ?? "")
+          .join("") || "B";
+
+      const drawHeader = (title: string, subtitle?: string) => {
+        setDraw(GOLD);
+        doc.setLineWidth(2);
+        doc.line(margin, 18, pageWidth - margin, 18);
+
+        const topY = 34;
+
+        setDraw(NAVY);
+        doc.setLineWidth(1);
+        doc.rect(margin, topY, 36, 36);
+        doc.setFont("times", "bold");
+        doc.setFontSize(16);
+        setText(NAVY);
+        doc.text(initials, margin + 18, topY + 24, { align: "center" });
+
+        const textX = margin + 50;
+        doc.setFont("times", "bold");
         doc.setFontSize(15);
-        doc.text(portalCompanyName, leftX + 118, topY + 15);
+        setText(NAVY);
+        doc.text(portalCompanyName, textX, topY + 11);
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.2);
-        doc.text(BROKER_ADDRESS, leftX + 118, topY + 28);
-        doc.text(`${BROKER_PHONE} | ${BROKER_EMAIL} | ${BROKER_WEBSITE}`, leftX + 118, topY + 39);
-
-        doc.setDrawColor(151, 172, 190);
-        doc.setLineWidth(0.8);
-        doc.line(margin, topY + 53, pageWidth - margin, topY + 53);
-
-        doc.setTextColor(24, 38, 54);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.text(title, margin, 86);
+        doc.setFontSize(7);
+        setText(GOLD);
+        doc.text("LICENSED PROPERTY BROKER", textX, topY + 20);
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.1);
-        doc.setTextColor(86, 96, 108);
+        doc.setFontSize(7.4);
+        setText(MUTED);
+        doc.text(BROKER_ADDRESS, textX, topY + 29);
+        doc.text(`${BROKER_PHONE}  ·  ${BROKER_EMAIL}  ·  ${BROKER_WEBSITE}`, textX, topY + 38);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.6);
+        setText(MUTED);
+        doc.text(`BOL ${form.bolNo || "—"}`, pageWidth - margin, topY + 6, { align: "right" });
+        doc.text(DOCUMENT_REVISION, pageWidth - margin, topY + 15, { align: "right" });
+        doc.text(`Effective ${formatDate(form.dateIssued)}`, pageWidth - margin, topY + 24, {
+          align: "right",
+        });
+
+        const ruleY = topY + 48;
+        setDraw(HAIRLINE);
+        doc.setLineWidth(0.75);
+        doc.line(margin, ruleY, pageWidth - margin, ruleY);
+        setDraw(GOLD);
+        doc.setLineWidth(1.5);
+        doc.line(margin, ruleY, margin + 54, ruleY);
+
+        doc.setFont("times", "bold");
+        doc.setFontSize(14.5);
+        setText(NAVY);
+        doc.text(title, margin, ruleY + 22);
+
+        if (subtitle) {
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7.6);
+          setText(GOLD);
+          doc.text(subtitle.toUpperCase(), margin, ruleY + 32);
+        }
+      };
+
+      const drawFooter = () => {
+        setDraw(HAIRLINE_SOFT);
+        doc.setLineWidth(0.5);
+        doc.line(margin, pageHeight - 36, pageWidth - margin, pageHeight - 36);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        setText(MUTED);
         doc.text(
-          `${form.bolNo || "BOL"} | ${DOCUMENT_REVISION} | Effective ${formatDate(form.dateIssued)}`,
+          `FMCSA PROPERTY BROKER  ·  ${BROKER_MC_NUMBER}  ·  ${BROKER_USDOT_NUMBER}`,
+          margin,
+          pageHeight - 24,
+        );
+        doc.text(
+          "CONTROLLED TEMPLATE — VERIFY CURRENT REVISION",
           pageWidth - margin,
-          86,
+          pageHeight - 24,
           { align: "right" },
         );
       };
 
-      const drawFooter = () => {
-        doc.setTextColor(40, 52, 62);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7.4);
-        doc.text(
-          `FMCSA PROPERTY BROKER | ${BROKER_MC_NUMBER} | ${BROKER_USDOT_NUMBER}`,
-          margin,
-          pageHeight - 18,
-        );
-        doc.text(
-          "CONTROLLED TEMPLATE | Verify current revision",
-          pageWidth - margin,
-          pageHeight - 18,
-          {
-            align: "right",
-          },
-        );
-      };
-
-      let pageNumber = 1;
-
-      const newPage = (title: string) => {
+      const newPage = (title: string, subtitle?: string) => {
         drawFooter();
         doc.addPage();
-        pageNumber += 1;
-        drawHeader(title);
-        return 110;
+        drawHeader(title, subtitle);
+        return contentTop;
       };
 
       // Ensures the next block of `neededHeight` fits before the footer; if
-      // not, starts a continuation page automatically instead of overflowing
-      // (previous version had no protection here, so extra freight rows or
-      // long free-text fields could silently run off the bottom of the page).
-      const ensureSpace = (currentY: number, neededHeight: number, continuationTitle: string) => {
+      // not, starts a continuation page automatically instead of overflowing.
+      const ensureSpace = (
+        currentY: number,
+        neededHeight: number,
+        continuationTitle: string,
+        continuationSubtitle = "Continued",
+      ) => {
         if (currentY + neededHeight > safeBottom) {
-          return newPage(continuationTitle);
+          return newPage(continuationTitle, continuationSubtitle);
         }
         return currentY;
+      };
+
+      const sectionHeading = (label: string, x: number, y: number, width: number) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.3);
+        setText(NAVY);
+        doc.text(label.toUpperCase(), x, y);
+        setDraw(GOLD);
+        doc.setLineWidth(1.3);
+        doc.line(x, y + 4, x + 22, y + 4);
+        setDraw(HAIRLINE_SOFT);
+        doc.setLineWidth(0.5);
+        doc.line(x + 26, y + 4, x + width, y + 4);
       };
 
       const drawField = (
         x: number,
         y: number,
         w: number,
-        h: number,
         label: string,
         value: string,
-        labelSize = 7,
+        align: "left" | "right" = "left",
       ) => {
-        doc.setDrawColor(204, 214, 224);
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(x, y, w, h, 2, 2, "FD");
-        doc.setTextColor(40, 52, 62);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(labelSize);
-        doc.text(label, x + 5, y + 12);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.4);
-        doc.setTextColor(18, 23, 32);
-        const text = value || "";
-        const lines = doc.splitTextToSize(text, w - 12);
-        const lineHeight = 9;
-        const startY = y + 22;
-        const maxLines = Math.max(1, Math.min(3, lines.length));
+        doc.setFontSize(6.6);
+        setText(MUTED);
+        doc.text(label.toUpperCase(), align === "right" ? x + w : x, y, {
+          align: align === "right" ? "right" : "left",
+        });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        setText(CHARCOAL);
+        const lines = doc.splitTextToSize(value || "—", w);
+        const maxLines = Math.max(1, Math.min(2, lines.length));
         for (let i = 0; i < maxLines; i += 1) {
-          doc.text(lines[i] || "", x + 5, startY + i * lineHeight);
+          doc.text(lines[i] || "", align === "right" ? x + w : x, y + 15 + i * 10, {
+            align: align === "right" ? "right" : "left",
+          });
         }
-      };
 
-      const drawCheck = (x: number, y: number, checked: boolean) => {
-        doc.setDrawColor(125, 136, 147);
-        doc.rect(x, y, 10, 10);
-        if (checked) {
-          doc.setDrawColor(20, 31, 47);
-          doc.line(x + 2, y + 5, x + 4, y + 7);
-          doc.line(x + 4, y + 7, x + 8, y + 3);
-        }
-      };
-
-      const drawSectionHeading = (label: string, x: number, y: number, width: number) => {
-        doc.setFillColor(235, 241, 247);
-        doc.roundedRect(x, y, width, 18, 2, 2, "F");
-        doc.setTextColor(17, 39, 61);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10.6);
-        doc.text(label, x + 6, y + 12);
+        setDraw(HAIRLINE);
+        doc.setLineWidth(0.6);
+        doc.line(x, y + 24, x + w, y + 24);
       };
 
       const drawLongBox = (
         x: number,
         y: number,
-        width: number,
-        height: number,
+        w: number,
+        h: number,
         label: string,
         value: string,
       ) => {
-        doc.setDrawColor(151, 171, 193);
-        doc.setFillColor(248, 250, 252);
-        doc.roundedRect(x, y, width, height, 0, 0, "FD");
+        setDraw(HAIRLINE);
+        doc.setLineWidth(0.75);
+        doc.rect(x, y, w, h);
         if (label) {
-          doc.setTextColor(41, 50, 70);
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(7.5);
-          doc.text(label, x + 5, y + 13);
+          doc.setFontSize(6.8);
+          setText(MUTED);
+          doc.text(label.toUpperCase(), x + 8, y + 13);
         }
-        doc.setTextColor(18, 23, 32);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.2);
-        const text = doc.splitTextToSize(value || "", width - 12);
-        text.forEach((line: string, idx: number) => {
-          doc.text(line, x + 5, y + 23 + idx * 10);
+        doc.setFontSize(8.5);
+        setText(CHARCOAL);
+        const lines = doc.splitTextToSize(value || "—", w - 16);
+        lines.forEach((line: string, idx: number) => {
+          doc.text(line, x + 8, y + (label ? 25 : 14) + idx * 11);
         });
       };
 
-      // ---------------------------------------------------------------- //
-      // Page 1
-      // ---------------------------------------------------------------- //
-      drawHeader("STRAIGHT BILL OF LADING - NON-NEGOTIABLE");
+      const drawCheck = (x: number, y: number, checked: boolean, label: string) => {
+        setDraw(NAVY);
+        doc.setLineWidth(0.8);
+        doc.rect(x, y, 9, 9);
+        if (checked) {
+          setDraw(GOLD);
+          doc.setLineWidth(1.3);
+          doc.line(x + 1.5, y + 5, x + 3.5, y + 7.5);
+          doc.line(x + 3.5, y + 7.5, x + 7.5, y + 2);
+        }
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.3);
+        setText(CHARCOAL);
+        doc.text(label, x + 16, y + 8);
+      };
 
-      let y = 110;
-      drawSectionHeading("SHIPMENT IDENTIFICATION", margin, y, contentWidth);
+      const drawRadio = (
+        x: number,
+        y: number,
+        selected: boolean,
+        label: string,
+        danger = false,
+      ) => {
+        setDraw(NAVY);
+        doc.setLineWidth(0.8);
+        doc.circle(x, y, 4.5, "S");
+        if (selected) {
+          setFill(danger ? DANGER : GOLD);
+          doc.circle(x, y, 2.1, "F");
+        }
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.3);
+        setText(danger && selected ? DANGER : CHARCOAL);
+        doc.text(label, x + 12, y + 3);
+      };
+
+      // ---------------------------------------------------------------- //
+      // Page 1 — Shipment identification & freight description
+      // ---------------------------------------------------------------- //
+      drawHeader("Straight Bill of Lading", "Non-Negotiable");
+      let y = contentTop;
+
+      sectionHeading("Shipment Identification", margin, y, contentWidth);
       y += 24;
-
-      drawField(margin, y, contentWidth / 4 - 6, 28, "LOAD NO.", form.loadNo);
-      drawField(margin + contentWidth / 4, y, contentWidth / 4 - 6, 28, "BOL NO.", form.bolNo);
+      const quarter = contentWidth / 4;
+      drawField(margin, y, quarter - 10, "Load No.", form.loadNo);
+      drawField(margin + quarter, y, quarter - 10, "BOL No.", form.bolNo);
       drawField(
-        margin + (contentWidth / 4) * 2,
+        margin + quarter * 2,
         y,
-        contentWidth / 4 - 6,
-        28,
-        "CUSTOMER PO / REFERENCE",
+        quarter - 10,
+        "Customer PO / Reference",
         form.customerReference,
       );
-      drawField(
-        margin + (contentWidth / 4) * 3 + 6,
-        y,
-        contentWidth / 4 - 12,
-        28,
-        "DATE ISSUED",
-        formatDate(form.dateIssued),
-      );
-      y += 38;
+      drawField(margin + quarter * 3, y, quarter, "Date Issued", formatDate(form.dateIssued));
+      y += 36;
 
+      const third = contentWidth / 3;
       drawField(
         margin,
         y,
-        contentWidth / 3 - 8,
-        28,
-        "PICKUP DATE / TIME / TIME ZONE",
-        `${form.pickupDate} ${form.pickupTime} ${form.pickupTimezone}`.trim(),
+        third - 10,
+        "Pickup Date / Time / Zone",
+        `${formatDate(form.pickupDate)}  ${form.pickupTime}  ${form.pickupTimezone}`.trim(),
       );
       drawField(
-        margin + contentWidth / 3,
+        margin + third,
         y,
-        contentWidth / 3 - 8,
-        28,
-        "DELIVERY DATE / TIME / TIME ZONE",
-        `${form.deliveryDate} ${form.deliveryTime} ${form.deliveryTimezone}`.trim(),
+        third - 10,
+        "Delivery Date / Time / Zone",
+        `${formatDate(form.deliveryDate)}  ${form.deliveryTime}  ${form.deliveryTimezone}`.trim(),
       );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y,
-        contentWidth / 3 - 16,
-        28,
-        "EQUIPMENT TYPE",
-        form.equipmentType,
-      );
-      y += 42;
+      drawField(margin + third * 2, y, third, "Equipment Type", form.equipmentType);
+      y += 30;
 
-      doc.setFont("helvetica", "italic");
-      doc.setTextColor(90, 96, 103);
-      doc.setFontSize(8.5);
-      doc.text(`${portalCompanyName} acts solely as a property broker`, pageWidth - margin, y + 4, {
+      doc.setFont("times", "italic");
+      doc.setFontSize(8);
+      setText(MUTED);
+      doc.text(`${portalCompanyName} acts solely as a property broker.`, pageWidth - margin, y, {
         align: "right",
       });
+      y += 20;
 
-      y += 12;
-      drawSectionHeading("ORIGIN / SHIPPER", margin, y, contentWidth);
+      sectionHeading("Origin / Shipper", margin, y, contentWidth);
       y += 24;
-      drawField(margin, y, contentWidth / 2 - 8, 28, "SHIPPER NAME", form.shipperName);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        28,
-        "CONTACT / PHONE",
-        form.shipperContact,
-      );
-      y += 38;
-      drawField(margin, y, contentWidth / 2 - 8, 28, "PICKUP ADDRESS", form.pickupAddress);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        28,
-        "DOCK / APPOINTMENT NO.",
-        form.pickupDock,
-      );
-      y += 46;
+      const half = contentWidth / 2;
+      drawField(margin, y, half - 10, "Shipper Name", form.shipperName);
+      drawField(margin + half, y, half, "Contact / Phone", form.shipperContact);
+      y += 36;
+      drawField(margin, y, half - 10, "Pickup Address", form.pickupAddress);
+      drawField(margin + half, y, half, "Dock / Appointment No.", form.pickupDock);
+      y += 40;
 
-      drawSectionHeading("DESTINATION / CONSIGNEE", margin, y, contentWidth);
+      sectionHeading("Destination / Consignee", margin, y, contentWidth);
       y += 24;
-      drawField(margin, y, contentWidth / 2 - 8, 28, "CONSIGNEE NAME", form.consigneeName);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        28,
-        "CONTACT / PHONE",
-        form.consigneeContact,
-      );
-      y += 38;
-      drawField(margin, y, contentWidth / 2 - 8, 28, "DELIVERY ADDRESS", form.deliveryAddress);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y,
-        contentWidth / 2 - 16,
-        28,
-        "DOCK / APPOINTMENT NO.",
-        form.deliveryDock,
-      );
-      y += 46;
+      drawField(margin, y, half - 10, "Consignee Name", form.consigneeName);
+      drawField(margin + half, y, half, "Contact / Phone", form.consigneeContact);
+      y += 36;
+      drawField(margin, y, half - 10, "Delivery Address", form.deliveryAddress);
+      drawField(margin + half, y, half, "Dock / Appointment No.", form.deliveryDock);
+      y += 44;
 
-      y = ensureSpace(y, 40, "STRAIGHT BILL OF LADING - NON-NEGOTIABLE (CONTINUED)");
-      drawSectionHeading("FREIGHT DESCRIPTION", margin, y, contentWidth);
-      doc.setTextColor(90, 96, 103);
-      doc.setFont("helvetica", "italic");
+      y = ensureSpace(y, 60, "Straight Bill of Lading");
+      sectionHeading("Freight Description", margin, y, contentWidth);
+      doc.setFont("times", "italic");
       doc.setFontSize(7.3);
+      setText(MUTED);
       doc.text(
-        "Shipper must identify hazardous materials and special handling needs",
+        "Shipper must identify hazardous materials and special handling needs.",
         pageWidth - margin,
-        y + 12,
+        y,
         { align: "right" },
       );
-      y += 22;
+      y += 18;
 
-      const rowHeight = 36;
-      const colW = { hm: 46, units: 52, pkg: 50, commodity: 200, nmfc: 83, weight: 64 };
-      const headers = ["HM", "Units", "Pkg", "Commodity / Description", "NMFC / Class", "Weight"];
-      const headerWidths = [colW.hm, colW.units, colW.pkg, colW.commodity, colW.nmfc, colW.weight];
+      const colW = { hm: 34, units: 52, pkg: 55, nmfc: 78, weight: 68 };
+      const commodityW = contentWidth - (colW.hm + colW.units + colW.pkg + colW.nmfc + colW.weight);
+      const headers: Array<{ label: string; w: number; align: "left" | "center" | "right" }> = [
+        { label: "HM", w: colW.hm, align: "center" },
+        { label: "Units", w: colW.units, align: "right" },
+        { label: "Pkg", w: colW.pkg, align: "left" },
+        { label: "Commodity / Description", w: commodityW, align: "left" },
+        { label: "NMFC / Class", w: colW.nmfc, align: "left" },
+        { label: "Weight", w: colW.weight, align: "right" },
+      ];
 
-      const drawFreightTableHeader = (headerY: number) => {
-        let hx = margin;
-        headers.forEach((header, idx) => {
-          doc.setFillColor(243, 247, 250);
-          doc.setDrawColor(151, 171, 193);
-          doc.rect(hx, headerY, headerWidths[idx], 18, "FD");
-          doc.setTextColor(35, 46, 60);
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(7.2);
-          doc.text(header, hx + 4, headerY + 12);
-          hx += headerWidths[idx];
+      const drawTableHeader = (headerY: number) => {
+        let x = margin;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.2);
+        setText(NAVY);
+        headers.forEach((col) => {
+          const tx =
+            col.align === "right" ? x + col.w - 4 : col.align === "center" ? x + col.w / 2 : x + 4;
+          doc.text(col.label.toUpperCase(), tx, headerY, { align: col.align });
+          x += col.w;
         });
-        return headerY + 18;
+        setDraw(GOLD);
+        doc.setLineWidth(1.2);
+        doc.line(margin, headerY + 5, pageWidth - margin, headerY + 5);
+        return headerY + 5;
       };
 
-      let currentY = drawFreightTableHeader(y);
-      freightItems.forEach((row) => {
-        currentY = ensureSpace(
-          currentY,
-          rowHeight,
-          "STRAIGHT BILL OF LADING - NON-NEGOTIABLE (CONTINUED)",
-        );
-        // re-draw the column header at the top of a continuation page for readability
-        if (currentY === 110) {
-          currentY = drawFreightTableHeader(currentY);
+      let tableY = drawTableHeader(y);
+      const rowHeight = 24;
+      freightItems.forEach((row, idx) => {
+        tableY = ensureSpace(tableY, rowHeight + 10, "Straight Bill of Lading");
+        if (tableY === contentTop) {
+          tableY = drawTableHeader(tableY);
+        }
+        if (idx % 2 === 1) {
+          setFill(ZEBRA);
+          doc.rect(margin, tableY, contentWidth, rowHeight, "F");
         }
         let x = margin;
-        const rowValues = [row.hm, row.units, row.pkg, row.commodity, row.nmfcClass, row.weight];
-        rowValues.forEach((value, idx) => {
-          doc.setDrawColor(151, 171, 193);
-          doc.rect(x, currentY, headerWidths[idx], rowHeight, "S");
-          if (idx === 3) {
-            const lines = doc.splitTextToSize(value || "", headerWidths[idx] - 10);
-            const lineStartY = currentY + 12;
-            lines.slice(0, 2).forEach((line: string, lineIndex: number) => {
-              doc.text(line, x + 5, lineStartY + lineIndex * 10);
-            });
-          } else {
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(7.5);
-            doc.text(value || "", x + 5, currentY + 12);
-          }
-          x += headerWidths[idx];
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.8);
+        setText(CHARCOAL);
+        const cells = [row.hm || "—", row.units, row.pkg, row.commodity, row.nmfcClass, row.weight];
+        cells.forEach((value, colIdx) => {
+          const col = headers[colIdx];
+          const lines = doc.splitTextToSize(value || "—", col.w - 8);
+          const tx =
+            col.align === "right" ? x + col.w - 4 : col.align === "center" ? x + col.w / 2 : x + 4;
+          const displayValue =
+            colIdx === 5 && value ? `${formatNumber(Number(value) || 0)} lb` : lines[0] || "—";
+          doc.text(displayValue, tx, tableY + 15, { align: col.align });
+          x += col.w;
         });
-        currentY += rowHeight;
+        setDraw(HAIRLINE_SOFT);
+        doc.setLineWidth(0.5);
+        doc.line(margin, tableY + rowHeight, pageWidth - margin, tableY + rowHeight);
+        tableY += rowHeight;
       });
-      y = currentY + 10;
+      y = tableY + 14;
 
-      y = ensureSpace(y, 90, "STRAIGHT BILL OF LADING - NON-NEGOTIABLE (CONTINUED)");
-      drawField(margin, y, 172, 26, "TOTAL UNITS", formatNumber(totals.units));
-      drawField(margin + 172 + 10, y, 172, 26, "TOTAL WEIGHT", `${formatNumber(totals.weight)} lb`);
-      drawField(margin + 354 + 20, y, 136, 26, "DECLARED VALUE (IF ANY)", form.declaredValue);
-      y += 38;
+      y = ensureSpace(y, 100, "Straight Bill of Lading");
+      setDraw(GOLD);
+      doc.setLineWidth(1.2);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 18;
+      drawField(margin, y, third - 10, "Total Units", formatNumber(totals.units));
+      drawField(margin + third, y, third - 10, "Total Weight", `${formatNumber(totals.weight)} lb`);
+      drawField(margin + third * 2, y, third, "Declared Value (If Any)", form.declaredValue);
+      y += 34;
 
-      drawCheck(margin + 350, y, form.hazmat === "Yes");
-      doc.setTextColor(28, 34, 40);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.4);
-      doc.text("Hazmat - Yes", margin + 366, y + 8);
-      drawCheck(margin + 450, y, form.hazmat === "No");
-      doc.text("Hazmat - No", margin + 466, y + 8);
-      y += 16;
+      drawRadio(margin + 6, y, form.hazmat === "Yes", "Hazmat — Yes", true);
+      drawRadio(margin + 130, y, form.hazmat === "No", "Hazmat — No");
+      y += 20;
 
       drawLongBox(
         margin,
         y,
         contentWidth,
-        72,
-        "SPECIAL INSTRUCTIONS / HANDLING / TEMPERATURE / SECUREMENT",
+        70,
+        "Special Instructions / Handling / Temperature / Securement",
         form.specialInstructions,
       );
-      y += 90;
+      y += 70;
 
       // ---------------------------------------------------------------- //
-      // Page 2
+      // Page 2 — Custody, signatures, proof of delivery
       // ---------------------------------------------------------------- //
-      let y2 = newPage("STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS");
+      let y2 = newPage("Custody & Receipts", "Carrier, Driver & Signatures");
 
-      drawSectionHeading("CARRIER, DRIVER AND CARGO CONTROL", margin, y2, contentWidth);
-      y2 += 22;
-      drawField(margin, y2, contentWidth / 2 - 8, 28, "CARRIER LEGAL NAME", form.carrierLegalName);
-      drawField(
-        margin + contentWidth / 2 + 8,
-        y2,
-        contentWidth / 2 - 16,
-        28,
-        "CARRIER MC / USDOT",
-        form.carrierMcUsdot,
-      );
-      y2 += 38;
-      drawField(margin, y2, contentWidth / 3 - 8, 28, "DRIVER NAME", form.driverName);
-      drawField(
-        margin + contentWidth / 3,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "DRIVER PHONE",
-        form.driverPhone,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y2,
-        contentWidth / 3 - 16,
-        28,
-        "TRACTOR / TRAILER NO.",
-        form.tractorTrailerNo,
-      );
-      y2 += 38;
-      drawField(margin, y2, contentWidth / 3 - 8, 28, "SEAL NO.", form.sealNo);
-      drawField(
-        margin + contentWidth / 3,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "REQUIRED / ACTUAL TEMP",
-        form.reqActualTemp,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y2,
-        contentWidth / 3 - 16,
-        28,
-        "TRACKING LINK / REFERENCE",
-        form.trackingLink,
-      );
-      y2 += 46;
+      sectionHeading("Carrier, Driver and Cargo Control", margin, y2, contentWidth);
+      y2 += 24;
+      drawField(margin, y2, half - 10, "Carrier Legal Name", form.carrierLegalName);
+      drawField(margin + half, y2, half, "Carrier MC / USDOT", form.carrierMcUsdot);
+      y2 += 36;
+      drawField(margin, y2, third - 10, "Driver Name", form.driverName);
+      drawField(margin + third, y2, third - 10, "Driver Phone", form.driverPhone);
+      drawField(margin + third * 2, y2, third, "Tractor / Trailer No.", form.tractorTrailerNo);
+      y2 += 36;
+      drawField(margin, y2, third - 10, "Seal No.", form.sealNo);
+      drawField(margin + third, y2, third - 10, "Required / Actual Temp", form.reqActualTemp);
+      drawField(margin + third * 2, y2, third, "Tracking Link / Reference", form.trackingLink);
+      y2 += 30;
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.4);
-      drawCheck(margin, y2, form.driverCountedFreight);
-      doc.text("Driver counted freight", margin + 18, y2 + 8);
-      drawCheck(margin + 195, y2, form.shipperLoadAndCount);
-      doc.text("Shipper load and count (SLC)", margin + 213, y2 + 8);
-      drawCheck(margin + 390, y2, form.sealVerified);
-      doc.text("Seal verified at pickup", margin + 408, y2 + 8);
-      y2 += 22;
+      drawCheck(margin, y2, form.driverCountedFreight, "Driver counted freight");
+      drawCheck(margin + 190, y2, form.shipperLoadAndCount, "Shipper load and count (SLC)");
+      drawCheck(margin + 400, y2, form.sealVerified, "Seal verified at pickup");
+      y2 += 26;
 
-      drawSectionHeading("PICKUP CERTIFICATIONS AND EXCEPTIONS", margin, y2, contentWidth);
-      y2 += 22;
-      doc.setTextColor(35, 44, 58);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.3);
+      sectionHeading("Pickup Certifications and Exceptions", margin, y2, contentWidth);
+      y2 += 20;
+      doc.setFont("times", "italic");
+      doc.setFontSize(8.2);
+      setText(CHARCOAL);
       const certText =
-        "SHIPPER CERTIFICATION: The freight is properly described, packaged, marked, labeled, and in apparent good order. For hazardous materials, the shipper certifies compliance with applicable transportation regulations and has supplied required shipping papers.";
-      const certLines = doc.splitTextToSize(certText, contentWidth - 12);
-      doc.text(certLines, margin + 6, y2 + 12);
-      y2 += 12 + certLines.length * 10 + 8;
+        "Shipper certification: the freight is properly described, packaged, marked, labeled, and in apparent good order. For hazardous materials, the shipper certifies compliance with applicable transportation regulations and has supplied required shipping papers.";
+      const certLines = doc.splitTextToSize(certText, contentWidth);
+      doc.text(certLines, margin, y2 + 10);
+      y2 += certLines.length * 10.5 + 16;
 
-      y2 = ensureSpace(y2, 52, "STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS (CONTINUED)");
+      y2 = ensureSpace(y2, 60, "Custody & Receipts", "Continued");
       drawLongBox(
         margin,
         y2,
         contentWidth,
-        52,
-        "EXCEPTIONS / VISIBLE DAMAGE / COUNT DISCREPANCY AT PICKUP",
+        54,
+        "Exceptions / Visible Damage / Count Discrepancy at Pickup",
         form.pickupExceptions,
       );
       y2 += 70;
 
-      y2 = ensureSpace(y2, 84, "STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS (CONTINUED)");
-      drawField(
-        margin,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "SHIPPER SIGNATURE / TYPED NAME",
-        form.shipperTypedName,
-      );
-      drawField(
-        margin + contentWidth / 3,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "DATE / TIME",
-        form.shipperDateTime,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y2,
-        contentWidth / 3 - 16,
-        28,
-        "TITLE",
-        form.shipperTitle,
-      );
+      y2 = ensureSpace(y2, 90, "Custody & Receipts", "Continued");
+      drawField(margin, y2, third - 10, "Shipper Signature / Typed Name", form.shipperTypedName);
+      drawField(margin + third, y2, third - 10, "Date / Time", form.shipperDateTime);
+      drawField(margin + third * 2, y2, third, "Title", form.shipperTitle);
       if (form.shipperSignature) {
         try {
-          doc.addImage(form.shipperSignature, "PNG", margin + 8, y2 + 30, 150, 32);
+          doc.addImage(form.shipperSignature, "PNG", margin + 2, y2 + 26, 140, 30);
         } catch {
           // ignore malformed signature data
         }
       }
-      y2 += 54;
+      y2 += 56;
 
-      const carrierLines = doc.splitTextToSize(form.carrierReceiptText, contentWidth - 8);
-      y2 = ensureSpace(
-        y2,
-        carrierLines.length * 10 + 100,
-        "STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS (CONTINUED)",
-      );
-      doc.setTextColor(35, 44, 58);
+      const carrierLines = doc.splitTextToSize(form.carrierReceiptText, contentWidth);
+      y2 = ensureSpace(y2, carrierLines.length * 10.5 + 100, "Custody & Receipts", "Continued");
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(8.3);
-      doc.text("CARRIER RECEIPT:", margin + 6, y2 + 6);
-      doc.setFont("helvetica", "normal");
-      doc.text(carrierLines, margin + 6, y2 + 18);
-      y2 += 18 + carrierLines.length * 10;
-      drawField(
-        margin,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "DRIVER SIGNATURE / TYPED NAME",
-        form.driverTypedName,
-      );
-      drawField(
-        margin + contentWidth / 3,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "DATE / TIME",
-        form.driverDateTime,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y2,
-        contentWidth / 3 - 16,
-        28,
-        "SEAL NO. CONFIRMED",
-        form.sealConfirmed,
-      );
+      doc.setFontSize(8.2);
+      setText(NAVY);
+      doc.text("CARRIER RECEIPT", margin, y2);
+      setDraw(GOLD);
+      doc.setLineWidth(1.2);
+      doc.line(margin, y2 + 4, margin + 22, y2 + 4);
+      doc.setFont("times", "italic");
+      doc.setFontSize(8.2);
+      setText(CHARCOAL);
+      doc.text(carrierLines, margin, y2 + 16);
+      y2 += 16 + carrierLines.length * 10.5 + 6;
+
+      drawField(margin, y2, third - 10, "Driver Signature / Typed Name", form.driverTypedName);
+      drawField(margin + third, y2, third - 10, "Date / Time", form.driverDateTime);
+      drawField(margin + third * 2, y2, third, "Seal No. Confirmed", form.sealConfirmed);
       if (form.driverSignature) {
         try {
-          doc.addImage(form.driverSignature, "PNG", margin + 8, y2 + 32, 150, 32);
+          doc.addImage(form.driverSignature, "PNG", margin + 2, y2 + 26, 140, 30);
         } catch {
           // ignore malformed signature data
         }
       }
       y2 += 70;
 
-      y2 = ensureSpace(y2, 160, "STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS (CONTINUED)");
-      drawSectionHeading("DELIVERY RECEIPT / PROOF OF DELIVERY", margin, y2, contentWidth);
-      y2 += 24;
+      y2 = ensureSpace(y2, 150, "Custody & Receipts", "Continued");
+      sectionHeading("Delivery Receipt / Proof of Delivery", margin, y2, contentWidth);
+      y2 += 20;
       drawLongBox(
         margin,
         y2,
         contentWidth,
-        52,
-        "DELIVERY EXCEPTIONS / SHORTAGE / OVER / DAMAGE / SEAL CONDITION",
+        54,
+        "Delivery Exceptions / Shortage / Over / Damage / Seal Condition",
         form.deliveryExceptions,
       );
       y2 += 70;
       drawField(
         margin,
         y2,
-        contentWidth / 3 - 8,
-        28,
-        "CONSIGNEE SIGNATURE / TYPED NAME",
+        third - 10,
+        "Consignee Signature / Typed Name",
         form.consigneeTypedName,
       );
-      drawField(
-        margin + contentWidth / 3,
-        y2,
-        contentWidth / 3 - 8,
-        28,
-        "DATE / TIME",
-        form.consigneeDateTime,
-      );
-      drawField(
-        margin + (contentWidth / 3) * 2 + 8,
-        y2,
-        contentWidth / 3 - 16,
-        28,
-        "TITLE",
-        form.consigneeTitle,
-      );
+      drawField(margin + third, y2, third - 10, "Date / Time", form.consigneeDateTime);
+      drawField(margin + third * 2, y2, third, "Title", form.consigneeTitle);
       if (form.consigneeSignature) {
         try {
-          doc.addImage(form.consigneeSignature, "PNG", margin + 8, y2 + 32, 150, 32);
+          doc.addImage(form.consigneeSignature, "PNG", margin + 2, y2 + 26, 140, 30);
         } catch {
           // ignore malformed signature data
         }
       }
-      y2 += 70;
+      y2 += 66;
 
-      y2 = ensureSpace(y2, 60, "STRAIGHT BILL OF LADING - CUSTODY & RECEIPTS (CONTINUED)");
-      doc.setFillColor(230, 238, 246);
-      doc.roundedRect(margin, y2, contentWidth, 52, 1.5, 1.5, "F");
-      doc.setTextColor(20, 44, 70);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10.8);
-      doc.text("BROKER STATUS AND CONTROLLING DOCUMENTS", margin + 8, y2 + 15);
-      doc.setTextColor(35, 44, 58);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.15);
+      y2 = ensureSpace(y2, 84, "Custody & Receipts", "Continued");
+      setFill(NOTICE_BG);
+      setDraw(NAVY);
+      doc.setLineWidth(0.9);
+      doc.rect(margin, y2, contentWidth, 74, "FD");
+      doc.setFont("times", "bold");
+      doc.setFontSize(9.8);
+      setText(NAVY);
+      doc.text("BROKER STATUS AND CONTROLLING DOCUMENTS", margin + 10, y2 + 17);
+      doc.setFont("times", "italic");
+      doc.setFontSize(8.1);
+      setText(CHARCOAL);
       const legalText = `${portalCompanyName} is a property broker, not the motor carrier or warehouseman. The motor carrier has exclusive custody, control, and responsibility for transportation, loading review, securement, and delivery. This BOL does not change the load-specific rate confirmation or any signed broker-carrier agreement. Cargo claims are governed by applicable law and controlling contracts, including 49 U.S.C. 14706 when applicable.`;
-      const legalLines = doc.splitTextToSize(legalText, contentWidth - 18);
-      doc.text(legalLines, margin + 8, y2 + 26);
+      const legalLines = doc.splitTextToSize(legalText, contentWidth - 20);
+      doc.text(legalLines, margin + 10, y2 + 29);
 
       drawFooter();
 
       // Stamp accurate, dynamic "Page X of N" now that the true page count
-      // is known (previously hardcoded as "Page X of 2", which broke as
-      // soon as content overflowed onto extra pages).
+      // is known.
       const totalPages = doc.internal.getNumberOfPages();
       for (let p = 1; p <= totalPages; p += 1) {
         doc.setPage(p);
-        doc.setTextColor(90, 96, 103);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.1);
-        doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, 90, { align: "right" });
+        doc.setFontSize(7.8);
+        setText(MUTED);
+        doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, 112, { align: "right" });
       }
 
       doc.save(`${form.bolNo || "Bill_of_Lading"}.pdf`);
