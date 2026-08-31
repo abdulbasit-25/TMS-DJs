@@ -9,7 +9,6 @@ import { usePortalSettings } from "@/hooks/use-portal-settings";
 import {
   AlertCircle,
   ArrowRight,
-  ArrowUpRight,
   BadgeCheck,
   Eye,
   EyeOff,
@@ -23,6 +22,35 @@ const COMPANY_URL = "https://abdulbasit-archer.vercel.app/";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    title: "Agent Sign In | Archer Secure Agent Portal",
+    meta: [
+      {
+        name: "description",
+        content:
+          "Sign in to the Archer secure agent portal to manage loads, carriers, and operations across the network.",
+      },
+      { property: "og:title", content: "Agent Sign In | Archer Secure Agent Portal" },
+      {
+        property: "og:description",
+        content: "Secure agent portal access for dispatch, load tracking, and carrier operations.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://djsportal.vercel.app/login" },
+      { property: "og:image", content: "https://djsportal.vercel.app/og-image.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Archer agent portal login screen preview" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Agent Sign In | Archer Secure Agent Portal" },
+      {
+        name: "twitter:description",
+        content: "Secure agent portal access for dispatch, load tracking, and carrier operations.",
+      },
+      { name: "twitter:image", content: "https://djsportal.vercel.app/og-image.jpg" },
+      { name: "twitter:image:alt", content: "Archer agent portal login screen preview" },
+    ],
+  }),
   component: () => (
     <AuthProvider>
       <LoginPage />
@@ -83,22 +111,24 @@ function LoginPage() {
   return (
     <AuthLayout>
       {/* Header */}
-      <div className="mb-7">
-        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-brand)]/20 bg-[var(--color-brand)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-brand)]">
+      <div className="mb-5">
+        <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-brand)]/20 bg-[var(--color-brand)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-brand)]">
           <span className="relative flex size-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60" />
+            <span className="motion-safe:absolute motion-safe:inline-flex motion-safe:h-full motion-safe:w-full motion-safe:animate-ping absolute h-full w-full rounded-full bg-current opacity-60" />
             <span className="relative inline-flex size-1.5 rounded-full bg-current" />
           </span>
           Agent access
         </span>
-        <h1 className="mt-3.5 text-2xl font-bold tracking-tight text-foreground">Welcome back</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <h1 className="mt-3 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          Welcome back
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Sign in to manage loads, lanes, and carriers.
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={onSubmit} className="space-y-5" noValidate>
+      <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {error && (
           <div ref={errorRef} tabIndex={-1} role="alert" className="outline-none">
             <Alert variant="destructive">
@@ -108,7 +138,7 @@ function LoginPage() {
           </div>
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="email">Work email</Label>
           <div className="relative">
             <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -130,17 +160,17 @@ function LoginPage() {
               autoCapitalize="none"
               autoCorrect="off"
               className="h-11 pl-10"
-              placeholder="you@company.com"
+              placeholder="you@djfreight.com"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-3">
             <Label htmlFor="password">Password</Label>
             <a
               href={`mailto:${supportEmail}?subject=Portal%20password%20reset`}
-              className="text-xs font-medium text-[var(--color-link)] underline-offset-4 hover:underline"
+              className="rounded text-xs font-medium text-[var(--color-link)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               Forgot password?
             </a>
@@ -166,7 +196,7 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword((p) => !p)}
-              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+              className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-inset"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -178,7 +208,7 @@ function LoginPage() {
           type="submit"
           disabled={submitting}
           aria-busy={submitting}
-          className="group h-11 w-full bg-[var(--color-cta-bg)] text-[var(--color-cta-text)] shadow-[0_8px_24px_color-mix(in_oklab,var(--color-cta-bg)_30%,transparent)] transition-all hover:bg-[var(--color-cta-bg-hover)] hover:shadow-[0_10px_32px_color-mix(in_oklab,var(--color-cta-bg)_40%,transparent)] active:scale-[0.99]"
+          className="group h-11 w-full bg-[var(--color-cta-bg)] text-[var(--color-cta-text)] shadow-[0_8px_24px_color-mix(in_oklab,var(--color-cta-bg)_30%,transparent)] transition-all hover:bg-[var(--color-cta-bg-hover)] hover:shadow-[0_10px_32px_color-mix(in_oklab,var(--color-cta-bg)_40%,transparent)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {submitting ? (
             <>
@@ -195,7 +225,7 @@ function LoginPage() {
       </form>
 
       {/* Security footnote */}
-      <div className="mt-6 flex items-start gap-2.5 rounded-lg border border-border/60 bg-[var(--color-bg-surface-2)]/60 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-border/60 bg-[var(--color-bg-surface-2)]/60 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
         <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-[var(--color-success)]" />
         Internal use only. Unauthorized access is prohibited. All sign-in activity is monitored and
         logged.
@@ -204,26 +234,17 @@ function LoginPage() {
   );
 }
 
-/* ============================================================================
-   Brand panel — dark "mission control" scene
-   ========================================================================== */
-
-function BrandLogo({ glow = false }: { glow?: boolean }) {
+function BrandLogo() {
   const { companyName } = usePortalSettings();
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative">
-        {glow && (
-          <div className="absolute inset-0 rounded-xl bg-[var(--plum-500)] opacity-40 blur-lg" />
-        )}
-        <div className="relative grid size-10 place-items-center rounded-xl bg-gradient-to-br from-[var(--plum-400)] to-[var(--plum-600)] text-white shadow-lg">
-          <LockKeyhole className="size-[18px]" />
-        </div>
+    <div className="flex items-center gap-2.5">
+      <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[var(--plum-400)] to-[var(--plum-600)] text-white shadow-md">
+        <LockKeyhole className="size-4" />
       </div>
-      <div>
-        <div className="text-sm font-semibold tracking-tight">{companyName}</div>
-        <div className="text-[10px] uppercase tracking-[0.18em] opacity-60">
+      <div className="min-w-0">
+        <div className="truncate text-sm font-semibold tracking-tight">{companyName}</div>
+        <div className="truncate text-[10px] uppercase tracking-[0.16em] opacity-60">
           Secure Agent Portal · TMS
         </div>
       </div>
@@ -231,88 +252,58 @@ function BrandLogo({ glow = false }: { glow?: boolean }) {
   );
 }
 
-function CompanyLink({ className }: { className?: string }) {
+/* Compact shipment ticket — replaces the old floating-chip card. Everything
+   lives inside one bounded block so it can't push the panel past viewport
+   height on shorter laptop screens. */
+function ShipmentTicket() {
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">
-        Powered by
-      </span>
-
-      <a
-        href={COMPANY_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`group inline-flex items-center gap-1.5 text-sm font-semibold tracking-tight transition-all duration-200 hover:opacity-80 ${className ?? ""}`}
-      >
-        <span className="relative">
-          ARCHER
-          <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-current transition-all duration-300 group-hover:w-full" />
+    <div className="mt-5 max-w-sm rounded-xl border border-white/10 bg-white/[0.05] p-3.5 shadow-lg shadow-black/30 backdrop-blur-md">
+      <div className="flex items-center justify-between border-b border-dashed border-white/10 pb-2.5">
+        <span className="font-mono text-[10px] tracking-widest text-white/55">
+          WAYBILL · LOAD-2481
         </span>
-
-        <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-      </a>
-    </div>
-  );
-}
-
-function LoadCard() {
-  return (
-    <div className="relative mt-10 max-w-sm">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-black/40 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-xs tracking-widest text-white/60">LOAD-2481</span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--moss-400)]/15 px-2 py-0.5 text-[11px] font-semibold text-[var(--moss-400)]">
-            <span className="relative flex size-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-75" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-current" />
-            </span>
-            In transit
-          </span>
-        </div>
-
-        <div className="mt-4 flex items-center gap-2.5 text-sm font-medium text-white/90">
-          <span>Chicago, IL</span>
-          <svg viewBox="0 0 64 12" className="h-3 flex-1" aria-hidden="true">
-            <line
-              x1="1"
-              y1="6"
-              x2="63"
-              y2="6"
-              stroke="rgba(255,255,255,0.18)"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <line
-              x1="1"
-              y1="6"
-              x2="63"
-              y2="6"
-              stroke="var(--plum-400)"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeDasharray="4 6"
-              className="dj-route-line"
-            />
-          </svg>
-          <span>Dallas, TX</span>
-        </div>
-
-        <div className="mt-4">
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div className="dj-load-progress h-full w-[68%] rounded-full bg-gradient-to-r from-[var(--navy-400)] to-[var(--plum-400)]" />
-          </div>
-          <div className="mt-2 flex justify-between text-[11px] text-white/50">
-            <span>68% of route</span>
-            <span>ETA tomorrow · 9:40 AM</span>
-          </div>
-        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-success)]/15 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-success)]">
+          <span className="size-1.5 rounded-full bg-current" />
+          In transit
+        </span>
       </div>
 
-      {/* Floating notification chip */}
-      <div className="animate-float absolute -right-4 -top-5 rounded-xl border border-white/10 bg-[var(--ink-900)]/90 px-3 py-2 shadow-xl backdrop-blur">
-        <span className="flex items-center gap-1.5 text-xs font-medium text-white/80">
-          <BadgeCheck className="size-3.5 text-[var(--moss-400)]" />
-          Rate confirmed · $2,340
+      <div className="mt-2.5 flex items-center gap-2 text-[13px] font-medium text-white/90">
+        <span>Chicago, IL</span>
+        <svg viewBox="0 0 64 12" className="h-3 flex-1" aria-hidden="true">
+          <line
+            x1="1"
+            y1="6"
+            x2="63"
+            y2="6"
+            stroke="rgba(255,255,255,0.18)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <line
+            x1="1"
+            y1="6"
+            x2="63"
+            y2="6"
+            stroke="var(--plum-400)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeDasharray="4 6"
+            className="dj-route-line"
+          />
+        </svg>
+        <span>Dallas, TX</span>
+      </div>
+
+      <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/10">
+        <div className="dj-load-progress h-full w-[68%] rounded-full bg-gradient-to-r from-[var(--color-brand)] to-[var(--indigo-500)]" />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between text-[10.5px] text-white/50">
+        <span>68% of route · ETA tomorrow, 9:40 AM</span>
+        <span className="inline-flex items-center gap-1 font-semibold text-white/75">
+          <BadgeCheck className="size-3.5 text-[var(--color-success)]" />
+          $2,340
         </span>
       </div>
     </div>
@@ -322,8 +313,8 @@ function LoadCard() {
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <div className="text-lg font-bold tracking-tight text-white">{value}</div>
-      <div className="text-[11px] uppercase tracking-wider text-white/45">{label}</div>
+      <div className="text-base font-bold tracking-tight text-white">{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-white/45">{label}</div>
     </div>
   );
 }
@@ -332,13 +323,13 @@ function BrandPanel() {
   const { companyName } = usePortalSettings();
 
   return (
-    <div className="relative hidden overflow-hidden bg-[var(--navy-950)] p-10 text-[#f4efe6] lg:flex lg:flex-col lg:justify-between xl:p-14">
-      {/* ── Ambient background ── */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-32 -top-40 size-[34rem] rounded-full bg-[var(--plum-500)] opacity-25 blur-[120px]" />
-        <div className="absolute -bottom-48 -left-32 size-[30rem] rounded-full bg-[var(--navy-500)] opacity-30 blur-[110px]" />
-        <div className="theme-grid-pattern absolute inset-0 text-white opacity-[0.05] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
-        {/* Decorative long-haul route */}
+    <div className="relative hidden h-full flex-col justify-between overflow-y-auto bg-[var(--slate-950)] px-8 py-7 text-[#f4efe6] lg:flex xl:px-12 xl:py-9">
+      {/* ── Ambient background: a route, not a glow ── */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="theme-grid-pattern absolute inset-0 text-white opacity-[0.04]" />
+        <span className="absolute right-[-18%] top-[-8%] select-none font-serif text-[13rem] font-black italic leading-none tracking-tighter text-white/[0.035]">
+          A
+        </span>
         <svg
           viewBox="0 0 800 900"
           preserveAspectRatio="xMidYMid slice"
@@ -348,7 +339,7 @@ function BrandPanel() {
           <path
             d="M-60 700 C 150 640, 260 520, 380 470 S 640 330, 860 160"
             stroke="white"
-            strokeOpacity="0.09"
+            strokeOpacity="0.1"
             strokeWidth="1.5"
             strokeDasharray="2 8"
             strokeLinecap="round"
@@ -360,96 +351,239 @@ function BrandPanel() {
           <circle cx="760" cy="205" r="2.5" fill="var(--plum-400)" />
         </svg>
       </div>
-
-      {/* ── Top: logo ── */}
-      <div className="relative">
-        <BrandLogo glow />
+      {/* ── Top row: wordmark + a clickable Powered by Archer credit, using the provided mark ── */}
+      <div className="relative flex items-start justify-between gap-4">
+        <BrandLogo />
+        <a
+          href={COMPANY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Powered by Archer — opens in a new tab"
+          className="group flex items-center gap-2.5 rounded-full py-1 pl-1 pr-1 transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        >
+          <span className="text-right leading-tight">
+            <span className="block text-[9px] font-semibold uppercase tracking-[0.22em] text-white/45">
+              Powered by
+            </span>
+            <span className="block text-sm font-bold tracking-tight text-white/90 group-hover:text-white">
+              ARCHER
+            </span>
+          </span>
+          <span className="relative inline-flex size-[3.7rem] shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
+            <svg
+              viewBox="0 0 100 100"
+              className="archer-ring absolute inset-0 h-full w-full"
+              aria-hidden="true"
+            >
+              <circle
+                cx="50"
+                cy="50"
+                r="47"
+                fill="none"
+                stroke="white"
+                strokeOpacity="0.5"
+                strokeWidth="3"
+                strokeDasharray="2.4 4.4"
+              />
+            </svg>
+            <svg
+              viewBox="0 0 100 100"
+              className="archer-ring--reverse absolute inset-0 h-full w-full"
+              aria-hidden="true"
+            >
+              <circle
+                cx="50"
+                cy="50"
+                r="41"
+                fill="none"
+                stroke="var(--indigo-300)"
+                strokeOpacity="0.7"
+                strokeWidth="1.5"
+                strokeDasharray="1.8 4.5"
+              />
+            </svg>
+            <img
+              src="https://abdulbasit-archer.vercel.app/logo.png"
+              alt=""
+              className="relative h-[76%] w-[76%] object-contain"
+            />
+          </span>
+        </a>
       </div>
-
-      {/* ── Middle: headline + showcase ── */}
+      {/* ── Middle: headline + shipment ticket ── */}
       <div className="relative max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--plum-300)]">
-          Nationwide agent network
+        <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.2em] text-[var(--indigo-200)]">
+          Manifest · Nationwide agent network
         </p>
-        <h2 className="mt-4 text-4xl font-bold leading-[1.1] tracking-tight xl:text-[2.75rem]">
+        <h2 className="mt-3 text-[1.65rem] font-bold leading-[1.15] tracking-tight sm:text-3xl xl:text-[2.1rem]">
           Every lane, every load, tracked{" "}
-          <span className="bg-gradient-to-r from-[var(--plum-300)] to-[var(--plum-400)] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[var(--indigo-200)] to-[var(--indigo-400)] bg-clip-text text-transparent">
             door to door.
           </span>
         </h2>
-        <p className="mt-4 text-[15px] leading-relaxed text-[var(--ink-300)]">
-          The dispatch desk for agents moving freight across the network — live rates, status pings,
-          and paperwork in one view.
+        <p className="mt-2.5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+          Live rates, status pings, and paperwork — one dispatch view for every agent.
         </p>
 
-        <LoadCard />
+        <ShipmentTicket />
 
-        <div className="mt-9 flex items-center gap-8">
+        <div className="mt-5 flex items-center gap-5">
           <Stat value="1.2k+" label="loads moved" />
-          <div className="h-8 w-px bg-white/10" />
+          <div className="h-6 w-px bg-white/10" />
           <Stat value="38" label="states covered" />
-          <div className="h-8 w-px bg-white/10" />
+          <div className="h-6 w-px bg-white/10" />
           <Stat value="99.2%" label="on-time" />
         </div>
       </div>
-
-      {/* ── Bottom: link + copyright ── */}
-      <div className="relative flex items-center justify-between">
-        <CompanyLink className="group inline-flex items-center gap-1.5 text-sm font-medium text-white/60 transition-colors hover:text-white" />
-        <span className="text-xs text-white/35">
+      {/* ── Bottom: copyright + Powered by Archer credit ── */}
+      <div className="relative flex items-center justify-between text-[11px] text-white/35">
+        <span>
           © {new Date().getFullYear()} {companyName}
         </span>
+
+        <a
+          href={COMPANY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative rounded font-mono uppercase tracking-[0.18em] text-white/40 transition-colors duration-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        >
+          <span>Powered by Archer</span>
+
+          <span
+            aria-hidden="true"
+            className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-white transition-transform duration-500 ease-out group-hover:scale-x-100"
+          />
+        </a>
       </div>
     </div>
   );
 }
 
 /* ============================================================================
-   Layout
+   Layout — fixed to the viewport height so the page never scrolls on a
+   laptop screen; each column falls back to its own internal scroll only if
+   a user's window is unusually short.
    ========================================================================== */
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
+  const { supportEmail } = usePortalSettings();
+
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
+    <div className="grid h-dvh overflow-hidden lg:grid-cols-[1.05fr_1fr]">
       <BrandPanel />
 
       {/* Form side */}
-      <div className="relative flex items-center justify-center overflow-hidden bg-background px-4 py-12 sm:px-6">
+      <div className="relative flex h-full flex-col items-center justify-center overflow-hidden bg-background px-4 py-6 sm:px-6 lg:border-l lg:border-dashed lg:border-border">
+        {/* Perforation notches — ties the two panels together like a torn ticket stub */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-10 hidden size-3 -translate-x-1/2 rounded-full bg-background lg:block"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-10 left-0 hidden size-3 -translate-x-1/2 rounded-full bg-background lg:block"
+        />
+
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_45%_at_50%_0%,var(--color-bg-surface-2),transparent)]"
         />
 
         <div className="relative w-full max-w-md">
-          {/* Mobile brand header */}
-          <div className="mb-8 flex justify-center lg:hidden">
-            <BrandLogo glow />
+          {/* Mobile / tablet brand row — logo + a clickable Powered by Archer
+              credit, kept inline so the header stays compact below lg. */}
+          <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+            <BrandLogo />
+            <a
+              href={COMPANY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Powered by Archer — opens in a new tab"
+              className="group flex items-center gap-2 rounded-full py-1 pl-1 pr-1 transition-colors hover:bg-[var(--color-bg-surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]"
+            >
+              <span className="text-right leading-tight">
+                <span className="block text-[8px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Powered by
+                </span>
+                <span className="block text-xs font-bold tracking-tight text-foreground">
+                  ARCHER
+                </span>
+              </span>
+              <span className="relative inline-flex size-[2.9rem] shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <svg
+                  viewBox="0 0 100 100"
+                  className="archer-ring absolute inset-0 h-full w-full"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="47"
+                    fill="none"
+                    stroke="var(--color-brand)"
+                    strokeOpacity="0.55"
+                    strokeWidth="3.5"
+                    strokeDasharray="2.4 4.4"
+                  />
+                </svg>
+                <svg
+                  viewBox="0 0 100 100"
+                  className="archer-ring--reverse absolute inset-0 h-full w-full"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="41"
+                    fill="none"
+                    stroke="var(--indigo-300)"
+                    strokeOpacity="0.7"
+                    strokeWidth="1.5"
+                    strokeDasharray="1.8 4.5"
+                  />
+                </svg>
+                <img
+                  src="https://abdulbasit-archer.vercel.app/logo.png"
+                  alt=""
+                  className="relative h-[76%] w-[76%] object-contain"
+                />
+              </span>
+            </a>
           </div>
 
           {/* Card with gradient accent strip */}
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl shadow-black/[0.07]">
             <div
               aria-hidden="true"
-              className="h-1 w-full bg-gradient-to-r from-[var(--navy-400)] via-[var(--plum-500)] to-[var(--navy-400)]"
+              className="h-1 w-full bg-gradient-to-r from-[var(--indigo-400)] via-[var(--indigo-500)] to-[var(--indigo-400)]"
             />
-            <div className="animate-in fade-in slide-in-from-bottom-3 p-6 duration-500 sm:p-8">
+            <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 p-5 duration-500 sm:p-7">
               {children}
             </div>
           </div>
 
           {/* Below card */}
-          {/* <div className="mt-6 space-y-4 text-center">
+          <div className="mt-4 space-y-2 text-center">
             <p className="text-xs text-muted-foreground">
               Locked out of your account?{" "}
               <a
-                href={SUPPORT_MAILTO}
-                className="font-medium text-[var(--color-link)] underline-offset-4 hover:underline"
+                href={`mailto:${supportEmail}?subject=Portal%20access%20issue`}
+                className="rounded font-medium text-[var(--color-link)] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Contact dispatch
+                Contact Support
               </a>
             </p>
-            <CompanyLink className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground lg:hidden" />
-          </div> */}
+            <p className="lg:hidden">
+              <a
+                href={COMPANY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70 underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                Powered by Archer
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
