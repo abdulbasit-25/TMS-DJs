@@ -114,7 +114,7 @@ function LoginPage() {
       <div className="mb-5">
         <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-brand)]/20 bg-[var(--color-brand)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-brand)]">
           <span className="relative flex size-1.5">
-            <span className="motion-safe:absolute motion-safe:inline-flex motion-safe:h-full motion-safe:w-full motion-safe:animate-ping absolute h-full w-full rounded-full bg-current opacity-60" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60" />
             <span className="relative inline-flex size-1.5 rounded-full bg-current" />
           </span>
           Agent access
