@@ -271,6 +271,7 @@
   --color-brand-hover: var(--navy-700);
   --color-cta-bg: var(--brass-500);
   --color-cta-bg-hover: var(--brass-600);
+  --color-cta-text: #ffffff;
 
   /* Darker steps so white foreground on solid badges/buttons clears AA:
      sage-600/white ≈ 4.9:1 · oxblood-600/white ≈ 7.0:1 · slate-600/white ≈ 5.5:1.
